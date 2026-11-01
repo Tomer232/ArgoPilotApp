@@ -5,7 +5,7 @@ description = "AgroPilot registry service."
 requires-python = ">=3.12"
 dependencies = [
     "fastapi~=0.115",
-    "uvicorn>=0.32.0",
+    "uvicorn~=0.32",
 ]
 
 [tool.uv]
