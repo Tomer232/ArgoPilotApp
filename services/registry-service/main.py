@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 import catalogues
+import farms
 from errors import register_error_handlers
 
 # /docs, /redoc and /openapi.json are off: the task does not list them.
@@ -13,6 +14,7 @@ app = FastAPI(
 )
 register_error_handlers(app)
 app.include_router(catalogues.router)
+app.include_router(farms.router)
 
 
 @app.get("/health")

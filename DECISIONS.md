@@ -44,6 +44,10 @@ Every design decision made while building `services/registry-service`, and who m
 | O18 | The three catalogues share two helpers (`get_all`, `get_one`), with six tiny route functions | No logic copied three times, yet every URL still has its own visible function. |
 | O19 | Lists come back in insertion order (`ORDER BY rowid`) | Without `ORDER BY`, SQLite's order is not guaranteed. Catalogues then match the spec's tables; farms and plots come oldest first. |
 | O20 | Responses are shaped by Pydantic models | "Return only the fields listed" is enforced in one place, and types are fixed (`flow_lph` float, `available_water_mm_per_m` int). |
+| O21 | PATCH with an explicit `null` (`{"name": null}`) → 422 | A missing field means "don't change it"; `null` is an attempt to erase a required value. |
+| O22 | Any valid UUID spelling in the URL is accepted and normalized | Uppercase, no dashes or `{braces}` are the same id; `str(uuid.UUID(raw))` turns them into the stored lowercase form. |
+| O23 | No `Location` header on 201 | The spec asks only for 201 and the object; the id is already in the body. Unlisted functionality. |
+| O24 | Each route runs its own SQL in its area file, with small helpers like `find_farm()` | Everything about farms reads top to bottom in `farms.py`. A separate repository layer would double the files for no gain at this size. |
 
 ## Agent's
 
@@ -56,8 +60,13 @@ Every design decision made while building `services/registry-service`, and who m
 | A5 | Open the database with `?mode=rw` | Without it, `sqlite3` silently creates an empty database when the file is missing, so "database unreachable" would never happen. | `db.py` `connect` |
 | A6 | `PRAGMA foreign_keys = ON` on every connection | SQLite ignores `REFERENCES` unless this is set, per connection. | `db.py` `connect` |
 | A7 | Commit only if the whole request succeeds | A failed request leaves the database as it was. | `db.py` `connect` |
-| A8 | Uppercase UUIDs in the URL are lowercased before lookup | Ids are stored as lowercase text; otherwise a valid id would return 404. | Planned, Step 5 |
+| A8 | Uppercase UUIDs in the URL are lowercased before lookup | Ids are stored as lowercase text; otherwise a valid id would return 404. | `models.py` `parse_id` |
 | A9 | VS Code points at the service's virtual environment | Removes "import could not be resolved" warnings. Local only (git-ignored). | `.vscode/settings.json` |
 | A10 | Table names go into the SQL string; ids are passed as `?` parameters | Table names are our own constants, never user input, so this is safe. Ids come from the URL, so they must be parameters (prevents SQL injection). | `catalogues.py` helpers |
 | A11 | Models are set with `response_model=` in the route decorator, not as a return type | The helpers return plain dicts; FastAPI filters them through the model. A return type of `Crop` would make the editor flag a type mismatch. | `catalogues.py` routes |
 | A12 | 405 on catalogues needs no code of its own | Only `GET` is defined, so FastAPI returns 405 for any other method, and our handler turns it into problem+json. | `catalogues.py` |
+| A13 | "Farm still has plots" is detected by the database's foreign key, not by counting plots first | **Changed from the first plan** (check, then delete). The foreign key is the single source of truth, and there is no gap between "check" and "delete" where another request could add a plot. Relies on `PRAGMA foreign_keys = ON` (A6). | `farms.py` `delete_farm` |
+| A14 | A small `sent_fields()` helper rejects explicit nulls on PATCH | Tested: Pydantic accepts `{"name": null}` for an optional field, so O21 needs its own check. Plots will reuse it. | `models.py` |
+| A15 | The server creates ids with `uuid.uuid4()` (random) | Clients never choose ids; O4 already rejects `id` in a body. | `farms.py` `create_farm` |
+| A16 | 204 responses use `response_class=Response` | Otherwise FastAPI sends a `content-type: application/json` header with an empty body. | `farms.py` `delete_farm` |
+| A17 | A 422 for a missing body says `body: Field required` | The first version dropped the word `body` and said only `Field required`. | `errors.py` |

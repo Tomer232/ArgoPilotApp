@@ -97,8 +97,10 @@ def handle_request_validation_error(request: Request, exc: RequestValidationErro
     """Bad request body or query: list every problem as 'field: message'."""
     messages = []
     for error in exc.errors():
-        field = ".".join(str(part) for part in error["loc"][1:])  # drop "body"/"query"
-        messages.append(f"{field}: {error['msg']}" if field else error["msg"])
+        # loc is e.g. ("body", "area_m2"): drop "body", unless the whole body is the problem.
+        loc = error["loc"][1:] or error["loc"]
+        field = ".".join(str(part) for part in loc)
+        messages.append(f"{field}: {error['msg']}")
     return problem_response(422, "; ".join(messages), "VALIDATION")
 
 
