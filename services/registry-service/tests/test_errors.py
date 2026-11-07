@@ -1,5 +1,6 @@
 """Errors shared by every route: unknown URL, wrong method, database down, query parameters."""
 
+import pytest
 from fastapi.testclient import TestClient
 
 from helpers import assert_problem
@@ -24,6 +25,22 @@ def test_wrong_method_is_405_without_code(client):
     body = assert_problem(response, 405, None)
     assert body["title"] == "Method Not Allowed"
     assert response.headers["allow"] == "GET"
+
+
+@pytest.mark.parametrize(
+    "method, url, allow",
+    [
+        ("PUT", "/v1/farms", "GET, POST"),
+        ("PUT", "/v1/farms/b7e2c0a0-3c1d-4f0a-9a11-0c5d2e6f1001", "DELETE, GET, PATCH"),
+        ("PUT", "/v1/plots", "GET, POST"),
+        ("PUT", "/v1/plots/c8f3d1b0-4d2e-5a1b-8b22-1d6e3f702002", "DELETE, GET, PATCH"),
+        ("DELETE", "/v1/emitters/dripnet-pc-1.0", "GET"),
+    ],
+)
+def test_405_allow_header_lists_every_method(client, method, url, allow):
+    response = client.request(method, url)
+    assert response.status_code == 405
+    assert response.headers["allow"] == allow
 
 
 def test_422_title_matches_spec(client):

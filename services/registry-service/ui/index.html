@@ -108,7 +108,10 @@ h1, h2, h3 { margin: 0; }
   font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
   display: flex; align-items: center; gap: 8px;
 }
-section { margin-bottom: 14px; scroll-margin-top: 16px; }
+.view { display: grid; gap: 14px; }
+.view[hidden] { display: none; }
+.view-link { color: var(--blue); cursor: pointer; font-size: 12px; text-decoration: none; }
+.view-link:hover { text-decoration: underline; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
 .grid-2-wide { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; }
 
@@ -249,13 +252,13 @@ dialog::backdrop { background: rgba(24,24,27,.25); }
       <div><b>AgroPilot</b><span>Registry service</span></div>
     </div>
     <nav class="nav">
-      <a data-target="overview" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</a>
-      <a data-target="farms"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>Farms</a>
-      <a data-target="plots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg>Plots</a>
-      <a data-target="catalogues"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/></svg>Catalogues</a>
+      <a data-view="overview" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</a>
+      <a data-view="farms"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>Farms</a>
+      <a data-view="plots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg>Plots</a>
+      <a data-view="catalogues"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/></svg>Catalogues</a>
       <div class="nav-label">Developer</div>
-      <a data-target="break"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>Try to break it</a>
-      <a data-target="activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>API activity</a>
+      <a data-view="break"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>Try to break it</a>
+      <a data-view="activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>API activity</a>
     </nav>
     <div class="status-card">
       <b><span class="dot" id="health-dot" style="background:var(--faint)"></span><span id="health-title">Checking…</span></b>
@@ -277,31 +280,53 @@ dialog::backdrop { background: rgba(24,24,27,.25); }
       </div>
     </div>
 
-    <!-- KPI strip -->
-    <section id="overview">
+    <!-- ===== View: Overview (a glance; each card links to its full view) ===== -->
+    <section class="view" data-view="overview">
       <div class="card kpis" id="kpis"></div>
+      <div class="grid-2-wide">
+        <div class="card">
+          <div class="card-head"><h2>Planted area by farm<span class="hint">m², split by crop</span></h2></div>
+          <div class="card-body" id="area-chart"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Farms<span class="hint" id="overview-farm-count"></span></h2><a class="view-link" data-goto="farms">View all →</a></div>
+          <div class="table-wrap"><table><tbody id="overview-farms"></tbody></table></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head"><h2>Recent plantings<span class="hint">latest 5</span></h2><a class="view-link" data-goto="plots">View all →</a></div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Plot</th><th>Farm</th><th>Crop</th><th>Planted</th></tr></thead>
+            <tbody id="overview-plots"></tbody>
+          </table></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Last requests<span class="hint">latest 5</span></h2><a class="view-link" data-goto="activity">View all →</a></div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Request</th><th>Status</th><th>Time</th></tr></thead>
+            <tbody id="overview-activity"></tbody>
+          </table></div>
+        </div>
+      </div>
     </section>
 
-    <!-- Area by farm + farms list -->
-    <section class="grid-2-wide" id="farms">
-      <div class="card">
-        <div class="card-head"><h2>Planted area by farm<span class="hint">m², split by crop</span></h2></div>
-        <div class="card-body" id="area-chart"></div>
-      </div>
+    <!-- ===== View: Farms ===== -->
+    <section class="view" data-view="farms" hidden>
       <div class="card">
         <div class="card-head">
           <h2>Farms<span class="hint" id="farm-count"></span></h2>
-          <button class="btn small" id="new-farm-btn-2">+ New farm</button>
+          <button class="btn small primary" id="new-farm-btn-2">+ New farm</button>
         </div>
         <div class="table-wrap"><table>
-          <thead><tr><th>Farm</th><th>Plots</th><th></th></tr></thead>
+          <thead><tr><th>Farm</th><th>Plots</th><th>Planted area</th><th>Crops</th><th>Id</th><th></th></tr></thead>
           <tbody id="farm-rows"></tbody>
         </table></div>
       </div>
     </section>
 
-    <!-- Plots table -->
-    <section id="plots">
+    <!-- ===== View: Plots ===== -->
+    <section class="view" data-view="plots" hidden>
       <div class="card">
         <div class="card-head">
           <h2>Plots<span class="hint" id="plot-count"></span></h2>
@@ -320,9 +345,9 @@ dialog::backdrop { background: rgba(24,24,27,.25); }
       </div>
     </section>
 
-    <!-- Catalogues + break it -->
-    <section class="grid-2">
-      <div class="card" id="catalogues">
+    <!-- ===== View: Catalogues ===== -->
+    <section class="view" data-view="catalogues" hidden>
+      <div class="card">
         <div class="card-head">
           <h2>Catalogues<span class="hint">read-only</span></h2>
           <div class="tabs" id="catalogue-tabs">
@@ -347,18 +372,21 @@ dialog::backdrop { background: rgba(24,24,27,.25); }
           <div class="lookup-result" id="lookup-result"></div>
         </div>
       </div>
+    </section>
 
-      <div class="card" id="break">
+    <!-- ===== View: Try to break it ===== -->
+    <section class="view" data-view="break" hidden>
+      <div class="card">
         <div class="card-head">
           <h2>Try to break it<span class="hint">bad requests, expected errors</span></h2>
-          <button class="btn small" id="break-all-btn">Run all</button>
+          <button class="btn small primary" id="break-all-btn">Run all</button>
         </div>
         <div id="break-rows"></div>
       </div>
     </section>
 
-    <!-- API activity -->
-    <section id="activity">
+    <!-- ===== View: API activity ===== -->
+    <section class="view" data-view="activity" hidden>
       <div class="card">
         <div class="card-head">
           <h2>API activity<span class="hint">every request this page sent</span></h2>
@@ -413,10 +441,12 @@ function esc(value) {
   return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 const $ = (id) => document.getElementById(id);
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 const fmt = (n, digits = 0) => Number(n).toLocaleString("en-US", { maximumFractionDigits: digits });
 const farmName = (id) => state.farms.find((f) => f.id === id)?.name ?? "Unknown farm";
 const cropName = (id) => state.crops.find((c) => c.id === id)?.name ?? id;
 const soilName = (id) => state.soils.find((s) => s.id === id)?.name ?? id;
+const cropPill = (id) => `<span class="pill ${id === "tomato" ? "red" : id === "bell-pepper" ? "green" : "blue"}">${esc(cropName(id))}</span>`;
 const emitterLabel = (id) => {
   const e = state.emitters.find((x) => x.id === id);
   return e ? `${e.name} ${e.flow_lph.toFixed(1)} L/h` : id;
@@ -502,6 +532,8 @@ async function loadTablePlots() {
 function render() {
   renderKpis();
   renderAreaChart();
+  renderOverviewFarms();
+  renderOverviewPlots();
   renderFarms();
   renderPlotFilter();
   renderPlots();
@@ -516,7 +548,8 @@ function renderKpis() {
   const emptyFarms = plotsPerFarm.filter((n) => n === 0).length;
   const areaByCrop = state.crops.map((c) => ({ crop: c, area: plots.filter((p) => p.crop_id === c.id).reduce((s, p) => s + p.area_m2, 0) }));
   const latest = [...plots].sort((a, b) => b.planting_date.localeCompare(a.planting_date))[0];
-  const daysAgo = latest ? Math.round((Date.now() - new Date(latest.planting_date)) / 86400000) : null;
+  const todayLocal = new Date(); todayLocal.setHours(0, 0, 0, 0);
+  const daysAgo = latest ? Math.round((todayLocal - new Date(`${latest.planting_date}T00:00`)) / 86400000) : null;
 
   const farmSegments = state.farms.map((f, i) => `<span style="background:${FARM_COLORS[i % FARM_COLORS.length]};flex-grow:${Math.max(plotsPerFarm[i], 0.15)}"></span>`).join("");
   const cropSegments = areaByCrop.map(({ crop, area }) => `<span style="background:${CROP_COLORS[crop.id] ?? "var(--blue)"};flex-grow:${area || 0.01}"></span>`).join("");
@@ -544,7 +577,7 @@ function renderKpis() {
       <div class="kpi-label"><span class="dot" style="background:var(--yellow)"></span>Latest planting</div>
       <div class="kpi-value">${latest ? esc(latest.planting_date) : "—"}</div>
       <div class="segbar"><span style="background:var(--yellow)"></span></div>
-      <div class="kpi-sub">${latest ? `<span>${esc(latest.name)} · ${daysAgo} days ago</span>` : "<span>No plots yet</span>"}</div>
+      <div class="kpi-sub">${latest ? `<span>${esc(latest.name)} · ${daysAgo === 0 ? "today" : `${plural(daysAgo, "day")} ago`}</span>` : "<span>No plots yet</span>"}</div>
     </div>
     <div class="kpi">
       <div class="kpi-label"><span class="dot" style="background:var(--faint)"></span>Catalogue</div>
@@ -577,19 +610,46 @@ function renderAreaChart() {
     ${bars || '<div class="empty">No farms yet.</div>'}`;
 }
 
-function renderFarms() {
-  $("farm-count").textContent = `${state.farms.length} total`;
-  $("farm-rows").innerHTML = state.farms.map((f, i) => {
+// Overview card: each farm with its plot count.
+function renderOverviewFarms() {
+  $("overview-farm-count").textContent = `${state.farms.length} total`;
+  $("overview-farms").innerHTML = state.farms.slice(0, 6).map((f, i) => {
     const count = state.allPlots.filter((p) => p.farm_id === f.id).length;
     return `<tr>
       <td><span class="dot" style="background:${FARM_COLORS[i % FARM_COLORS.length]};margin-right:8px"></span>${esc(f.name)}</td>
-      <td class="num">${count ? `<span class="pill blue">${count} plots</span>` : '<span class="pill">empty</span>'}</td>
+      <td style="text-align:right">${count ? `<span class="pill blue">${plural(count, "plot")}</span>` : '<span class="pill">empty</span>'}</td></tr>`;
+  }).join("") || '<tr><td class="empty">No farms yet.</td></tr>';
+}
+
+// Overview card: the five most recently planted plots.
+function renderOverviewPlots() {
+  const latest = [...state.allPlots].sort((a, b) => b.planting_date.localeCompare(a.planting_date)).slice(0, 5);
+  $("overview-plots").innerHTML = latest.map((p) => `<tr>
+      <td><b style="font-weight:500">${esc(p.name)}</b></td>
+      <td class="muted">${esc(farmName(p.farm_id))}</td>
+      <td>${cropPill(p.crop_id)}</td>
+      <td class="num">${esc(p.planting_date)}</td></tr>`).join("") || '<tr><td colspan="4" class="empty">No plots yet.</td></tr>';
+}
+
+// Farms view: every farm with its plots, area and crops.
+function renderFarms() {
+  $("farm-count").textContent = `${state.farms.length} total`;
+  $("farm-rows").innerHTML = state.farms.map((f, i) => {
+    const plots = state.allPlots.filter((p) => p.farm_id === f.id);
+    const area = plots.reduce((s, p) => s + p.area_m2, 0);
+    const crops = [...new Set(plots.map((p) => p.crop_id))].map(cropPill).join(" ");
+    return `<tr>
+      <td><span class="dot" style="background:${FARM_COLORS[i % FARM_COLORS.length]};margin-right:8px"></span>${esc(f.name)}</td>
+      <td class="num">${plots.length ? `<span class="pill blue">${plural(plots.length, "plot")}</span>` : '<span class="pill">empty</span>'}</td>
+      <td class="num">${fmt(area)} m²</td>
+      <td>${crops || '<span class="muted">—</span>'}</td>
+      <td class="mono muted">${esc(f.id.slice(0, 8))}…</td>
       <td class="row-actions">
         <button class="btn small" onclick="showFarmPlots('${f.id}')">Plots</button>
         <button class="btn small" onclick="openFarmForm('${f.id}')">Rename</button>
         <button class="btn small danger" onclick="deleteFarm('${f.id}')">Delete</button>
       </td></tr>`;
-  }).join("") || '<tr><td colspan="3" class="empty">No farms yet. Create one.</td></tr>';
+  }).join("") || '<tr><td colspan="6" class="empty">No farms yet. Create one.</td></tr>';
 }
 
 function renderPlotFilter() {
@@ -602,7 +662,7 @@ function renderPlots() {
   $("plot-rows").innerHTML = state.tablePlots.map((p) => `<tr>
       <td><b style="font-weight:500">${esc(p.name)}</b></td>
       <td class="muted">${esc(farmName(p.farm_id))}</td>
-      <td><span class="pill ${p.crop_id === "tomato" ? "red" : p.crop_id === "bell-pepper" ? "green" : "blue"}">${esc(cropName(p.crop_id))}</span></td>
+      <td>${cropPill(p.crop_id)}</td>
       <td class="num">${fmt(p.area_m2)} m²</td>
       <td class="num">${esc(p.planting_date)}</td>
       <td>${esc(soilName(p.soil_id))}</td>
@@ -653,7 +713,7 @@ async function deleteFarm(farmId) {
 
 function showFarmPlots(farmId) {
   state.filterFarmId = farmId;
-  loadTablePlots().then(() => { renderPlotFilter(); renderPlots(); $("plots").scrollIntoView({ behavior: "smooth" }); });
+  loadTablePlots().then(() => { renderPlotFilter(); renderPlots(); showView("plots"); });
 }
 
 // ============================================================
@@ -832,6 +892,12 @@ function recordActivity(entry) {
 }
 
 function renderActivity() {
+  $("overview-activity").innerHTML = state.activity.slice(0, 5).map((a) => `
+    <tr>
+      <td><span class="mono"><b>${a.method}</b> ${esc(a.path)}</span></td>
+      <td>${statusPill(a.status)}</td>
+      <td class="num muted">${fmt(a.ms, 1)} ms</td>
+    </tr>`).join("") || '<tr><td colspan="3" class="empty">No requests yet.</td></tr>';
   $("activity-rows").innerHTML = state.activity.map((a, i) => `
     <tr class="${a === state.selectedActivity ? "selected" : ""}" onclick="selectActivity(${i})">
       <td><span class="mono"><b>${a.method}</b> ${esc(a.path)}</span></td>
@@ -878,6 +944,27 @@ async function checkHealth() {
 // ============================================================
 // Wiring: buttons, navigation, start-up
 // ============================================================
+// Title and subtitle shown in the header for each view.
+const VIEWS = {
+  overview: [null, null],
+  farms: ["Farms", "Create, rename and delete farms. A farm with plots can't be deleted."],
+  plots: ["Plots", "Every plot, or one farm's plots. Create, edit (only changed fields are sent) and delete."],
+  catalogues: ["Catalogues", "Crops, soils and emitters. Read-only: any method but GET gets a 405."],
+  break: ["Try to break it", "Bad requests the API must refuse, each with the status the spec requires."],
+  activity: ["API activity", "Every request this page sent, with the raw response."],
+};
+
+// Show one view and hide the rest. The view name is kept in the URL (#plots), so a reload stays put.
+function showView(name) {
+  if (!VIEWS[name]) name = "overview";
+  document.querySelectorAll(".view").forEach((v) => v.hidden = v.dataset.view !== name);
+  document.querySelectorAll(".nav a").forEach((l) => l.classList.toggle("active", l.dataset.view === name));
+  const [title, subtitle] = VIEWS[name];
+  if (title) { $("greeting").textContent = title; $("subtitle").textContent = subtitle; }
+  else greet();
+  if (location.hash !== `#${name}`) history.replaceState(null, "", `#${name}`);
+}
+
 function greet() {
   const hour = new Date().getHours();
   $("greeting").textContent = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
@@ -893,12 +980,9 @@ $("lookup-id").onkeydown = (e) => { if (e.key === "Enter") lookup(); };
 $("break-all-btn").onclick = runAllBreakers;
 $("clear-activity-btn").onclick = () => { state.activity = []; state.selectedActivity = null; renderActivity(); };
 document.querySelectorAll("#catalogue-tabs button").forEach((b) => b.onclick = () => { state.catalogueKind = b.dataset.kind; renderCatalogue(); });
-document.querySelectorAll(".nav a").forEach((link) => link.onclick = () => {
-  document.querySelectorAll(".nav a").forEach((l) => l.classList.toggle("active", l === link));
-  $(link.dataset.target).scrollIntoView({ behavior: "smooth" });
-});
+document.querySelectorAll(".nav a, .view-link").forEach((link) => link.onclick = () => showView(link.dataset.view ?? link.dataset.goto));
 
-greet();
+showView(location.hash.slice(1));
 renderBreakers();
 renderActivity();
 loadAll();

@@ -64,6 +64,16 @@ Every design decision made while building `services/registry-service`, and who m
 | O37 | The service itself serves the UI at `/ui` | Same address as the API, so the browser needs no cross-origin (CORS) setup, and one command starts everything. |
 | O38 | Plain HTML, CSS and JavaScript in one file, no framework, no build step | Nothing to install; small `fetch()` calls to the API you already know. |
 | O39 | Extras: an API activity panel, "Try to break it" buttons, a health indicator | Lets you demo every error (404/405/409/422/503) in the interview and see the raw problem+json. |
+| O40 | The UI shows one view at a time; Overview is a summary (KPIs, area chart, farms, 5 recent plantings, 5 last requests), each card linking to its full view | You asked for a real overview, not every section stacked on one page. |
+| O41 | A "break the API" matrix, both as committed tests (`tests/test_matrix.py`) and as a one-off report | The tests guard forever; the report shows what each attack actually returned. |
+| O42 | The matrix covers bad fields, protocol abuse, broken databases and concurrency | All four kinds you asked for. 266 cases plus 4 concurrency tests. |
+| O43 | When the matrix finds a failure: report first, then fix one by one | Matches "pause, reflect, understand". |
+| O44 | The hammer test ramps request rate, data size, and mixed reads+writes, against 1 uvicorn worker as shipped; committed as `scripts/hammer.py` | Honest numbers for the service as it runs, and anyone can rerun them. |
+| O45 | A body FastAPI can't decode (invalid UTF-8, JSON nested 100,000 deep) → 422 `VALIDATION` | **Found by the matrix**: it was FastAPI's own 400, with no `code`. Same answer as any other unreadable body. |
+| O46 | A stored row that doesn't fit the API (e.g. text in a number column) → 503 `UNAVAILABLE`; plus a last-resort handler so no crash is ever plain text | **Found by the matrix**: it was a plain-text 500. Broken data in the database is like a corrupt file (Y4). |
+| O47 | HEAD requests keep getting 405 | The spec lists only GET; the 405 says which methods do work. |
+| O48 | The `GET /v1/plots` size limit is documented, not fixed | **Found by the hammer**: past ~13,000 plots one response takes over 100 ms, so at 10 req/s requests arrive faster than they're answered and time out. The real fix (pagination) changes the spec's API, so it's the spec owner's decision. |
+| O49 | The 405 `Allow` header lists every method the URL accepts | **Found by the matrix**: `/v1/farms` said `Allow: POST`, leaving out GET. |
 
 ## Agent's
 
@@ -106,3 +116,9 @@ Every design decision made while building `services/registry-service`, and who m
 | A35 | The health check polls every 5 s and is not logged in the activity panel | It would flood the panel. `/health` checks the API; a catalogue request checks the database. | `ui/index.html` `checkHealth` |
 | A36 | The page is served by one plain route (`FileResponse`), not a static-files mount | One file, one route, easy to read. | `main.py` `ui` |
 | A37 | The font (Inter) loads from Google Fonts, with system fonts as fallback | Matches the reference style; offline, the page still works with the fallback font. | `ui/index.html` |
+| A38 | The matrix uses a test client that returns crashes as 500s (`raise_server_exceptions=False`) | By default FastAPI's test client re-raises a crash as a Python exception, so the matrix couldn't see what a real caller gets. | `tests/test_matrix.py` |
+| A39 | The `Allow` header is worked out with the public `route.matches()`, asking method by method | FastAPI 0.162 wraps included routers in a private `_IncludedRouter`; depending on private internals would break on upgrades. | `errors.py` `allowed_methods` |
+| A40 | The hammer script builds its own scratch databases and starts and stops its own server | One command reproduces everything; `registry.db` is never touched. | `scripts/hammer.py` |
+| A41 | The hammer reports the **achieved** rate next to the target rate | If the client can't send as fast as asked, the step measures the laptop, not the service. Seen: above ~200 req/s on this laptop, client and server compete for the same CPU. | `scripts/hammer.py` |
+| A42 | Matrix cases with no decision yet (`None`) only check the two rules | Their actual answers are listed for you: duplicate JSON keys (last wins), 1 MB names (accepted), no content-type (422), `+json` (201), trailing slash (307 redirect), `farm_id` twice (last wins), a garbage stored date (returned as-is). | `tests/test_matrix.py` |
+| A43 | One of my matrix expectations was wrong and was corrected | With the plots table dropped, deleting a farm correctly succeeds: nothing references it. | `tests/test_matrix.py` |
