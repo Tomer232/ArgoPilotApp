@@ -1,4 +1,7 @@
+from pathlib import Path
+
 from fastapi import Depends, FastAPI, Request
+from fastapi.responses import FileResponse
 
 import catalogues
 import farms
@@ -36,3 +39,12 @@ app.include_router(plots.router)
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+UI_FILE = Path(__file__).parent / "ui" / "index.html"
+
+
+@app.get("/ui", include_in_schema=False)
+def ui() -> FileResponse:
+    """The demo dashboard: one static HTML page that calls the API above."""
+    return FileResponse(UI_FILE)

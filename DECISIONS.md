@@ -18,7 +18,8 @@ Every design decision made while building `services/registry-service`, and who m
 | Y4 | A corrupt database file returns 503, not 500 | Found by testing: the first version caught only `OperationalError`, and a non-database file escaped as a plain 500. |
 | Y5 | Work step by step, ask all questions first, pause after each step | You will be interviewed on the code and must understand every part. |
 | Y6 | Code is simple and readable, with a short comment per function | Same reason. |
-| Y7 | Future work (after P1, separate branch): a UI, and deliberately breaking the database to prove every failure is handled | Not part of P1: the task says to delete unlisted functionality. |
+| Y7 | Future work (after P1, separate branch): a UI, and deliberately breaking the database to prove every failure is handled | Not part of P1: the task says to delete unlisted functionality. **The UI part was later changed by Y8.** |
+| Y8 | Build a small UI now, on the same branch, in the P1 pull request, styled like a reference dashboard you supplied | You want visuals that show and exercise every feature. Trade-off accepted: a reviewer sees functionality the task doesn't list. |
 
 ## Ours
 
@@ -56,6 +57,13 @@ Every design decision made while building `services/registry-service`, and who m
 | O30 | Run the real `seed_registry.sh` once per test run, then give every test its own copy of the file | Tests use exactly the spec's data, can't affect each other, and copying is near-instant (134 tests in under 1 s). |
 | O31 | One test file per area (`test_errors`, `test_catalogues`, `test_farms`, `test_plots`) | Each test file mirrors the code file it tests. |
 | O32 | Date tests compute "today in UTC+14" when they run | Always correct on any day, with no clock-freezing library to explain. |
+| O33 | Latency is measured by our own small Python script, not a load-testing tool | Nothing to install, uses `httpx2` (already a dev dependency), and every line can be explained. |
+| O34 | All 10 GET endpoints (list and by id for all five resources), 30 s each at 10 requests/s | 300 requests per endpoint gives a stable p95. |
+| O35 | Measure on the seed data (the official number) and again with 1,000 plots | The seed has only 4 plots; the second run shows how the plot list holds up as it grows. |
+| O36 | The script is committed in `scripts/measure_latency.py` | The task says "Measure it"; a reviewer can rerun the exact measurement behind the PR's number. |
+| O37 | The service itself serves the UI at `/ui` | Same address as the API, so the browser needs no cross-origin (CORS) setup, and one command starts everything. |
+| O38 | Plain HTML, CSS and JavaScript in one file, no framework, no build step | Nothing to install; small `fetch()` calls to the API you already know. |
+| O39 | Extras: an API activity panel, "Try to break it" buttons, a health indicator | Lets you demo every error (404/405/409/422/503) in the interview and see the raw problem+json. |
 
 ## Agent's
 
@@ -87,3 +95,14 @@ Every design decision made while building `services/registry-service`, and who m
 | A24 | Tests check status and `code`, and the `detail` text only where we wrote it ourselves (`Unknown emitter`) | Python's own messages change between versions (seen: 3.12 vs 3.14 for `2026-02-30`), so asserting them would make tests break on upgrades. | `tests/` |
 | A25 | Shared ids, the spec's example plot body and `assert_problem()` live in `tests/helpers.py` | Importing from `conftest.py` is discouraged by pytest; `conftest.py` keeps only fixtures. | `tests/helpers.py` |
 | A26 | The tests were proven by breaking the code on purpose (13 breaks, in a scratch copy) | Every break, e.g. removing the foreign-key setting or allowing area 0, made at least one test fail. Passing tests prove little unless they can fail. Not committed. | — |
+| A27 | Requests go out on a fixed schedule (one every 100 ms) without waiting for the previous answer | If each request waited for the last, one slow response would delay the next ones and the slowness would be under-counted ("coordinated omission"). | `measure_latency.py` `measure` |
+| A28 | The first 10 requests per endpoint are a warm-up and not counted | They include opening the connection, which a running service only pays once. | `measure_latency.py` `main` |
+| A29 | Percentiles use `method="inclusive"` | Found in a trial run: Python's default estimate reported a p99 above the slowest real request. | `measure_latency.py` `main` |
+| A30 | The 1,000-plot database is built in a scratch folder with one SQL statement, not committed | It's only for the context run. The PR describes how it was made. | — |
+| A31 | The UI's forms do no checking of their own (`novalidate`); the API is the only validator | The point of the UI is to show the API's rules. Browser checks would hide the 422s. | `ui/index.html` |
+| A32 | Every value from the API is escaped before it goes into the page | Farm and plot names are user input; without escaping, a name like `<script>` would run in the browser (XSS). | `ui/index.html` `esc()` |
+| A33 | Editing a plot sends only the changed fields (PATCH) | Shows the "PATCH changes only the fields in the body" rule in action. | `ui/index.html` `openPlotForm` |
+| A34 | The plot filter calls `GET /v1/plots?farm_id=` instead of filtering in the browser | Exercises the API's own filter. | `ui/index.html` `loadTablePlots` |
+| A35 | The health check polls every 5 s and is not logged in the activity panel | It would flood the panel. `/health` checks the API; a catalogue request checks the database. | `ui/index.html` `checkHealth` |
+| A36 | The page is served by one plain route (`FileResponse`), not a static-files mount | One file, one route, easy to read. | `main.py` `ui` |
+| A37 | The font (Inter) loads from Google Fonts, with system fonts as fallback | Matches the reference style; offline, the page still works with the fallback font. | `ui/index.html` |
