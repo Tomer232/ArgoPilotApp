@@ -8,7 +8,7 @@ from starlette.exceptions import HTTPException
 PROBLEM_JSON = "application/problem+json"
 RETRY_AFTER_SECONDS = 5
 
-# Title for each status we return. Written out because Python 3.12 calls 422
+# Title for each status we return. Written out because Python 3.13+ calls 422
 # "Unprocessable Content", while the spec's example says "Unprocessable Entity".
 TITLES = {
     404: "Not Found",

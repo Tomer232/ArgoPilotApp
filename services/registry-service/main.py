@@ -1,8 +1,22 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Request
 
 import catalogues
 import farms
-from errors import register_error_handlers
+import plots
+from errors import ValidationFailedError, register_error_handlers
+
+# Query parameters each URL accepts. Anything else is a 422, so a typo like
+# ?farmid= fails loudly instead of quietly returning every plot.
+ALLOWED_QUERY_PARAMS = {"/v1/plots": {"farm_id"}}
+
+
+def reject_unknown_query_params(request: Request) -> None:
+    """Runs before every route: 422 on any query parameter the URL does not accept."""
+    allowed = ALLOWED_QUERY_PARAMS.get(request.url.path, set())
+    unknown = set(request.query_params) - allowed
+    if unknown:
+        raise ValidationFailedError(f"Unknown query parameter: {', '.join(sorted(unknown))}")
+
 
 # /docs, /redoc and /openapi.json are off: the task does not list them.
 app = FastAPI(
@@ -11,10 +25,12 @@ app = FastAPI(
     docs_url=None,
     redoc_url=None,
     openapi_url=None,
+    dependencies=[Depends(reject_unknown_query_params)],
 )
 register_error_handlers(app)
 app.include_router(catalogues.router)
 app.include_router(farms.router)
+app.include_router(plots.router)
 
 
 @app.get("/health")

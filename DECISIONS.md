@@ -48,12 +48,16 @@ Every design decision made while building `services/registry-service`, and who m
 | O22 | Any valid UUID spelling in the URL is accepted and normalized | Uppercase, no dashes or `{braces}` are the same id; `str(uuid.UUID(raw))` turns them into the stored lowercase form. |
 | O23 | No `Location` header on 201 | The spec asks only for 201 and the object; the id is already in the body. Unlisted functionality. |
 | O24 | Each route runs its own SQL in its area file, with small helpers like `find_farm()` | Everything about farms reads top to bottom in `farms.py`. A separate repository layer would double the files for no gain at this size. |
+| O25 | Rebuild the virtual environment on Python 3.12 | The venv was on 3.14.4 while the repo's `.python-version` says 3.12. Match what the repo declares, which is what reviewers will run. |
+| O26 | `GET /v1/plots?farm_id=<unknown farm>` → 200 and `[]` | It's a filter, and the spec says "no rows means 200 and `[]`". |
+| O27 | `GET /v1/plots?farm_id=abc` (not a UUID) → 422 | A malformed filter is bad input. (In the *path*, a non-UUID is 404 because there it names a resource.) |
+| O28 | Unknown query parameters → 422, on every URL | Same rule as unknown body fields. Otherwise `?farmid=` (typo) quietly returns every plot. |
 
 ## Agent's
 
 | # | Decision | Why | Where |
 | --- | --- | --- | --- |
-| A1 | Error `title` comes from a hand-written table, not Python's `HTTPStatus` | Python 3.12 calls 422 "Unprocessable Content"; the spec's example says "Unprocessable Entity". | `errors.py` `TITLES` |
+| A1 | Error `title` comes from a hand-written table, not Python's `HTTPStatus` | Python 3.13+ calls 422 "Unprocessable Content"; the spec's example says "Unprocessable Entity". | `errors.py` `TITLES` |
 | A2 | 405 responses keep FastAPI's `Allow` header | Standard HTTP: tells the client which methods do work. | `errors.py` `handle_http_error` |
 | A3 | A 422 `detail` lists every problem as `field: message`, joined by `; ` | One response shows all mistakes, not just the first. | `errors.py` `handle_request_validation_error` |
 | A4 | One error class per `code` (`NotFoundError`, …), raised by routes | Routes say what went wrong; status and code come with the class. | `errors.py` |
@@ -70,3 +74,9 @@ Every design decision made while building `services/registry-service`, and who m
 | A15 | The server creates ids with `uuid.uuid4()` (random) | Clients never choose ids; O4 already rejects `id` in a body. | `farms.py` `create_farm` |
 | A16 | 204 responses use `response_class=Response` | Otherwise FastAPI sends a `content-type: application/json` header with an empty body. | `farms.py` `delete_farm` |
 | A17 | A 422 for a missing body says `body: Field required` | The first version dropped the word `body` and said only `Field required`. | `errors.py` |
+| A18 | `planting_date` is text that must match `YYYY-MM-DD` exactly, then be a real date, then not be in the future | Tested: strict mode rejects even a valid `"2026-03-01"` (JSON has no date type), and non-strict mode is too loose (accepts `"2026-03-01T00:00:00"` and timestamps). | `models.py` `PlantingDate` |
+| A19 | `Infinity` and `NaN` are rejected in every request body | Python's JSON reader accepts them. `Infinity` passes "area > 0", then crashes with a 500 when sent back. | `models.py` `RequestModel` |
+| A20 | Farm, crop, soil and emitter are looked up **before** the write | Gives the spec's own message (`"Unknown emitter"`) instead of a generic foreign-key error. After that, any `IntegrityError` on write can only be the unique name rule, so it becomes 409. | `plots.py` `check_references` |
+| A21 | PATCH merges the changes into the stored plot, then checks the whole result | Moving a plot to another farm (O7) is just another field change: the new farm must exist and the name must be free there. | `plots.py` `update_plot` |
+| A22 | The unknown-query-parameter rule (O28) lives in one place: a dependency on the whole app, with a small table of allowed parameters per URL | One rule, one place; routes don't repeat it. | `main.py` |
+| A23 | 422 messages for date and UUID problems start with Pydantic's own `Value error, …` | Pydantic adds that prefix to messages from our custom checks. Removing it needs a more complex error type; left as is. | `models.py` |
