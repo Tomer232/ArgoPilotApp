@@ -52,6 +52,10 @@ Every design decision made while building `services/registry-service`, and who m
 | O26 | `GET /v1/plots?farm_id=<unknown farm>` → 200 and `[]` | It's a filter, and the spec says "no rows means 200 and `[]`". |
 | O27 | `GET /v1/plots?farm_id=abc` (not a UUID) → 422 | A malformed filter is bad input. (In the *path*, a non-UUID is 404 because there it names a resource.) |
 | O28 | Unknown query parameters → 422, on every URL | Same rule as unknown body fields. Otherwise `?farmid=` (typo) quietly returns every plot. |
+| O29 | Tests use `httpx2` under FastAPI's `TestClient` | Starlette 1.10 marks `httpx` as deprecated for its test client and asks for `httpx2`; tested, it runs with no warnings. Dev-only dependency. |
+| O30 | Run the real `seed_registry.sh` once per test run, then give every test its own copy of the file | Tests use exactly the spec's data, can't affect each other, and copying is near-instant (134 tests in under 1 s). |
+| O31 | One test file per area (`test_errors`, `test_catalogues`, `test_farms`, `test_plots`) | Each test file mirrors the code file it tests. |
+| O32 | Date tests compute "today in UTC+14" when they run | Always correct on any day, with no clock-freezing library to explain. |
 
 ## Agent's
 
@@ -80,3 +84,6 @@ Every design decision made while building `services/registry-service`, and who m
 | A21 | PATCH merges the changes into the stored plot, then checks the whole result | Moving a plot to another farm (O7) is just another field change: the new farm must exist and the name must be free there. | `plots.py` `update_plot` |
 | A22 | The unknown-query-parameter rule (O28) lives in one place: a dependency on the whole app, with a small table of allowed parameters per URL | One rule, one place; routes don't repeat it. | `main.py` |
 | A23 | 422 messages for date and UUID problems start with Pydantic's own `Value error, …` | Pydantic adds that prefix to messages from our custom checks. Removing it needs a more complex error type; left as is. | `models.py` |
+| A24 | Tests check status and `code`, and the `detail` text only where we wrote it ourselves (`Unknown emitter`) | Python's own messages change between versions (seen: 3.12 vs 3.14 for `2026-02-30`), so asserting them would make tests break on upgrades. | `tests/` |
+| A25 | Shared ids, the spec's example plot body and `assert_problem()` live in `tests/helpers.py` | Importing from `conftest.py` is discouraged by pytest; `conftest.py` keeps only fixtures. | `tests/helpers.py` |
+| A26 | The tests were proven by breaking the code on purpose (13 breaks, in a scratch copy) | Every break, e.g. removing the foreign-key setting or allowing area 0, made at least one test fail. Passing tests prove little unless they can fail. Not committed. | — |
