@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgroPilot Registry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ---------- Design tokens ---------- */
+:root {
+  --page: #ececee;
+  --surface: #f7f7f8;
+  --card: #ffffff;
+  --border: #e6e6e9;
+  --text: #18181b;
+  --muted: #71717a;
+  --faint: #a1a1aa;
+  --blue: #4a72d9;
+  --blue-soft: #e8eefb;
+  --green: #2f9e6b;
+  --green-soft: #e3f4ec;
+  --orange: #e5853b;
+  --orange-soft: #fcefe3;
+  --red: #e5484d;
+  --red-soft: #fde8e8;
+  --yellow: #c99a1e;
+  --yellow-soft: #f8f0d9;
+  --radius: 12px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text);
+  font: 13px/1.45 Inter, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+button, input, select { font: inherit; color: inherit; }
+h1, h2, h3 { margin: 0; }
+
+/* ---------- Layout: sidebar + main ---------- */
+.app { display: flex; min-height: 100vh; padding: 12px; gap: 12px; }
+.sidebar {
+  width: 220px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px 10px;
+  position: sticky; top: 12px; height: calc(100vh - 24px);
+}
+.main {
+  flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px 28px 40px;
+}
+
+/* ---------- Sidebar ---------- */
+.brand {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px 14px;
+  border-bottom: 1px solid var(--border); margin-bottom: 8px;
+}
+.brand-mark {
+  width: 26px; height: 26px; border-radius: 7px; background: var(--text); color: #fff;
+  display: grid; place-items: center; font-weight: 700; font-size: 13px;
+}
+.brand b { display: block; font-size: 13px; }
+.brand span { color: var(--muted); font-size: 11px; }
+.nav a {
+  display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 8px;
+  color: var(--text); text-decoration: none; cursor: pointer;
+}
+.nav a:hover { background: #ececef; }
+.nav a.active { background: var(--card); border: 1px solid var(--border); padding: 6px 9px; }
+.nav svg { width: 15px; height: 15px; color: var(--muted); flex-shrink: 0; }
+.nav-label { color: var(--faint); font-size: 11px; padding: 14px 10px 4px; }
+.status-card {
+  margin-top: auto; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px;
+}
+.status-card b { display: flex; align-items: center; gap: 8px; }
+.status-card p { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+
+/* ---------- Header ---------- */
+.header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+.header h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; }
+.header p { margin: 4px 0 0; color: var(--muted); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--card); cursor: pointer; white-space: nowrap;
+  box-shadow: 0 1px 1px rgba(0,0,0,.03);
+}
+.btn:hover { background: #f4f4f5; }
+.btn.primary { background: var(--text); border-color: var(--text); color: #fff; }
+.btn.primary:hover { background: #2e2e33; }
+.btn.small { padding: 3px 9px; font-size: 12px; }
+.btn.danger { color: var(--red); }
+.btn svg { width: 14px; height: 14px; }
+
+/* ---------- Cards ---------- */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); }
+.card-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+}
+.card-head h2 { font-size: 14px; font-weight: 600; }
+.card-head .hint { color: var(--muted); font-size: 12px; font-weight: 400; margin-left: 6px; }
+.card-body { padding: 14px 16px; }
+.eyebrow {
+  font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+  display: flex; align-items: center; gap: 8px;
+}
+.view { display: grid; gap: 14px; }
+.view[hidden] { display: none; }
+.view-link { color: var(--blue); cursor: pointer; font-size: 12px; text-decoration: none; }
+.view-link:hover { text-decoration: underline; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.grid-2-wide { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; }
+
+/* ---------- KPI strip ---------- */
+.kpis { display: grid; grid-template-columns: repeat(5, 1fr); }
+.kpi { padding: 14px 16px; border-right: 1px solid var(--border); }
+.kpi:last-child { border-right: 0; }
+.kpi-label { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
+.kpi-value { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin: 8px 0 8px; }
+.kpi-value small { font-size: 12px; color: var(--muted); font-weight: 400; margin-left: 4px; letter-spacing: 0; }
+.kpi-sub { color: var(--muted); font-size: 11px; margin-top: 8px; display: flex; gap: 10px; flex-wrap: wrap; }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.segbar { display: flex; gap: 3px; height: 4px; }
+.segbar span { border-radius: 4px; flex-grow: 1; }
+
+/* ---------- Bars ---------- */
+.bar-row { display: grid; grid-template-columns: 130px 1fr 80px; gap: 12px; align-items: center; padding: 7px 0; }
+.bar-row .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { height: 6px; background: #f0f0f2; border-radius: 6px; overflow: hidden; display: flex; }
+.bar-track span { height: 100%; }
+.bar-row .value { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.big-number { font-size: 34px; font-weight: 600; letter-spacing: -0.03em; }
+.legend { display: flex; gap: 14px; color: var(--muted); font-size: 12px; margin: 4px 0 12px; flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ---------- Tables ---------- */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left; font-weight: 500; color: var(--muted); font-size: 12px;
+  padding: 8px 12px; border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+th:first-child, td:first-child { padding-left: 16px; }
+td { padding: 9px 12px; border-bottom: 1px solid #f1f1f3; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: #fafafa; }
+td.num { font-variant-numeric: tabular-nums; }
+td.row-actions { text-align: right; }
+td.row-actions .btn { margin-left: 4px; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+.muted { color: var(--muted); }
+.empty { padding: 26px 16px; text-align: center; color: var(--muted); }
+
+/* ---------- Pills ---------- */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 999px;
+  font-size: 12px; background: #f1f1f3; color: var(--text);
+}
+.pill.blue { background: var(--blue-soft); color: #2f56b8; }
+.pill.green { background: var(--green-soft); color: #23784f; }
+.pill.orange { background: var(--orange-soft); color: #b3601f; }
+.pill.red { background: var(--red-soft); color: #c0353a; }
+.pill.yellow { background: var(--yellow-soft); color: #8d6a0f; }
+
+/* ---------- Toolbar, tabs, inputs ---------- */
+.toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.input, select.input {
+  border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; background: var(--card); min-width: 0;
+}
+.input:focus { outline: 2px solid var(--blue-soft); border-color: var(--blue); }
+.tabs { display: inline-flex; background: #f1f1f3; border-radius: 8px; padding: 2px; }
+.tabs button { border: 0; background: transparent; padding: 4px 12px; border-radius: 6px; cursor: pointer; color: var(--muted); }
+.tabs button.active { background: var(--card); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+.lookup-result { margin-top: 10px; }
+
+/* ---------- Break-it list ---------- */
+.break-row {
+  display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center;
+  padding: 8px 16px; border-bottom: 1px solid #f1f1f3;
+}
+.break-row:last-child { border-bottom: 0; }
+.break-row .what b { display: block; font-weight: 500; }
+.break-row .what span { color: var(--muted); font-size: 12px; }
+
+/* ---------- API activity ---------- */
+.activity { display: grid; grid-template-columns: 1fr 1fr; }
+.activity-list { border-right: 1px solid var(--border); max-height: 380px; overflow-y: auto; }
+.activity-list tr { cursor: pointer; }
+.activity-list tr.selected { background: var(--blue-soft); }
+.activity-detail { padding: 14px 16px; max-height: 380px; overflow-y: auto; }
+.activity-detail h3 { font-size: 12px; color: var(--muted); font-weight: 500; margin: 12px 0 6px; }
+.activity-detail h3:first-child { margin-top: 0; }
+pre {
+  margin: 0; background: #f7f7f8; border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px; font-size: 12px; white-space: pre-wrap; word-break: break-word;
+}
+
+/* ---------- Dialog (forms) ---------- */
+dialog {
+  border: 1px solid var(--border); border-radius: 14px; padding: 0; width: min(560px, calc(100vw - 32px));
+  box-shadow: 0 20px 50px rgba(0,0,0,.15);
+}
+dialog::backdrop { background: rgba(24,24,27,.25); }
+.dialog-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.dialog-head h2 { font-size: 15px; font-weight: 600; }
+.dialog-body { padding: 16px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.dialog-body label { display: grid; gap: 4px; color: var(--muted); font-size: 12px; }
+.dialog-body label.full { grid-column: 1 / -1; }
+.dialog-foot { padding: 12px 18px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.form-note { color: var(--muted); font-size: 12px; }
+.form-error {
+  grid-column: 1 / -1; background: var(--red-soft); color: #a32a2f; border-radius: 8px; padding: 8px 10px; display: none;
+}
+
+/* ---------- Toasts ---------- */
+.toasts { position: fixed; right: 20px; bottom: 20px; display: grid; gap: 8px; z-index: 10; }
+.toast {
+  background: var(--text); color: #fff; padding: 10px 14px; border-radius: 10px; max-width: 360px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.2); font-size: 12px;
+}
+.toast.error { background: #a32a2f; }
+
+/* ---------- Narrow screens ---------- */
+@media (max-width: 1100px) {
+  .kpis { grid-template-columns: repeat(3, 1fr); }
+  .kpi:nth-child(3) { border-right: 0; }
+  .kpi:nth-child(n+4) { border-top: 1px solid var(--border); }
+  .grid-2, .grid-2-wide, .activity { grid-template-columns: 1fr; }
+  .activity-list { border-right: 0; border-bottom: 1px solid var(--border); }
+}
+@media (max-width: 760px) {
+  .app { flex-direction: column; padding: 8px; }
+  .sidebar { width: auto; height: auto; position: static; }
+  .main { padding: 18px 16px 30px; }
+  .kpis { grid-template-columns: 1fr 1fr; }
+  .kpi { border-right: 0; border-top: 1px solid var(--border); }
+  .dialog-body { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= Sidebar ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">A</div>
+      <div><b>AgroPilot</b><span>Registry service</span></div>
+    </div>
+    <nav class="nav">
+      <a data-view="overview" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</a>
+      <a data-view="farms"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>Farms</a>
+      <a data-view="plots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg>Plots</a>
+      <a data-view="catalogues"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/></svg>Catalogues</a>
+      <div class="nav-label">Developer</div>
+      <a data-view="break"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>Try to break it</a>
+      <a data-view="activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>API activity</a>
+    </nav>
+    <div class="status-card">
+      <b><span class="dot" id="health-dot" style="background:var(--faint)"></span><span id="health-title">Checking…</span></b>
+      <p id="health-text">Contacting the service.</p>
+    </div>
+  </aside>
+
+  <!-- ================= Main ================= -->
+  <main class="main">
+    <div class="header">
+      <div>
+        <h1 id="greeting">Welcome back</h1>
+        <p id="subtitle">Farms, plots and catalogues in the AgroPilot registry.</p>
+      </div>
+      <div class="actions">
+        <button class="btn" id="refresh-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>Refresh</button>
+        <button class="btn" id="new-farm-btn">+ New farm</button>
+        <button class="btn primary" id="new-plot-btn">+ New plot</button>
+      </div>
+    </div>
+
+    <!-- ===== View: Overview (a glance; each card links to its full view) ===== -->
+    <section class="view" data-view="overview">
+      <div class="card kpis" id="kpis"></div>
+      <div class="grid-2-wide">
+        <div class="card">
+          <div class="card-head"><h2>Planted area by farm<span class="hint">m², split by crop</span></h2></div>
+          <div class="card-body" id="area-chart"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Farms<span class="hint" id="overview-farm-count"></span></h2><a class="view-link" data-goto="farms">View all →</a></div>
+          <div class="table-wrap"><table><tbody id="overview-farms"></tbody></table></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head"><h2>Recent plantings<span class="hint">latest 5</span></h2><a class="view-link" data-goto="plots">View all →</a></div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Plot</th><th>Farm</th><th>Crop</th><th>Planted</th></tr></thead>
+            <tbody id="overview-plots"></tbody>
+          </table></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Last requests<span class="hint">latest 5</span></h2><a class="view-link" data-goto="activity">View all →</a></div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Request</th><th>Status</th><th>Time</th></tr></thead>
+            <tbody id="overview-activity"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== View: Farms ===== -->
+    <section class="view" data-view="farms" hidden>
+      <div class="card">
+        <div class="card-head">
+          <h2>Farms<span class="hint" id="farm-count"></span></h2>
+          <button class="btn small primary" id="new-farm-btn-2">+ New farm</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Farm</th><th>Plots</th><th>Planted area</th><th>Crops</th><th>Id</th><th></th></tr></thead>
+          <tbody id="farm-rows"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- ===== View: Plots ===== -->
+    <section class="view" data-view="plots" hidden>
+      <div class="card">
+        <div class="card-head">
+          <h2>Plots<span class="hint" id="plot-count"></span></h2>
+          <div class="toolbar">
+            <select class="input" id="plot-filter" title="Uses GET /v1/plots?farm_id="></select>
+            <button class="btn small primary" id="new-plot-btn-2">+ New plot</button>
+          </div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr>
+            <th>Plot</th><th>Farm</th><th>Crop</th><th>Area</th><th>Planted</th>
+            <th>Soil</th><th>Emitter</th><th>Row × emitter</th><th>Lat, lon</th><th></th>
+          </tr></thead>
+          <tbody id="plot-rows"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- ===== View: Catalogues ===== -->
+    <section class="view" data-view="catalogues" hidden>
+      <div class="card">
+        <div class="card-head">
+          <h2>Catalogues<span class="hint">read-only</span></h2>
+          <div class="tabs" id="catalogue-tabs">
+            <button data-kind="crops" class="active">Crops</button>
+            <button data-kind="soils">Soils</button>
+            <button data-kind="emitters">Emitters</button>
+          </div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead id="catalogue-head"></thead>
+          <tbody id="catalogue-rows"></tbody>
+        </table></div>
+        <div class="card-body" style="border-top:1px solid var(--border)">
+          <div class="eyebrow">Look up by id</div>
+          <div class="toolbar" style="margin-top:8px">
+            <select class="input" id="lookup-kind">
+              <option value="crops">crops</option><option value="soils">soils</option><option value="emitters">emitters</option>
+            </select>
+            <input class="input" id="lookup-id" placeholder="e.g. tomato" style="flex:1">
+            <button class="btn" id="lookup-btn">Get</button>
+          </div>
+          <div class="lookup-result" id="lookup-result"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== View: Try to break it ===== -->
+    <section class="view" data-view="break" hidden>
+      <div class="card">
+        <div class="card-head">
+          <h2>Try to break it<span class="hint">bad requests, expected errors</span></h2>
+          <button class="btn small primary" id="break-all-btn">Run all</button>
+        </div>
+        <div id="break-rows"></div>
+      </div>
+    </section>
+
+    <!-- ===== View: API activity ===== -->
+    <section class="view" data-view="activity" hidden>
+      <div class="card">
+        <div class="card-head">
+          <h2>API activity<span class="hint">every request this page sent</span></h2>
+          <button class="btn small" id="clear-activity-btn">Clear</button>
+        </div>
+        <div class="activity">
+          <div class="activity-list"><table>
+            <thead><tr><th>Request</th><th>Status</th><th>Time</th></tr></thead>
+            <tbody id="activity-rows"></tbody>
+          </table></div>
+          <div class="activity-detail" id="activity-detail"><div class="muted">Select a request to see its details.</div></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ================= Dialog used by every form ================= -->
+<dialog id="dialog">
+  <form method="dialog" id="dialog-form" novalidate>
+    <div class="dialog-head"><h2 id="dialog-title"></h2><button class="btn small" value="cancel">Close</button></div>
+    <div class="dialog-body" id="dialog-body"></div>
+    <div class="dialog-foot">
+      <span class="form-note" id="dialog-note"></span>
+      <button class="btn primary" id="dialog-submit" value="submit">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+// ============================================================
+// State: the latest data loaded from the API.
+// ============================================================
+const state = {
+  farms: [], allPlots: [], tablePlots: [],
+  crops: [], soils: [], emitters: [],
+  filterFarmId: "", catalogueKind: "crops",
+  activity: [], selectedActivity: null,
+};
+
+const CROP_COLORS = { "tomato": "var(--red)", "bell-pepper": "var(--green)" };
+const FARM_COLORS = ["var(--blue)", "var(--orange)", "var(--green)", "var(--yellow)", "var(--red)"];
+
+// ============================================================
+// Small helpers
+// ============================================================
+
+// Escape text before putting it into HTML (names come from users).
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+const $ = (id) => document.getElementById(id);
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const fmt = (n, digits = 0) => Number(n).toLocaleString("en-US", { maximumFractionDigits: digits });
+const farmName = (id) => state.farms.find((f) => f.id === id)?.name ?? "Unknown farm";
+const cropName = (id) => state.crops.find((c) => c.id === id)?.name ?? id;
+const soilName = (id) => state.soils.find((s) => s.id === id)?.name ?? id;
+const cropPill = (id) => `<span class="pill ${id === "tomato" ? "red" : id === "bell-pepper" ? "green" : "blue"}">${esc(cropName(id))}</span>`;
+const emitterLabel = (id) => {
+  const e = state.emitters.find((x) => x.id === id);
+  return e ? `${e.name} ${e.flow_lph.toFixed(1)} L/h` : id;
+};
+
+// Colour of a status pill: green 2xx, yellow 404, orange 4xx, red 5xx or network failure.
+function statusPill(status) {
+  const color = status >= 200 && status < 300 ? "green" : status === 404 ? "yellow" : status >= 400 && status < 500 ? "orange" : "red";
+  return `<span class="pill ${color}">${status || "network"}</span>`;
+}
+
+function toast(message, isError = false) {
+  const el = document.createElement("div");
+  el.className = "toast" + (isError ? " error" : "");
+  el.textContent = message;
+  $("toasts").append(el);
+  setTimeout(() => el.remove(), 4500);
+}
+
+// Turn a problem+json body into one readable line.
+const problemText = (r) => r.data?.detail ? `${r.status} ${r.data.code ?? ""} · ${r.data.detail}` : `Request failed (${r.status || "network error"})`;
+
+// ============================================================
+// API: one function sends every request and records it for the activity panel.
+// ============================================================
+async function api(method, path, body, { log = true } = {}) {
+  const options = { method, headers: {} };
+  if (body !== undefined) {
+    options.headers["content-type"] = "application/json";
+    options.body = typeof body === "string" ? body : JSON.stringify(body);
+  }
+  const started = performance.now();
+  const result = { method, path, requestBody: options.body ?? null, status: 0, ok: false, headers: {}, data: null, ms: 0 };
+  try {
+    const response = await fetch(path, options);
+    result.status = response.status;
+    result.ok = response.ok;
+    for (const name of ["content-type", "allow", "retry-after"]) {
+      if (response.headers.has(name)) result.headers[name] = response.headers.get(name);
+    }
+    const text = await response.text();
+    try { result.data = text ? JSON.parse(text) : null; } catch { result.data = text; }
+  } catch (error) {
+    result.data = { error: String(error) };
+  }
+  result.ms = performance.now() - started;
+  if (log) recordActivity(result);
+  return result;
+}
+
+// ============================================================
+// Loading data
+// ============================================================
+
+// Load everything the page shows. Catalogues rarely change but are cheap to reload.
+async function loadAll() {
+  const [farms, plots, crops, soils, emitters] = await Promise.all([
+    api("GET", "/v1/farms"), api("GET", "/v1/plots"),
+    api("GET", "/v1/crops"), api("GET", "/v1/soils"), api("GET", "/v1/emitters"),
+  ]);
+  const failed = [farms, plots, crops, soils, emitters].find((r) => !r.ok);
+  if (failed) toast(problemText(failed), true);
+  state.farms = farms.ok ? farms.data : [];
+  state.allPlots = plots.ok ? plots.data : [];
+  state.crops = crops.ok ? crops.data : [];
+  state.soils = soils.ok ? soils.data : [];
+  state.emitters = emitters.ok ? emitters.data : [];
+  if (state.filterFarmId && !state.farms.some((f) => f.id === state.filterFarmId)) state.filterFarmId = "";
+  await loadTablePlots();
+  render();
+}
+
+// The plots table uses the API's own filter (?farm_id=) rather than filtering in the browser.
+async function loadTablePlots() {
+  if (!state.filterFarmId) { state.tablePlots = state.allPlots; return; }
+  const r = await api("GET", `/v1/plots?farm_id=${encodeURIComponent(state.filterFarmId)}`);
+  state.tablePlots = r.ok ? r.data : [];
+}
+
+// ============================================================
+// Rendering
+// ============================================================
+function render() {
+  renderKpis();
+  renderAreaChart();
+  renderOverviewFarms();
+  renderOverviewPlots();
+  renderFarms();
+  renderPlotFilter();
+  renderPlots();
+  renderCatalogue();
+}
+
+// Top strip: five headline numbers, in the style of a dashboard summary.
+function renderKpis() {
+  const plots = state.allPlots;
+  const totalArea = plots.reduce((sum, p) => sum + p.area_m2, 0);
+  const plotsPerFarm = state.farms.map((f) => plots.filter((p) => p.farm_id === f.id).length);
+  const emptyFarms = plotsPerFarm.filter((n) => n === 0).length;
+  const areaByCrop = state.crops.map((c) => ({ crop: c, area: plots.filter((p) => p.crop_id === c.id).reduce((s, p) => s + p.area_m2, 0) }));
+  const latest = [...plots].sort((a, b) => b.planting_date.localeCompare(a.planting_date))[0];
+  const todayLocal = new Date(); todayLocal.setHours(0, 0, 0, 0);
+  const daysAgo = latest ? Math.round((todayLocal - new Date(`${latest.planting_date}T00:00`)) / 86400000) : null;
+
+  const farmSegments = state.farms.map((f, i) => `<span style="background:${FARM_COLORS[i % FARM_COLORS.length]};flex-grow:${Math.max(plotsPerFarm[i], 0.15)}"></span>`).join("");
+  const cropSegments = areaByCrop.map(({ crop, area }) => `<span style="background:${CROP_COLORS[crop.id] ?? "var(--blue)"};flex-grow:${area || 0.01}"></span>`).join("");
+
+  $("kpis").innerHTML = `
+    <div class="kpi">
+      <div class="kpi-label"><span class="dot" style="background:var(--blue)"></span>Farms</div>
+      <div class="kpi-value">${state.farms.length}<small>registered</small></div>
+      <div class="segbar">${farmSegments || '<span style="background:#eee"></span>'}</div>
+      <div class="kpi-sub"><span>● ${state.farms.length - emptyFarms} with plots</span><span>● ${emptyFarms} empty</span></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label"><span class="dot" style="background:var(--green)"></span>Plots</div>
+      <div class="kpi-value">${plots.length}<small>${state.farms.length ? `≈ ${fmt(plots.length / state.farms.length, 1)} per farm` : ""}</small></div>
+      <div class="segbar"><span style="background:var(--green)"></span></div>
+      <div class="kpi-sub"><span>${new Set(plots.map((p) => p.crop_id)).size} crops planted</span></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label"><span class="dot" style="background:var(--orange)"></span>Planted area</div>
+      <div class="kpi-value">${fmt(totalArea)}<small>m² · ${fmt(totalArea / 1000, 1)} dunam</small></div>
+      <div class="segbar">${cropSegments || '<span style="background:#eee"></span>'}</div>
+      <div class="kpi-sub">${areaByCrop.map(({ crop, area }) => `<span><span class="dot" style="background:${CROP_COLORS[crop.id] ?? "var(--blue)"}"></span> ${esc(crop.name)} ${fmt(area)}</span>`).join("")}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label"><span class="dot" style="background:var(--yellow)"></span>Latest planting</div>
+      <div class="kpi-value">${latest ? esc(latest.planting_date) : "—"}</div>
+      <div class="segbar"><span style="background:var(--yellow)"></span></div>
+      <div class="kpi-sub">${latest ? `<span>${esc(latest.name)} · ${daysAgo === 0 ? "today" : `${plural(daysAgo, "day")} ago`}</span>` : "<span>No plots yet</span>"}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label"><span class="dot" style="background:var(--faint)"></span>Catalogue</div>
+      <div class="kpi-value">${state.crops.length} · ${state.soils.length} · ${state.emitters.length}</div>
+      <div class="segbar"><span style="background:var(--red)"></span><span style="background:var(--orange)"></span><span style="background:var(--blue)"></span></div>
+      <div class="kpi-sub"><span>crops · soils · emitters</span></div>
+    </div>`;
+}
+
+// Horizontal bars: area per farm, each bar split by crop.
+function renderAreaChart() {
+  const rows = state.farms.map((f) => {
+    const farmPlots = state.allPlots.filter((p) => p.farm_id === f.id);
+    return { farm: f, total: farmPlots.reduce((s, p) => s + p.area_m2, 0), plots: farmPlots };
+  });
+  const max = Math.max(1, ...rows.map((r) => r.total));
+  const total = rows.reduce((s, r) => s + r.total, 0);
+  const legend = state.crops.map((c) => `<span><span class="dot" style="background:${CROP_COLORS[c.id] ?? "var(--blue)"}"></span>${esc(c.name)}</span>`).join("");
+  const bars = rows.map(({ farm, total, plots }) => {
+    const parts = state.crops.map((c) => {
+      const area = plots.filter((p) => p.crop_id === c.id).reduce((s, p) => s + p.area_m2, 0);
+      return area ? `<span style="width:${(area / max) * 100}%;background:${CROP_COLORS[c.id] ?? "var(--blue)"}"></span>` : "";
+    }).join("");
+    return `<div class="bar-row"><span class="name">${esc(farm.name)}</span><div class="bar-track">${parts}</div><span class="value">${fmt(total)} m²</span></div>`;
+  }).join("");
+  $("area-chart").innerHTML = `
+    <div class="eyebrow">Total planted</div>
+    <div class="big-number">${fmt(total)} <span class="muted" style="font-size:14px;font-weight:400">m²</span></div>
+    <div class="legend">${legend}</div>
+    ${bars || '<div class="empty">No farms yet.</div>'}`;
+}
+
+// Overview card: each farm with its plot count.
+function renderOverviewFarms() {
+  $("overview-farm-count").textContent = `${state.farms.length} total`;
+  $("overview-farms").innerHTML = state.farms.slice(0, 6).map((f, i) => {
+    const count = state.allPlots.filter((p) => p.farm_id === f.id).length;
+    return `<tr>
+      <td><span class="dot" style="background:${FARM_COLORS[i % FARM_COLORS.length]};margin-right:8px"></span>${esc(f.name)}</td>
+      <td style="text-align:right">${count ? `<span class="pill blue">${plural(count, "plot")}</span>` : '<span class="pill">empty</span>'}</td></tr>`;
+  }).join("") || '<tr><td class="empty">No farms yet.</td></tr>';
+}
+
+// Overview card: the five most recently planted plots.
+function renderOverviewPlots() {
+  const latest = [...state.allPlots].sort((a, b) => b.planting_date.localeCompare(a.planting_date)).slice(0, 5);
+  $("overview-plots").innerHTML = latest.map((p) => `<tr>
+      <td><b style="font-weight:500">${esc(p.name)}</b></td>
+      <td class="muted">${esc(farmName(p.farm_id))}</td>
+      <td>${cropPill(p.crop_id)}</td>
+      <td class="num">${esc(p.planting_date)}</td></tr>`).join("") || '<tr><td colspan="4" class="empty">No plots yet.</td></tr>';
+}
+
+// Farms view: every farm with its plots, area and crops.
+function renderFarms() {
+  $("farm-count").textContent = `${state.farms.length} total`;
+  $("farm-rows").innerHTML = state.farms.map((f, i) => {
+    const plots = state.allPlots.filter((p) => p.farm_id === f.id);
+    const area = plots.reduce((s, p) => s + p.area_m2, 0);
+    const crops = [...new Set(plots.map((p) => p.crop_id))].map(cropPill).join(" ");
+    return `<tr>
+      <td><span class="dot" style="background:${FARM_COLORS[i % FARM_COLORS.length]};margin-right:8px"></span>${esc(f.name)}</td>
+      <td class="num">${plots.length ? `<span class="pill blue">${plural(plots.length, "plot")}</span>` : '<span class="pill">empty</span>'}</td>
+      <td class="num">${fmt(area)} m²</td>
+      <td>${crops || '<span class="muted">—</span>'}</td>
+      <td class="mono muted">${esc(f.id.slice(0, 8))}…</td>
+      <td class="row-actions">
+        <button class="btn small" onclick="showFarmPlots('${f.id}')">Plots</button>
+        <button class="btn small" onclick="openFarmForm('${f.id}')">Rename</button>
+        <button class="btn small danger" onclick="deleteFarm('${f.id}')">Delete</button>
+      </td></tr>`;
+  }).join("") || '<tr><td colspan="6" class="empty">No farms yet. Create one.</td></tr>';
+}
+
+function renderPlotFilter() {
+  $("plot-filter").innerHTML = `<option value="">All farms</option>` +
+    state.farms.map((f) => `<option value="${f.id}" ${f.id === state.filterFarmId ? "selected" : ""}>${esc(f.name)}</option>`).join("");
+}
+
+function renderPlots() {
+  $("plot-count").textContent = state.filterFarmId ? `${state.tablePlots.length} on ${farmName(state.filterFarmId)}` : `${state.tablePlots.length} total`;
+  $("plot-rows").innerHTML = state.tablePlots.map((p) => `<tr>
+      <td><b style="font-weight:500">${esc(p.name)}</b></td>
+      <td class="muted">${esc(farmName(p.farm_id))}</td>
+      <td>${cropPill(p.crop_id)}</td>
+      <td class="num">${fmt(p.area_m2)} m²</td>
+      <td class="num">${esc(p.planting_date)}</td>
+      <td>${esc(soilName(p.soil_id))}</td>
+      <td>${esc(emitterLabel(p.emitter_id))}</td>
+      <td class="num">${fmt(p.row_spacing_m, 2)} m × ${fmt(p.emitter_spacing_m, 2)} m</td>
+      <td class="num muted">${fmt(p.lat, 4)}, ${fmt(p.lon, 4)}</td>
+      <td class="row-actions">
+        <button class="btn small" onclick="openPlotForm('${p.id}')">Edit</button>
+        <button class="btn small danger" onclick="deletePlot('${p.id}')">Delete</button>
+      </td></tr>`).join("") || '<tr><td colspan="10" class="empty">No plots here. Add one with “New plot”.</td></tr>';
+}
+
+// One table for whichever catalogue tab is active.
+function renderCatalogue() {
+  const kind = state.catalogueKind;
+  const columns = { crops: ["id", "name"], soils: ["id", "name", "available_water_mm_per_m"], emitters: ["id", "name", "flow_lph"] }[kind];
+  const labels = { id: "Id", name: "Name", available_water_mm_per_m: "Available water (mm/m)", flow_lph: "Flow (L/h)" };
+  $("catalogue-head").innerHTML = `<tr>${columns.map((c) => `<th>${labels[c]}</th>`).join("")}</tr>`;
+  $("catalogue-rows").innerHTML = state[kind].map((row) =>
+    `<tr>${columns.map((c) => `<td class="${c === "id" ? "mono" : typeof row[c] === "number" ? "num" : ""}">${esc(row[c])}</td>`).join("")}</tr>`
+  ).join("") || `<tr><td colspan="${columns.length}" class="empty">Not loaded.</td></tr>`;
+  document.querySelectorAll("#catalogue-tabs button").forEach((b) => b.classList.toggle("active", b.dataset.kind === kind));
+}
+
+// ============================================================
+// Farms: create, rename, delete
+// ============================================================
+function openFarmForm(farmId) {
+  const farm = state.farms.find((f) => f.id === farmId);
+  openDialog({
+    title: farm ? "Rename farm" : "New farm",
+    note: farm ? "PATCH sends only the name." : "POST /v1/farms",
+    fields: `<label class="full">Name<input class="input" name="name" value="${esc(farm?.name ?? "")}" autofocus></label>`,
+    onSubmit: async (form) => {
+      const body = { name: form.name.value };
+      return farm ? api("PATCH", `/v1/farms/${farm.id}`, body) : api("POST", "/v1/farms", body);
+    },
+    success: farm ? "Farm renamed" : "Farm created",
+  });
+}
+
+async function deleteFarm(farmId) {
+  if (!confirm(`Delete farm “${farmName(farmId)}”?`)) return;
+  const r = await api("DELETE", `/v1/farms/${farmId}`);
+  if (r.ok) { toast("Farm deleted"); await loadAll(); }
+  else toast(problemText(r), true);  // e.g. 409: farm still has plots
+}
+
+function showFarmPlots(farmId) {
+  state.filterFarmId = farmId;
+  loadTablePlots().then(() => { renderPlotFilter(); renderPlots(); showView("plots"); });
+}
+
+// ============================================================
+// Plots: create, edit (PATCH only what changed), delete
+// ============================================================
+const PLOT_NUMBER_FIELDS = ["area_m2", "row_spacing_m", "emitter_spacing_m", "lat", "lon"];
+
+function options(list, selected, label = (x) => x.name) {
+  return list.map((x) => `<option value="${esc(x.id)}" ${x.id === selected ? "selected" : ""}>${esc(label(x))}</option>`).join("");
+}
+
+function openPlotForm(plotId) {
+  const plot = state.allPlots.find((p) => p.id === plotId);
+  const v = plot ?? { farm_id: state.filterFarmId || state.farms[0]?.id, planting_date: new Date().toISOString().slice(0, 10) };
+  openDialog({
+    title: plot ? `Edit “${plot.name}”` : "New plot",
+    note: plot ? "PATCH sends only the fields you change." : "The API checks every field; this form doesn't.",
+    fields: `
+      <label class="full">Farm<select class="input" name="farm_id">${options(state.farms, v.farm_id)}</select></label>
+      <label class="full">Name<input class="input" name="name" value="${esc(v.name ?? "")}"></label>
+      <label>Area (m²)<input class="input" name="area_m2" type="number" step="any" value="${v.area_m2 ?? ""}"></label>
+      <label>Planting date<input class="input" name="planting_date" type="date" value="${esc(v.planting_date ?? "")}"></label>
+      <label>Crop<select class="input" name="crop_id">${options(state.crops, v.crop_id)}</select></label>
+      <label>Soil<select class="input" name="soil_id">${options(state.soils, v.soil_id, (s) => `${s.name} · ${s.available_water_mm_per_m} mm/m`)}</select></label>
+      <label class="full">Emitter<select class="input" name="emitter_id">${options(state.emitters, v.emitter_id, (e) => `${e.name} · ${e.flow_lph.toFixed(1)} L/h`)}</select></label>
+      <label>Row spacing (m)<input class="input" name="row_spacing_m" type="number" step="any" value="${v.row_spacing_m ?? ""}"></label>
+      <label>Emitter spacing (m)<input class="input" name="emitter_spacing_m" type="number" step="any" value="${v.emitter_spacing_m ?? ""}"></label>
+      <label>Latitude<input class="input" name="lat" type="number" step="any" value="${v.lat ?? ""}"></label>
+      <label>Longitude<input class="input" name="lon" type="number" step="any" value="${v.lon ?? ""}"></label>`,
+    onSubmit: async (form) => {
+      const values = readPlotForm(form);
+      if (!plot) return api("POST", "/v1/plots", values);
+      const changes = Object.fromEntries(Object.entries(values).filter(([k, val]) => val !== plot[k]));
+      return api("PATCH", `/v1/plots/${plot.id}`, changes);
+    },
+    success: plot ? "Plot updated" : "Plot created",
+  });
+}
+
+// Read the form into a plot body. Empty number fields are left out so the API reports them as missing.
+function readPlotForm(form) {
+  const body = {};
+  for (const el of form.elements) {
+    if (!el.name) continue;
+    if (PLOT_NUMBER_FIELDS.includes(el.name)) { if (el.value !== "") body[el.name] = Number(el.value); }
+    else body[el.name] = el.value;
+  }
+  return body;
+}
+
+async function deletePlot(plotId) {
+  const plot = state.allPlots.find((p) => p.id === plotId);
+  if (!confirm(`Delete plot “${plot?.name}”?`)) return;
+  const r = await api("DELETE", `/v1/plots/${plotId}`);
+  if (r.ok) { toast("Plot deleted"); await loadAll(); }
+  else toast(problemText(r), true);
+}
+
+// ============================================================
+// Dialog: one form for farms and plots. API errors are shown inside it.
+// ============================================================
+let dialogSubmit = null;
+
+function openDialog({ title, note, fields, onSubmit, success }) {
+  $("dialog-title").textContent = title;
+  $("dialog-note").textContent = note;
+  $("dialog-body").innerHTML = `<div class="form-error" id="form-error"></div>${fields}`;
+  dialogSubmit = { onSubmit, success };
+  $("dialog").showModal();
+}
+
+$("dialog-form").addEventListener("submit", async (event) => {
+  if (event.submitter?.value !== "submit") return;  // "Close" just closes
+  event.preventDefault();
+  const r = await dialogSubmit.onSubmit($("dialog-form"));
+  if (r.ok) {
+    $("dialog").close();
+    toast(dialogSubmit.success);
+    await loadAll();
+  } else {
+    $("form-error").style.display = "block";
+    $("form-error").textContent = problemText(r);
+  }
+});
+
+// ============================================================
+// Catalogue lookup: GET /v1/{kind}/{id}
+// ============================================================
+async function lookup() {
+  const kind = $("lookup-kind").value;
+  const id = $("lookup-id").value.trim();
+  const r = await api("GET", `/v1/${kind}/${encodeURIComponent(id)}`);
+  $("lookup-result").innerHTML = `${statusPill(r.status)} <span class="muted mono">GET /v1/${esc(kind)}/${esc(id)}</span><pre style="margin-top:8px">${esc(JSON.stringify(r.data, null, 2))}</pre>`;
+}
+
+// ============================================================
+// "Try to break it": bad requests, each with the status the spec says it must get.
+// ============================================================
+function futureDate() {
+  const d = new Date(); d.setDate(d.getDate() + 3);
+  return d.toISOString().slice(0, 10);
+}
+
+// A valid plot body built from live data; each scenario breaks one thing.
+function validPlot(changes = {}) {
+  return {
+    farm_id: state.farms[0]?.id, name: `Test ${Date.now()}`, area_m2: 1000, crop_id: state.crops[0]?.id ?? "tomato",
+    planting_date: "2026-03-01", soil_id: state.soils[0]?.id ?? "loam", row_spacing_m: 1.5,
+    emitter_spacing_m: 0.4, emitter_id: state.emitters[0]?.id ?? "dripnet-pc-1.0", lat: 31.25, lon: 34.79, ...changes,
+  };
+}
+
+const firstPlot = () => state.allPlots[0];
+const farmWithPlots = () => state.farms.find((f) => state.allPlots.some((p) => p.farm_id === f.id));
+
+const BREAKERS = [
+  { title: "Duplicate plot name on the same farm", why: "Plot names are unique inside one farm", expect: 409,
+    run: () => firstPlot() ? api("POST", "/v1/plots", validPlot({ farm_id: firstPlot().farm_id, name: firstPlot().name })) : null },
+  { title: "Area of 0 m²", why: "FR-1.3: area_m2 must be greater than 0", expect: 422,
+    run: () => api("POST", "/v1/plots", validPlot({ area_m2: 0 })) },
+  { title: "Planting date in the future", why: "FR-1.3: planting_date not in the future", expect: 422,
+    run: () => api("POST", "/v1/plots", validPlot({ planting_date: futureDate() })) },
+  { title: "Unknown emitter", why: "FR-1.3: emitter must be in the catalogue", expect: 422,
+    run: () => api("POST", "/v1/plots", validPlot({ emitter_id: "dripnet-pc-9.9" })) },
+  { title: "Latitude 91", why: "FR-1.3: lat from -90 to 90", expect: 422,
+    run: () => api("POST", "/v1/plots", validPlot({ lat: 91 })) },
+  { title: "Area sent as text \"1000\"", why: "Strict types: a number must be a JSON number", expect: 422,
+    run: () => api("POST", "/v1/plots", validPlot({ area_m2: "1000" })) },
+  { title: "Unknown field in the body", why: "Unknown fields are rejected", expect: 422,
+    run: () => api("POST", "/v1/farms", { name: "X", owner: "bob" }) },
+  { title: "Rename a farm to null", why: "PATCH may not erase a required field", expect: 422,
+    run: () => state.farms[0] ? api("PATCH", `/v1/farms/${state.farms[0].id}`, { name: null }) : null },
+  { title: "Delete a farm that still has plots", why: "Plots would be left without a farm", expect: 409,
+    run: () => farmWithPlots() ? api("DELETE", `/v1/farms/${farmWithPlots().id}`) : null },
+  { title: "POST to a read-only catalogue", why: "FR-1.2: catalogues only allow GET", expect: 405,
+    run: () => api("POST", "/v1/crops", { id: "banana", name: "Banana" }) },
+  { title: "Plot id that doesn't exist", why: "Unknown id", expect: 404,
+    run: () => api("GET", "/v1/plots/00000000-0000-0000-0000-000000000000") },
+  { title: "Typo in a query parameter (?farmid=)", why: "Unknown query parameters are rejected", expect: 422,
+    run: () => api("GET", "/v1/plots?farmid=abc") },
+];
+
+function renderBreakers() {
+  $("break-rows").innerHTML = BREAKERS.map((b, i) => `
+    <div class="break-row">
+      <div class="what"><b>${esc(b.title)}</b><span>${esc(b.why)} · expect ${b.expect}</span></div>
+      <span id="break-result-${i}"></span>
+      <button class="btn small" onclick="runBreaker(${i})">Run</button>
+    </div>`).join("");
+}
+
+// Run one scenario and show whether the API answered with the expected status.
+async function runBreaker(i) {
+  const breaker = BREAKERS[i];
+  const r = await breaker.run();
+  const cell = $(`break-result-${i}`);
+  if (!r) { cell.innerHTML = '<span class="pill">needs data</span>'; return; }
+  const passed = r.status === breaker.expect;
+  cell.innerHTML = `${statusPill(r.status)} <span class="pill ${passed ? "green" : "red"}">${passed ? "✓ handled" : "✗ unexpected"}</span>`;
+  if (r.ok) await loadAll();  // something was created or deleted after all: keep the page true
+}
+
+async function runAllBreakers() {
+  for (let i = 0; i < BREAKERS.length; i++) await runBreaker(i);
+}
+
+// ============================================================
+// API activity panel
+// ============================================================
+function recordActivity(entry) {
+  entry.time = new Date();
+  state.activity.unshift(entry);
+  state.activity = state.activity.slice(0, 100);
+  state.selectedActivity = entry;
+  renderActivity();
+}
+
+function renderActivity() {
+  $("overview-activity").innerHTML = state.activity.slice(0, 5).map((a) => `
+    <tr>
+      <td><span class="mono"><b>${a.method}</b> ${esc(a.path)}</span></td>
+      <td>${statusPill(a.status)}</td>
+      <td class="num muted">${fmt(a.ms, 1)} ms</td>
+    </tr>`).join("") || '<tr><td colspan="3" class="empty">No requests yet.</td></tr>';
+  $("activity-rows").innerHTML = state.activity.map((a, i) => `
+    <tr class="${a === state.selectedActivity ? "selected" : ""}" onclick="selectActivity(${i})">
+      <td><span class="mono"><b>${a.method}</b> ${esc(a.path)}</span></td>
+      <td>${statusPill(a.status)}</td>
+      <td class="num muted">${fmt(a.ms, 1)} ms</td>
+    </tr>`).join("") || '<tr><td colspan="3" class="empty">No requests yet.</td></tr>';
+
+  const a = state.selectedActivity;
+  $("activity-detail").innerHTML = !a ? '<div class="muted">Select a request to see its details.</div>' : `
+    <h3>Request</h3><pre>${a.method} ${esc(a.path)}${a.requestBody ? "\n\n" + esc(pretty(a.requestBody)) : ""}</pre>
+    <h3>Response · ${statusPill(a.status)} <span class="muted">${fmt(a.ms, 1)} ms</span></h3>
+    <pre>${esc(Object.entries(a.headers).map(([k, v]) => `${k}: ${v}`).join("\n") || "(no headers of interest)")}</pre>
+    <h3>Body</h3><pre>${a.data === null ? "(empty)" : esc(JSON.stringify(a.data, null, 2))}</pre>`;
+}
+
+function selectActivity(i) {
+  state.selectedActivity = state.activity[i];
+  renderActivity();
+}
+
+const pretty = (text) => { try { return JSON.stringify(JSON.parse(text), null, 2); } catch { return text; } };
+
+// ============================================================
+// Health: /health says the API is up; a list request says the database is up.
+// Polled every 5 s, and not logged in the activity panel.
+// ============================================================
+async function checkHealth() {
+  const health = await api("GET", "/health", undefined, { log: false });
+  const db = health.ok ? await api("GET", "/v1/crops", undefined, { log: false }) : null;
+  let color, title, text;
+  if (!health.ok) {
+    [color, title, text] = ["var(--red)", "API unreachable", "The service is not answering."];
+  } else if (!db.ok) {
+    const retry = db.headers["retry-after"];
+    [color, title, text] = ["var(--orange)", "Database unavailable", `${db.status} ${db.data?.code ?? ""}${retry ? ` · retry after ${retry} s` : ""}`];
+  } else {
+    [color, title, text] = ["var(--green)", "All systems normal", `API and database answering · ${fmt(db.ms, 0)} ms`];
+  }
+  $("health-dot").style.background = color;
+  $("health-title").textContent = title;
+  $("health-text").textContent = text;
+}
+
+// ============================================================
+// Wiring: buttons, navigation, start-up
+// ============================================================
+// Title and subtitle shown in the header for each view.
+const VIEWS = {
+  overview: [null, null],
+  farms: ["Farms", "Create, rename and delete farms. A farm with plots can't be deleted."],
+  plots: ["Plots", "Every plot, or one farm's plots. Create, edit (only changed fields are sent) and delete."],
+  catalogues: ["Catalogues", "Crops, soils and emitters. Read-only: any method but GET gets a 405."],
+  break: ["Try to break it", "Bad requests the API must refuse, each with the status the spec requires."],
+  activity: ["API activity", "Every request this page sent, with the raw response."],
+};
+
+// Show one view and hide the rest. The view name is kept in the URL (#plots), so a reload stays put.
+function showView(name) {
+  if (!VIEWS[name]) name = "overview";
+  document.querySelectorAll(".view").forEach((v) => v.hidden = v.dataset.view !== name);
+  document.querySelectorAll(".nav a").forEach((l) => l.classList.toggle("active", l.dataset.view === name));
+  const [title, subtitle] = VIEWS[name];
+  if (title) { $("greeting").textContent = title; $("subtitle").textContent = subtitle; }
+  else greet();
+  if (location.hash !== `#${name}`) history.replaceState(null, "", `#${name}`);
+}
+
+function greet() {
+  const hour = new Date().getHours();
+  $("greeting").textContent = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  $("subtitle").textContent = `AgroPilot registry · ${new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}`;
+}
+
+$("refresh-btn").onclick = loadAll;
+$("new-farm-btn").onclick = $("new-farm-btn-2").onclick = () => openFarmForm(null);
+$("new-plot-btn").onclick = $("new-plot-btn-2").onclick = () => openPlotForm(null);
+$("plot-filter").onchange = async (e) => { state.filterFarmId = e.target.value; await loadTablePlots(); renderPlots(); };
+$("lookup-btn").onclick = lookup;
+$("lookup-id").onkeydown = (e) => { if (e.key === "Enter") lookup(); };
+$("break-all-btn").onclick = runAllBreakers;
+$("clear-activity-btn").onclick = () => { state.activity = []; state.selectedActivity = null; renderActivity(); };
+document.querySelectorAll("#catalogue-tabs button").forEach((b) => b.onclick = () => { state.catalogueKind = b.dataset.kind; renderCatalogue(); });
+document.querySelectorAll(".nav a, .view-link").forEach((link) => link.onclick = () => showView(link.dataset.view ?? link.dataset.goto));
+
+showView(location.hash.slice(1));
+renderBreakers();
+renderActivity();
+loadAll();
+checkHealth();
+setInterval(checkHealth, 5000);
+</script>
+</body>
+</html>
