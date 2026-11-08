@@ -20,6 +20,7 @@ Every design decision made while building `services/registry-service`, and who m
 | Y6 | Code is simple and readable, with a short comment per function | Same reason. |
 | Y7 | Future work (after P1, separate branch): a UI, and deliberately breaking the database to prove every failure is handled | Not part of P1: the task says to delete unlisted functionality. **The UI part was later changed by Y8.** |
 | Y8 | Build a small UI now, on the same branch, in the P1 pull request, styled like a reference dashboard you supplied | You want visuals that show and exercise every feature. Trade-off accepted: a reviewer sees functionality the task doesn't list. |
+| Y9 | The two measurement scripts (`measure_latency.py`, `hammer.py`) are kept locally, not committed | They are tooling, not API features, and the task says to delete unlisted functionality. Replaces O36 and the "committed" part of O44. Trade-off: a reviewer cannot rerun the measurement; the README describes the method instead. |
 
 ## Ours
 

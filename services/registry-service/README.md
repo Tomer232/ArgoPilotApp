@@ -40,13 +40,7 @@ uv run pytest          # 412 tests, about 10 s
 
 ## Latency (NFR-1.1: p95 ≤ 100 ms at 10 req/s)
 
-To reproduce, start the service, then in another terminal run:
-
-```bash
-uv run python scripts/measure_latency.py
-```
-
-Each of the 10 GET endpoints was called at 10 req/s for 30 s. That is 300 requests per endpoint, with 0 errors.
+Method: each of the 10 GET endpoints was called at 10 req/s for 30 s, which is 300 requests per endpoint, with 0 errors. Requests went out on a fixed schedule without waiting for earlier answers, so a slow answer could not delay the next request and hide its slowness. The first 10 requests were a warm-up and not counted.
 
 | Data | Worst p95 | Slowest endpoint |
 | --- | --- | --- |
@@ -57,7 +51,7 @@ Test machine: i7-1165G7 laptop, WSL2, Python 3.12.16, one uvicorn worker, client
 
 ## Load limits
 
-`uv run python scripts/hammer.py` starts its own server on a scratch database and takes about 15 minutes.
+A separate load test raised the request rate and the data size until p95 went over 100 ms. It used one uvicorn worker and a scratch database.
 
 - **Request rate:** every GET stays at p95 ≤ 7 ms up to 200 req/s, and most stay there up to 400. Above about 200 req/s the laptop itself could not send requests fast enough, so those numbers are rough.
 - **Reads and writes mixed (80/20):** p95 ≤ 7 ms up to 200 req/s, with no errors.

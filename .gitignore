@@ -28,3 +28,6 @@ htmlcov/
 .idea/
 .vscode/*
 !.vscode/launch.json
+
+# Local measurement scripts (kept on disk, not committed: Y9)
+services/registry-service/scripts/
