@@ -1,0 +1,69 @@
+# Registry service
+
+The registry API for AgroPilot. It stores **farms** and **plots** (create, read, update, delete) and serves three read-only catalogues: **crops**, **soils** and **emitters**. It uses FastAPI with SQLite through the standard `sqlite3` module, with no ORM.
+
+Every error is RFC 9457 `application/problem+json` with a `code`: `VALIDATION` (422), `NOT_FOUND` (404), `CONFLICT` (409) or `UNAVAILABLE` (503, always with `Retry-After: 5`). A 405 has no `code` because none of the four fits; see the judgment log.
+
+## Run it
+
+Run these from this folder. You need [uv](https://docs.astral.sh/uv/) and `sqlite3`.
+
+```bash
+uv sync                               # create .venv with the dependencies
+bash seed_registry.sh                 # create registry.db with demo data
+uv run uvicorn main:app --port 8000
+```
+
+- API: `http://127.0.0.1:8000/v1/...`
+- Health check: `/health`
+- Demo UI: `/ui`
+
+To use another database file, set `REGISTRY_DB_PATH=/path/to/file.db`. The service never creates a missing database; it answers 503 instead.
+
+## Endpoints
+
+| Path | Methods |
+| --- | --- |
+| `/v1/farms`, `/v1/plots` | GET (list), POST |
+| `/v1/farms/{id}`, `/v1/plots/{id}` | GET, PATCH, DELETE |
+| `/v1/crops`, `/v1/soils`, `/v1/emitters` and `/{id}` | GET only (anything else: 405) |
+
+`GET /v1/plots?farm_id=...` filters plots by farm. Deleting a farm that still has plots gives 409.
+
+## Test it
+
+```bash
+uv run pytest          # 412 tests, about 10 s
+```
+
+`tests/test_matrix.py` is the break-the-API matrix. It covers bad field values, protocol abuse (wrong content type, broken JSON, huge bodies), broken databases (missing, read-only, locked, corrupt, bad rows) and concurrent writes.
+
+## Latency (NFR-1.1: p95 ≤ 100 ms at 10 req/s)
+
+To reproduce, start the service, then in another terminal run:
+
+```bash
+uv run python scripts/measure_latency.py
+```
+
+Each of the 10 GET endpoints was called at 10 req/s for 30 s. That is 300 requests per endpoint, with 0 errors.
+
+| Data | Worst p95 | Slowest endpoint |
+| --- | --- | --- |
+| Seed data (4 plots) | **6.8 ms** | `GET /v1/plots` |
+| 1,000 plots | **14.9 ms** (p99 22.1 ms) | `GET /v1/plots` |
+
+Test machine: i7-1165G7 laptop, WSL2, Python 3.12.16, one uvicorn worker, client on the same machine.
+
+## Load limits
+
+`uv run python scripts/hammer.py` starts its own server on a scratch database and takes about 15 minutes.
+
+- **Request rate:** every GET stays at p95 ≤ 7 ms up to 200 req/s, and most stay there up to 400. Above about 200 req/s the laptop itself could not send requests fast enough, so those numbers are rough.
+- **Reads and writes mixed (80/20):** p95 ≤ 7 ms up to 200 req/s, with no errors.
+- **Data size, the known limit:** `GET /v1/plots` returns every plot, so it slows down as the table grows. At 10 req/s it measured p95 49 ms at 5,000 plots and 91 ms at 12,500. At 15,000 plots it timed out. The fix would be pagination, which would change the spec's API, so it is left to the spec owner (`DECISIONS.md` O48).
+
+## More
+
+- `../../DECISIONS.md`: every design decision, marked as mine, ours or the agent's.
+- `../../docs/judgment-log.md`: where the agent's suggestion and my decision differed, and why.
