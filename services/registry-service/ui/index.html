@@ -224,8 +224,87 @@ dialog::backdrop { background: rgba(24,24,27,.25); }
 }
 .toast.error { background: #a32a2f; }
 
+/* ---------- Playground ---------- */
+.pg-scenarios { display: flex; flex-wrap: wrap; gap: 8px; }
+.pg-builder { display: grid; gap: 14px; }
+.pg-step { display: grid; grid-template-columns: 22px 64px 1fr; gap: 10px; align-items: center; }
+.pg-step.top { align-items: start; }
+.pg-num {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--text); color: #fff;
+  display: grid; place-items: center; font-size: 11px; font-weight: 600;
+}
+.pg-step .tabs { justify-self: start; flex-wrap: wrap; }
+.tabs button:disabled { opacity: .35; cursor: not-allowed; }
+.pg-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.pg-fields label { display: grid; gap: 4px; color: var(--muted); font-size: 12px; }
+.pg-send { display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
+.pg-result { display: grid; gap: 14px; }
+.pg-result[hidden] { display: none; }
+.pg-why { padding: 14px 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 15px; }
+.pg-why .text { color: var(--muted); }
+.pg-flow { display: grid; grid-template-columns: 1fr 36px 1fr; align-items: stretch; }
+.pg-flow .card { display: flex; flex-direction: column; }
+.pg-flow pre { flex: 1; border: 0; border-radius: 0 0 var(--radius) var(--radius); max-height: 320px; overflow: auto; }
+.pg-arrow { display: grid; place-items: center; color: var(--faint); font-size: 22px; }
+.journey { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.jstep { border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; min-width: 130px; }
+.jstep b { display: block; font-size: 13px; }
+.jstep span { font-size: 11px; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.jstep.ok { background: var(--green-soft); border-color: #bfe3d0; }
+.jstep.fail { background: var(--red-soft); border-color: #f3b9bb; }
+.jstep.skip { opacity: .4; }
+.jarrow { color: var(--faint); }
+
+/* Playground colour: steps, methods, statuses */
+.pg-step:nth-child(1) .pg-num { background: var(--blue); }
+.pg-step:nth-child(2) .pg-num { background: var(--orange); }
+.pg-step:nth-child(3) .pg-num { background: var(--green); }
+.m { font-weight: 700; padding: 1px 6px; border-radius: 4px; }
+.m-GET { background: var(--blue-soft); color: #2f56b8; }
+.m-POST { background: var(--green-soft); color: #23784f; }
+.m-PATCH { background: var(--orange-soft); color: #b3601f; }
+.m-DELETE { background: var(--red-soft); color: #c0353a; }
+.m-PUT { background: var(--yellow-soft); color: #8d6a0f; }
+#pg-actions button.active { font-weight: 600; }
+#pg-actions button.active.m-GET { background: var(--blue-soft); color: #2f56b8; }
+#pg-actions button.active.m-POST { background: var(--green-soft); color: #23784f; }
+#pg-actions button.active.m-PATCH { background: var(--orange-soft); color: #b3601f; }
+#pg-actions button.active.m-DELETE { background: var(--red-soft); color: #c0353a; }
+#pg-actions button.active.m-PUT { background: var(--yellow-soft); color: #8d6a0f; }
+.pg-why { border-left: 5px solid var(--faint); }
+.pg-why.s2 { border-left-color: var(--green); }
+.pg-why.s4 { border-left-color: var(--orange); }
+.pg-why.s5 { border-left-color: var(--red); }
+.st { font-weight: 700; }
+.st.s2 { color: #23784f; } .st.s4 { color: #b3601f; } .st.s5 { color: #c0353a; }
+
+/* JSON in colour, and highlights for what's being tested */
+.j-key { color: #7c3aed; }
+.j-str { color: #15803d; }
+.j-num { color: #1d4ed8; }
+.j-lit { color: #b45309; }
+.hl { border-radius: 4px; padding: 2px 5px; margin: 0 -5px; font-weight: 600; }
+.hl-name { background: #d6e2fb; box-shadow: inset 3px 0 0 var(--blue); }
+.hl-new { background: #cdeedd; box-shadow: inset 3px 0 0 var(--green); }
+.hl-edit { background: #fbdfc6; box-shadow: inset 3px 0 0 var(--orange); }
+.hl-bad { background: #fbd3d4; box-shadow: inset 3px 0 0 var(--red); }
+
+/* What changed: one chip per record */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chip { padding: 4px 10px; border-radius: 999px; background: #f1f1f3; font-size: 12px; }
+.chip small { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-left: 6px; }
+.chip.added { background: var(--green-soft); color: #23784f; }
+.chip.removed { background: var(--red-soft); color: #c0353a; text-decoration: line-through; }
+.chip.removed small { text-decoration: none; display: inline-block; }
+.chip.edited { background: var(--orange-soft); color: #b3601f; }
+.chip-label { color: var(--muted); font-size: 12px; margin-top: 12px; }
+td.was { background: var(--red-soft); color: #c0353a; text-decoration: line-through; }
+td.now { background: var(--green-soft); color: #23784f; font-weight: 600; }
+
 /* ---------- Narrow screens ---------- */
 @media (max-width: 1100px) {
+  .pg-flow { grid-template-columns: 1fr; }
+  .pg-arrow { transform: rotate(90deg); padding: 4px 0; }
   .kpis { grid-template-columns: repeat(3, 1fr); }
   .kpi:nth-child(3) { border-right: 0; }
   .kpi:nth-child(n+4) { border-top: 1px solid var(--border); }
@@ -239,6 +318,8 @@ dialog::backdrop { background: rgba(24,24,27,.25); }
   .kpis { grid-template-columns: 1fr 1fr; }
   .kpi { border-right: 0; border-top: 1px solid var(--border); }
   .dialog-body { grid-template-columns: 1fr; }
+  .pg-step { grid-template-columns: 22px 1fr; }
+  .pg-step > :last-child { grid-column: 1 / -1; }
 }
 </style>
 </head>
@@ -252,7 +333,8 @@ dialog::backdrop { background: rgba(24,24,27,.25); }
       <div><b>AgroPilot</b><span>Registry service</span></div>
     </div>
     <nav class="nav">
-      <a data-view="overview" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</a>
+      <a data-view="playground" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l5 3.5-5 3.5z"/></svg>Playground</a>
+      <a data-view="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</a>
       <a data-view="farms"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>Farms</a>
       <a data-view="plots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg>Plots</a>
       <a data-view="catalogues"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/></svg>Catalogues</a>
@@ -280,8 +362,35 @@ dialog::backdrop { background: rgba(24,24,27,.25); }
       </div>
     </div>
 
+    <!-- ===== View: Playground (build any request, see the answer and why) ===== -->
+    <section class="view" data-view="playground">
+      <div class="card">
+        <div class="card-head"><h2>Quick scenarios<span class="hint">one click fills the builder and sends</span></h2></div>
+        <div class="card-body pg-scenarios" id="pg-scenarios"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Build a request</h2></div>
+        <div class="card-body pg-builder">
+          <div class="pg-step"><span class="pg-num">1</span><span class="eyebrow">Action</span><div class="tabs" id="pg-actions"></div></div>
+          <div class="pg-step"><span class="pg-num">2</span><span class="eyebrow">What</span><div class="tabs" id="pg-resources"></div></div>
+          <div class="pg-step top"><span class="pg-num">3</span><span class="eyebrow">Details</span><div class="pg-fields" id="pg-fields"></div></div>
+          <div class="pg-send"><span class="mono muted" id="pg-preview"></span><button class="btn primary" id="pg-send-btn">Send request →</button></div>
+        </div>
+      </div>
+      <div class="pg-result" id="pg-result" hidden>
+        <div class="card pg-why" id="pg-why"></div>
+        <div class="card"><div class="card-head"><h2>Journey through the code</h2></div><div class="card-body journey" id="pg-journey"></div></div>
+        <div class="pg-flow">
+          <div class="card"><div class="card-head"><h2>Request</h2></div><pre id="pg-request"></pre></div>
+          <div class="pg-arrow">→</div>
+          <div class="card"><div class="card-head"><h2>Response</h2></div><pre id="pg-response"></pre></div>
+        </div>
+        <div class="card"><div class="card-head"><h2>What changed</h2></div><div class="card-body" id="pg-changes"></div></div>
+      </div>
+    </section>
+
     <!-- ===== View: Overview (a glance; each card links to its full view) ===== -->
-    <section class="view" data-view="overview">
+    <section class="view" data-view="overview" hidden>
       <div class="card kpis" id="kpis"></div>
       <div class="grid-2-wide">
         <div class="card">
@@ -441,6 +550,7 @@ function esc(value) {
   return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 const $ = (id) => document.getElementById(id);
+const BROWSER_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 const fmt = (n, digits = 0) => Number(n).toLocaleString("en-US", { maximumFractionDigits: digits });
 const farmName = (id) => state.farms.find((f) => f.id === id)?.name ?? "Unknown farm";
@@ -472,15 +582,18 @@ const problemText = (r) => r.data?.detail ? `${r.status} ${r.data.code ?? ""} ·
 // ============================================================
 // API: one function sends every request and records it for the activity panel.
 // ============================================================
-async function api(method, path, body, { log = true } = {}) {
+async function api(method, path, body, { log = true, headers = {} } = {}) {
   // Time-Zone: the browser's zone, so "today" for planting dates is the user's local date.
-  const options = { method, headers: { "Time-Zone": Intl.DateTimeFormat().resolvedOptions().timeZone } };
+  // `headers` can override it; a null value means "don't send this header".
+  const sent = { "Time-Zone": BROWSER_ZONE, ...headers };
+  for (const name in sent) if (sent[name] === null) delete sent[name];
+  const options = { method, headers: sent };
   if (body !== undefined) {
     options.headers["content-type"] = "application/json";
     options.body = typeof body === "string" ? body : JSON.stringify(body);
   }
   const started = performance.now();
-  const result = { method, path, requestBody: options.body ?? null, status: 0, ok: false, headers: {}, data: null, ms: 0 };
+  const result = { method, path, requestHeaders: sent, requestBody: options.body ?? null, status: 0, ok: false, headers: {}, data: null, ms: 0 };
   try {
     const response = await fetch(path, options);
     result.status = response.status;
@@ -531,6 +644,7 @@ async function loadTablePlots() {
 // Rendering
 // ============================================================
 function render() {
+  renderPlayground();
   renderKpis();
   renderAreaChart();
   renderOverviewFarms();
@@ -882,6 +996,368 @@ async function runAllBreakers() {
 }
 
 // ============================================================
+// Playground: build any request, send it, then show the answer,
+// why the API gave it, how far it got in the code, and what changed.
+// ============================================================
+const UNKNOWN_UUID = "00000000-0000-0000-0000-000000000000";
+const CATALOGUES = ["crops", "soils", "emitters"];
+const PLOT_FIELDS = ["farm_id", "name", "area_m2", "crop_id", "planting_date", "soil_id",
+  "row_spacing_m", "emitter_spacing_m", "emitter_id", "lat", "lon"];
+const NUMBER_FIELDS = ["area_m2", "row_spacing_m", "emitter_spacing_m", "lat", "lon"];
+const PG_ACTIONS = { list: "List", get: "Get one", create: "Create", edit: "Edit", delete: "Delete", wrong: "Wrong method" };
+const ACTION_METHOD = { list: "GET", get: "GET", create: "POST", edit: "PATCH", delete: "DELETE", wrong: "PUT" };
+const PG_RESOURCES = { farms: "Farms", plots: "Plots", crops: "Crops", soils: "Soils", emitters: "Emitters" };
+const SINGULAR = { farms: "farm", plots: "plot", crops: "crop", soils: "soil", emitters: "emitter" };
+const TIME_ZONES = [
+  ["browser", `Your browser (${BROWSER_ZONE})`], ["Asia/Jerusalem", "Asia/Jerusalem"], ["Asia/Kolkata", "Asia/Kolkata"],
+  ["Pacific/Kiritimati", "Pacific/Kiritimati (UTC+14)"], ["Pacific/Honolulu", "Pacific/Honolulu (UTC−10)"],
+  ["none", "Not sent (UTC+14 rule)"], ["Mars/Base", "Mars/Base (not real)"],
+];
+const STATUS_TITLES = { 200: "OK", 201: "Created", 204: "No Content", 404: "Not Found", 405: "Method Not Allowed",
+  409: "Conflict", 422: "Unprocessable Entity", 503: "Service Unavailable" };
+
+// What the builder currently holds. `values` are the detail fields, as typed.
+const pg = { ready: false, action: "create", resource: "plots", target: "", values: {}, tz: "browser" };
+
+// Today's date (YYYY-MM-DD) in a time zone, plus some days.
+const dateIn = (zone, addDays = 0) => new Date(Date.now() + addDays * 86400000).toLocaleDateString("en-CA", { timeZone: zone });
+const pgRecords = (resource) => resource === "plots" ? state.allPlots : state[resource];
+const pgFind = (id) => pgRecords(pg.resource).find((r) => r.id === id);
+const pgAllowed = (action, resource) => !CATALOGUES.includes(resource) || ["list", "get", "wrong"].includes(action);
+const asText = (record) => Object.fromEntries(Object.entries(record ?? {}).filter(([k]) => k !== "id").map(([k, v]) => [k, String(v)]));
+
+// Starting values for "Create": the spec's example plot, dated today.
+function pgDefaults(resource) {
+  if (resource === "farms") return { name: "New farm" };
+  return { farm_id: state.farms[0]?.id ?? "", name: `Demo plot ${Date.now() % 10000}`, area_m2: "1000",
+    crop_id: "tomato", planting_date: dateIn(BROWSER_ZONE), soil_id: "loam", row_spacing_m: "1.5",
+    emitter_spacing_m: "0.4", emitter_id: "dripnet-pc-1.0", lat: "31.25", lon: "34.79" };
+}
+
+// Put the builder into a state (used by the step buttons and by the quick scenarios).
+function pgSet({ action = pg.action, resource = pg.resource, target, values = {}, tz = "browser" } = {}) {
+  Object.assign(pg, { action, resource, tz });
+  pg.target = target ?? pgRecords(resource)[0]?.id ?? "";
+  const base = action === "create" ? pgDefaults(resource) : action === "edit" ? asText(pgFind(pg.target)) : {};
+  pg.values = { ...base, ...values };
+  renderBuilder();
+}
+
+// Step 1 or 2 clicked. A catalogue can only be listed or read, so fall back to farms.
+function pgChoose(action, resource) {
+  action ??= pg.action;
+  resource ??= pg.resource;
+  if (!pgAllowed(action, resource)) resource = "farms";
+  pgSet({ action, resource });
+}
+
+// "Which one" changed: Edit refills the fields from that record.
+function pgTargetChanged() {
+  pg.target = $("pg-target").value;
+  if (pg.action === "edit") { pg.values = asText(pgFind(pg.target)); renderBuilder(); } else pgPreview();
+}
+
+// Called on every page render: keep what was typed, refresh the dropdowns.
+function renderPlayground() {
+  if (!pg.ready) { pg.ready = true; pgSet(); return; }
+  pgReadInputs();
+  if (!pgFind(pg.target) && ["get", "edit", "delete"].includes(pg.action) && ![UNKNOWN_UUID, "abc", "unknown-id"].includes(pg.target)) {
+    pg.target = pgRecords(pg.resource)[0]?.id ?? "";
+  }
+  renderBuilder();
+}
+
+// --- Builder (steps 1-3) --------------------------------------------------
+
+const pgSelect = (name, label, options, selected, onchange = "pgPreview()") =>
+  `<label>${label}<select class="input" id="pg-${name}" onchange="${onchange}">${options.map(([v, l]) =>
+    `<option value="${esc(v)}" ${String(v) === String(selected) ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>`;
+const pgInput = (name, label) =>
+  `<label>${label}<input class="input" id="pg-${name}" value="${esc(pg.values[name] ?? "")}" oninput="pgPreview()"></label>`;
+
+function renderBuilder() {
+  $("pg-actions").innerHTML = Object.entries(PG_ACTIONS).map(([key, label]) =>
+    `<button class="m-${ACTION_METHOD[key]} ${key === pg.action ? "active" : ""}" onclick="pgChoose('${key}', null)">${label}</button>`).join("");
+  $("pg-resources").innerHTML = Object.entries(PG_RESOURCES).map(([key, label]) =>
+    `<button class="${key === pg.resource ? "active" : ""}" ${pgAllowed(pg.action, key) ? "" : "disabled"}
+      onclick="pgChoose(null, '${key}')">${label}</button>`).join("");
+  $("pg-fields").innerHTML = pgFieldsHtml();
+  pgPreview();
+}
+
+// The detail fields for the chosen action and resource. Each dropdown also offers a bad value.
+function pgFieldsHtml() {
+  const { action, resource, values: v } = pg;
+  const farms = state.farms.map((f) => [f.id, f.name]);
+  const parts = [];
+  if (["get", "edit", "delete"].includes(action)) {
+    const records = pgRecords(resource).map((r) => [r.id, resource === "plots" ? `${r.name} · ${farmName(r.farm_id)}` : r.name]);
+    const bad = CATALOGUES.includes(resource) ? [["unknown-id", "unknown-id (doesn't exist)"]]
+      : [[UNKNOWN_UUID, "Unknown id"], ["abc", "abc (not a UUID)"]];
+    parts.push(pgSelect("target", `Which ${SINGULAR[resource]}`, [...records, ...bad], pg.target, "pgTargetChanged()"));
+  }
+  if (action === "list" && resource === "plots") {
+    parts.push(pgSelect("farm_filter", "Farm filter", [["", "All plots"], ...farms, [UNKNOWN_UUID, "Unknown farm"], ["abc", "abc (not a UUID)"]], v.farm_filter ?? ""));
+  }
+  if ((action === "create" || action === "edit") && resource === "farms") parts.push(pgInput("name", "Name"));
+  if ((action === "create" || action === "edit") && resource === "plots") {
+    parts.push(
+      pgSelect("farm_id", "Farm", [...farms, [UNKNOWN_UUID, "Unknown farm"]], v.farm_id),
+      pgInput("name", "Name"),
+      pgSelect("crop_id", "Crop", [...state.crops.map((c) => [c.id, c.name]), ["mango", "mango (not in catalogue)"]], v.crop_id),
+      pgSelect("soil_id", "Soil", [...state.soils.map((s) => [s.id, s.name]), ["rock", "rock (not in catalogue)"]], v.soil_id),
+      pgSelect("emitter_id", "Emitter", [...state.emitters.map((e) => [e.id, emitterLabel(e.id)]), ["dripnet-9.9", "dripnet-9.9 (not in catalogue)"]], v.emitter_id),
+      pgInput("area_m2", "Area m²"),
+      pgInput("planting_date", "Planting date"),
+      pgInput("row_spacing_m", "Row spacing m"),
+      pgInput("emitter_spacing_m", "Emitter spacing m"),
+      pgInput("lat", "Latitude"),
+      pgInput("lon", "Longitude"),
+      pgSelect("tz", "Time-Zone header", TIME_ZONES, pg.tz),
+    );
+  }
+  if (action === "wrong") parts.push(`<span class="muted">Sends ${CATALOGUES.includes(resource) ? "POST" : "PUT"} to /v1/${resource}, which doesn't accept it.</span>`);
+  return parts.join("") || '<span class="muted">No details needed.</span>';
+}
+
+// Copy what's typed in the form back into `pg`.
+function pgReadInputs() {
+  document.querySelectorAll("#pg-fields [id^='pg-']").forEach((el) => {
+    const name = el.id.slice(3);
+    if (name === "target") pg.target = el.value;
+    else if (name === "tz") pg.tz = el.value;
+    else pg.values[name] = el.value;
+  });
+}
+
+// A typed value as JSON: numbers become numbers; anything else is sent as typed,
+// so text in a number field shows the strict-type rule.
+const pgValue = (name, raw) => NUMBER_FIELDS.includes(name) && /^-?\d+(\.\d+)?$/.test(raw.trim()) ? Number(raw) : raw;
+
+// The HTTP request the builder describes. Edit sends only the fields that differ (PATCH).
+function pgRequest() {
+  pgReadInputs();
+  const { action, resource, target, values } = pg;
+  const base = `/v1/${resource}`;
+  const one = `${base}/${encodeURIComponent(target)}`;
+  const fields = resource === "farms" ? ["name"] : PLOT_FIELDS;
+  const before = asText(pgFind(target));
+  const send = (f) => values[f] !== undefined && values[f] !== "" && (action === "create" || values[f] !== before[f]);
+  const body = ["create", "edit"].includes(action) ? Object.fromEntries(fields.filter(send).map((f) => [f, pgValue(f, values[f])])) : undefined;
+  const headers = {};
+  if (resource === "plots" && body && pg.tz !== "browser") headers["Time-Zone"] = pg.tz === "none" ? null : pg.tz;
+  const filter = resource === "plots" && values.farm_filter ? `?farm_id=${encodeURIComponent(values.farm_filter)}` : "";
+  const [method, path] = {
+    list: ["GET", base + filter], get: ["GET", one], create: ["POST", base],
+    edit: ["PATCH", one], delete: ["DELETE", one], wrong: [CATALOGUES.includes(resource) ? "POST" : "PUT", base],
+  }[action];
+  return { action, resource, target, method, path, body, headers };
+}
+
+function pgPreview() {
+  const r = pgRequest();
+  $("pg-preview").innerHTML = `<span class="m m-${r.method}">${r.method}</span> ${esc(r.path)}`;
+}
+
+// --- Send and explain -------------------------------------------------------
+
+async function pgSend() {
+  const req = pgRequest();
+  const before = { farms: structuredClone(state.farms), plots: structuredClone(state.allPlots) };
+  const r = await api(req.method, req.path, req.body, { headers: req.headers });
+  if (req.method !== "GET") await loadAll();  // a write may have changed data: reload, then compare
+  const after = { farms: state.farms, plots: state.allPlots };
+  $("pg-result").hidden = false;
+  $("pg-why").className = `card pg-why s${String(r.status)[0]}`;
+  $("pg-why").innerHTML = `${statusPill(r.status)} <b>${esc(STATUS_TITLES[r.status] ?? "")}</b>
+    <span class="text">${esc(pgWhy(req, r))}</span>`;
+  $("pg-request").innerHTML = pgRequestHtml(req, r);
+  $("pg-response").innerHTML = pgResponseHtml(req, r);
+  $("pg-journey").innerHTML = pgJourney(req, r);
+  $("pg-changes").innerHTML = pgChanges(req, r, before, after);
+}
+
+// JSON as coloured HTML. `mark(key)` returns a highlight class for that key, or "".
+function jsonHtml(value, mark = () => "", indent = 0) {
+  const pad = "  ".repeat(indent);
+  if (Array.isArray(value)) {
+    if (!value.length) return "[]";
+    return "[\n" + value.map((v) => `${pad}  ${jsonHtml(v, mark, indent + 1)}`).join(",\n") + `\n${pad}]`;
+  }
+  if (value !== null && typeof value === "object") {
+    const lines = Object.entries(value).map(([k, v]) => {
+      const pair = `<span class="j-key">"${esc(k)}"</span>: ${jsonHtml(v, mark, indent + 1)}`;
+      const cls = mark(k);
+      return `${pad}  ${cls ? `<span class="hl ${cls}">${pair}</span>` : pair}`;
+    });
+    return lines.length ? `{\n${lines.join(",\n")}\n${pad}}` : "{}";
+  }
+  const cls = typeof value === "string" ? "j-str" : typeof value === "number" ? "j-num" : "j-lit";
+  return `<span class="${cls}">${esc(JSON.stringify(value))}</span>`;
+}
+
+// The request field the answer is about: the one that broke a rule, or the ones an edit sent.
+function pgBadFields(r) {
+  const detail = r.data?.detail ?? "";
+  if (r.status === 409 && detail !== "Farm still has plots") return ["name", "farm_id"];
+  if (detail.includes("must not be in the future")) return ["planting_date"];
+  const unknown = detail.match(/^Unknown (crop|soil|emitter|farm)$/);
+  if (unknown && r.status === 422) return [`${unknown[1]}_id`];
+  return [...detail.matchAll(/(?:^|; )(\w+):/g)].map((m) => m[1]);
+}
+
+function pgRequestHtml(req, r) {
+  const bad = r.ok ? [] : pgBadFields(r);
+  const zoneIssue = /future|Time-Zone/.test(r.data?.detail ?? "");
+  const headers = Object.entries(r.requestHeaders).map(([k, v]) => {
+    const line = `<span class="j-key">${esc(k)}</span>: ${esc(v)}`;
+    return k === "Time-Zone" && zoneIssue ? `<span class="hl hl-bad">${line}</span>` : line;
+  }).join("\n");
+  let body = "";
+  if (r.requestBody) {
+    const mark = (k) => bad.includes(k) ? "hl-bad" : req.method === "PATCH" ? "hl-edit" : "";
+    try { body = "\n\n" + jsonHtml(JSON.parse(r.requestBody), mark); } catch { body = "\n\n" + esc(r.requestBody); }
+  }
+  return `<span class="m m-${r.method}">${r.method}</span> ${esc(r.path)}\n${headers}${body}`;
+}
+
+function pgResponseHtml(req, r) {
+  const sent = req.body ? Object.keys(req.body) : [];
+  const mark = (k) => {
+    if (!r.ok) return ["detail", "code"].includes(k) ? "hl-bad" : "";
+    if (k === "id" && req.method === "POST") return "hl-new";
+    if (req.method === "PATCH") return sent.includes(k) ? "hl-edit" : "";
+    return k === "name" && req.method === "GET" ? "hl-name" : "";
+  };
+  const headers = Object.entries(r.headers).map(([k, v]) => `<span class="j-key">${esc(k)}</span>: ${esc(v)}`).join("\n");
+  const body = r.data === null ? '<span class="muted">(no body)</span>' : jsonHtml(r.data, mark);
+  return `HTTP <span class="st s${String(r.status)[0]}">${r.status} ${esc(STATUS_TITLES[r.status] ?? "")}</span>\n${headers}\n\n${body}`;
+}
+
+// One plain sentence: why the API answered this way.
+function pgWhy(req, r) {
+  const thing = SINGULAR[req.resource];
+  const detail = r.data?.detail ?? "";
+  if (r.status === 201) return `The server picked the id, and the database now has one more ${thing}.`;
+  if (r.status === 204) return "Deleted. 204 means success with nothing to send back.";
+  if (r.status === 200 && req.method === "PATCH") return Object.keys(req.body).length
+    ? `Updated. Only the changed field${Object.keys(req.body).length > 1 ? "s were" : " was"} sent: ${Object.keys(req.body).join(", ")}.`
+    : "Nothing was sent, so nothing changed. An empty edit is allowed.";
+  if (r.status === 200 && Array.isArray(r.data)) return `Found ${plural(r.data.length, thing)}${req.path.includes("farm_id") ? " for that farm" : ""}.`;
+  if (r.status === 200) return `Found the ${thing}.`;
+  if (r.status === 405) return `This URL only accepts ${r.headers.allow}. A 405 has no code: none of the four fits.`;
+  if (r.status === 404) return detail === "Resource not found" ? "No such URL." : `No ${thing} has that id.`;
+  if (r.status === 409) return detail === "Farm still has plots"
+    ? "A farm that still has plots can't be deleted. Delete or move its plots first."
+    : "That plot name is already used on this farm. Names are unique per farm.";
+  if (r.status === 503) return `The database can't be reached. Try again in ${r.headers["retry-after"] ?? "a few"} s.`;
+  if (r.status === 422) {
+    const unknown = detail.match(/^Unknown (crop|soil|emitter|farm)/);
+    if (unknown) return `That ${unknown[1]} doesn't exist, so the plot is refused.`;
+    if (detail.includes("must not be in the future")) return `The planting date is after today in the client's time zone (${r.requestHeaders["Time-Zone"] ?? "UTC+14, no header"}).`;
+    if (detail.startsWith("Time-Zone")) return "That isn't a real time zone, so the API can't know the client's today.";
+    if (detail.includes("greater than 0")) return "Area and both spacings must be more than 0.";
+    if (/^(lat|lon):/.test(detail)) return "Latitude must be −90 to 90, longitude −180 to 180.";
+    if (detail.includes("Field required")) return "A required field is missing.";
+    if (detail.includes("Extra inputs")) return "Only the spec's fields are accepted.";
+    if (detail.includes("should be a valid")) return "Wrong type: a number must be a number, not text.";
+    return "The request breaks a rule.";
+  }
+  return "No answer from the service.";
+}
+
+// Where in the code the request stopped: Route, Validate, Check or Database.
+function pgFailedStep(r) {
+  if (r.ok) return -1;
+  const detail = r.data?.detail ?? "";
+  if (r.status === 405 || detail === "Resource not found" || detail.startsWith("Unknown query parameter")) return 0;
+  if (r.status === 409 || r.status === 503) return 3;
+  if (r.status === 404 || /^Unknown (crop|soil|emitter|farm)/.test(detail) || detail.includes("must not be in the future")
+      || detail.startsWith("Time-Zone") || detail.startsWith("farm_id: not a valid UUID")) return 2;
+  return 1;
+}
+
+function pgJourney(req, r) {
+  const steps = [
+    ["Route", "main.py"],
+    ["Validate", req.body ? "models.py" : "no body"],
+    ["Check", `${CATALOGUES.includes(req.resource) ? "catalogues" : req.resource}.py`],
+    ["Database", "db.py · SQLite"],
+  ];
+  const failed = pgFailedStep(r);
+  return steps.map(([name, file], i) => {
+    const cls = failed === -1 || i < failed ? "ok" : i === failed ? "fail" : "skip";
+    return `<div class="jstep ${cls}"><b>${name}</b><span>${file}</span></div>`;
+  }).join('<span class="jarrow">→</span>');
+}
+
+// Every record of the touched list as a chip: added, deleted or edited stand out.
+function pgChips(beforeList, afterList, editedId) {
+  const beforeIds = new Set(beforeList.map((x) => x.id));
+  const afterIds = new Set(afterList.map((x) => x.id));
+  const all = [...beforeList, ...afterList.filter((x) => !beforeIds.has(x.id))];
+  return all.map((x) => {
+    const [cls, word] = !afterIds.has(x.id) ? ["removed", "deleted"] : !beforeIds.has(x.id) ? ["added", "new"]
+      : x.id === editedId ? ["edited", "edited"] : ["", ""];
+    return `<span class="chip ${cls}">${esc(x.name)}${word ? `<small>${word}</small>` : ""}</span>`;
+  }).join("");
+}
+
+// Counts before and after, the records as chips, and for an edit each changed field.
+function pgChanges(req, r, before, after) {
+  if (req.method === "GET") return '<span class="muted">Read only: nothing in the database changed.</span>';
+  const counts = [["Farms", before.farms.length, after.farms.length], ["Plots", before.plots.length, after.plots.length]]
+    .map(([label, a, b]) => `<span class="pill ${a < b ? "green" : a > b ? "red" : ""}">${label} ${a}${a !== b ? ` → ${b}` : ""}</span>`).join(" ");
+  if (!r.ok) return `${counts}<p class="muted">Refused, so nothing was saved.</p>`;
+  const list = req.resource === "farms" ? "farms" : "plots";
+  const was = before[list].find((x) => x.id === req.target);
+  const now = after[list].find((x) => x.id === req.target);
+  const edited = req.method === "PATCH" ? req.target : null;
+  let html = `${counts}<div class="chip-label">${list === "farms" ? "Farms" : "Plots"}</div><div class="chips">${pgChips(before[list], after[list], edited)}</div>`;
+  if (req.method === "PATCH" && was && now) {
+    const keys = Object.keys(now).filter((k) => String(was[k]) !== String(now[k]));
+    const rows = keys.map((k) => `<tr><td>${k}</td><td class="mono was">${esc(was[k])}</td><td class="mono now">${esc(now[k])}</td></tr>`).join("");
+    html += keys.length
+      ? `<div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Field</th><th>Before</th><th>After</th></tr></thead><tbody>${rows}</tbody></table></div>`
+      : '<p class="muted">Saved, but every value was already the same.</p>';
+  }
+  return html;
+}
+
+// --- Quick scenarios: each one fills the builder, then sends ------------------
+
+function pgScenarios() {
+  const plotWithFarm = state.allPlots[0];
+  const farmWithPlots = state.farms.find((f) => state.allPlots.some((p) => p.farm_id === f.id));
+  return [
+    ["List farms", () => pgSet({ action: "list", resource: "farms" })],
+    ["Valid plot", () => pgSet({ action: "create", resource: "plots" })],
+    ["Area 0", () => pgSet({ action: "create", resource: "plots", values: { area_m2: "0" } })],
+    ["Area as text", () => pgSet({ action: "create", resource: "plots", values: { area_m2: "a lot" } })],
+    ["Future date", () => pgSet({ action: "create", resource: "plots", values: { planting_date: dateIn(BROWSER_ZONE, 1) } })],
+    ["Time zone: Honolulu", () => pgSet({ action: "create", resource: "plots", values: { planting_date: dateIn("Pacific/Kiritimati") }, tz: "Pacific/Honolulu" })],
+    ["Unknown emitter", () => pgSet({ action: "create", resource: "plots", values: { emitter_id: "dripnet-9.9" } })],
+    ["Duplicate name", () => pgSet({ action: "create", resource: "plots", values: { farm_id: plotWithFarm?.farm_id, name: plotWithFarm?.name } })],
+    ["Edit area only", () => pgSet({ action: "edit", resource: "plots", values: { area_m2: "1234" } })],
+    ["One farm's plots", () => pgSet({ action: "list", resource: "plots", values: { farm_filter: state.farms[0]?.id } })],
+    ["Delete a plot", () => pgSet({ action: "delete", resource: "plots", target: state.allPlots.at(-1)?.id })],
+    ["Unknown id", () => pgSet({ action: "get", resource: "farms", target: UNKNOWN_UUID })],
+    ["Delete farm with plots", () => pgSet({ action: "delete", resource: "farms", target: farmWithPlots?.id })],
+    ["Read-only catalogue", () => pgSet({ action: "wrong", resource: "crops" })],
+  ];
+}
+
+function renderScenarios() {
+  $("pg-scenarios").innerHTML = pgScenarios().map(([label], i) =>
+    `<button class="btn small" onclick="pgRunScenario(${i})">${esc(label)}</button>`).join("");
+}
+
+async function pgRunScenario(i) {
+  pgScenarios()[i][1]();
+  await pgSend();
+}
+
+// ============================================================
 // API activity panel
 // ============================================================
 function recordActivity(entry) {
@@ -947,6 +1423,7 @@ async function checkHealth() {
 // ============================================================
 // Title and subtitle shown in the header for each view.
 const VIEWS = {
+  playground: ["Playground", "Build any request, send it, and see the answer, why, and what changed."],
   overview: [null, null],
   farms: ["Farms", "Create, rename and delete farms. A farm with plots can't be deleted."],
   plots: ["Plots", "Every plot, or one farm's plots. Create, edit (only changed fields are sent) and delete."],
@@ -957,7 +1434,7 @@ const VIEWS = {
 
 // Show one view and hide the rest. The view name is kept in the URL (#plots), so a reload stays put.
 function showView(name) {
-  if (!VIEWS[name]) name = "overview";
+  if (!VIEWS[name]) name = "playground";
   document.querySelectorAll(".view").forEach((v) => v.hidden = v.dataset.view !== name);
   document.querySelectorAll(".nav a").forEach((l) => l.classList.toggle("active", l.dataset.view === name));
   const [title, subtitle] = VIEWS[name];
@@ -979,11 +1456,13 @@ $("plot-filter").onchange = async (e) => { state.filterFarmId = e.target.value; 
 $("lookup-btn").onclick = lookup;
 $("lookup-id").onkeydown = (e) => { if (e.key === "Enter") lookup(); };
 $("break-all-btn").onclick = runAllBreakers;
+$("pg-send-btn").onclick = pgSend;
 $("clear-activity-btn").onclick = () => { state.activity = []; state.selectedActivity = null; renderActivity(); };
 document.querySelectorAll("#catalogue-tabs button").forEach((b) => b.onclick = () => { state.catalogueKind = b.dataset.kind; renderCatalogue(); });
 document.querySelectorAll(".nav a, .view-link").forEach((link) => link.onclick = () => showView(link.dataset.view ?? link.dataset.goto));
 
 showView(location.hash.slice(1));
+renderScenarios();
 renderBreakers();
 renderActivity();
 loadAll();

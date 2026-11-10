@@ -16,7 +16,7 @@ uv run uvicorn main:app --port 8000
 
 - API: `http://127.0.0.1:8000/v1/...`
 - Health check: `/health`
-- Demo UI: `/ui`
+- Demo UI: `/ui`, which opens on a playground for trying any request
 
 To use another database file, set `REGISTRY_DB_PATH=/path/to/file.db`. The service never creates a missing database; it answers 503 instead.
 
@@ -35,7 +35,7 @@ To use another database file, set `REGISTRY_DB_PATH=/path/to/file.db`. The servi
 ## Test it
 
 ```bash
-uv run pytest          # 421 tests, about 10 s
+uv run pytest          # 422 tests, about 10 s
 ```
 
 `tests/test_matrix.py` is the break-the-API matrix. It covers bad field values, protocol abuse (wrong content type, broken JSON, huge bodies), broken databases (missing, read-only, locked, corrupt, bad rows) and concurrent writes.
