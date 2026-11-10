@@ -30,10 +30,12 @@ To use another database file, set `REGISTRY_DB_PATH=/path/to/file.db`. The servi
 
 `GET /v1/plots?farm_id=...` filters plots by farm. Deleting a farm that still has plots gives 409.
 
+**Planting date and time zones.** A `planting_date` may not be in the future, and "today" is the client's local date. Send it as a header with an IANA zone name, for example `Time-Zone: Asia/Jerusalem`. With no header, today is taken in UTC+14, the first zone to reach a new day, so nobody is rejected for entering their own date. An unknown zone gives 422. Every real zone lies between UTC−12 and UTC+14, so a client can't move "today" more than a day past UTC. The demo UI sends the browser's zone.
+
 ## Test it
 
 ```bash
-uv run pytest          # 412 tests, about 10 s
+uv run pytest          # 421 tests, about 10 s
 ```
 
 `tests/test_matrix.py` is the break-the-API matrix. It covers bad field values, protocol abuse (wrong content type, broken JSON, huge bodies), broken databases (missing, read-only, locked, corrupt, bad rows) and concurrent writes.

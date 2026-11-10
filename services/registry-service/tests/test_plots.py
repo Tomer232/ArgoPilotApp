@@ -2,6 +2,7 @@
 
 import datetime
 import json
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -113,6 +114,54 @@ def test_create_plot_planting_date_in_future_is_422(client):
 def test_create_plot_planting_date_today_is_ok(client):
     body = plot_body(planting_date=today_in_earliest_timezone().isoformat())
     assert client.post("/v1/plots", json=body).status_code == 201
+
+
+# --- "Today" follows the client's Time-Zone header --------------------------
+
+
+def today_in(zone: str) -> datetime.date:
+    return datetime.datetime.now(ZoneInfo(zone)).date()
+
+
+def test_today_in_client_time_zone_is_ok(client):
+    body = plot_body(planting_date=today_in("Asia/Jerusalem").isoformat())
+    response = client.post("/v1/plots", json=body, headers={"Time-Zone": "Asia/Jerusalem"})
+    assert response.status_code == 201
+
+
+def test_tomorrow_in_client_time_zone_is_422(client):
+    tomorrow = today_in("Asia/Jerusalem") + datetime.timedelta(days=1)
+    body = plot_body(planting_date=tomorrow.isoformat())
+    response = client.post("/v1/plots", json=body, headers={"Time-Zone": "Asia/Jerusalem"})
+    problem = assert_problem(response, 422, "VALIDATION")
+    assert problem["detail"] == "planting_date: must not be in the future"
+
+
+def test_same_date_depends_on_client_time_zone(client):
+    # Kiritimati (UTC+14) is always a day ahead of Honolulu (UTC-10).
+    kiritimati_today = today_in("Pacific/Kiritimati").isoformat()
+    body = plot_body(planting_date=kiritimati_today)
+    behind = client.post("/v1/plots", json=body, headers={"Time-Zone": "Pacific/Honolulu"})
+    assert_problem(behind, 422, "VALIDATION")
+    ahead = client.post("/v1/plots", json=body, headers={"Time-Zone": "Pacific/Kiritimati"})
+    assert ahead.status_code == 201
+
+
+@pytest.mark.parametrize("zone", ["Mars/Base", "", "asia/jerusalem", "../../etc/passwd", "America"])
+def test_unknown_time_zone_is_422(client, zone):
+    response = client.post("/v1/plots", json=plot_body(), headers={"Time-Zone": zone})
+    problem = assert_problem(response, 422, "VALIDATION")
+    assert problem["detail"] == "Time-Zone: unknown time zone"
+
+
+def test_patch_planting_date_uses_client_time_zone(client):
+    tomorrow = today_in("Asia/Jerusalem") + datetime.timedelta(days=1)
+    response = client.patch(
+        f"/v1/plots/{NORTH_BLOCK}",
+        json={"planting_date": tomorrow.isoformat()},
+        headers={"Time-Zone": "Asia/Jerusalem"},
+    )
+    assert_problem(response, 422, "VALIDATION")
 
 
 @pytest.mark.parametrize("lat, lon", [(90, -180), (-90, 180)])

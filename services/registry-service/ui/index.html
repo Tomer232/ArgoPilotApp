@@ -473,7 +473,8 @@ const problemText = (r) => r.data?.detail ? `${r.status} ${r.data.code ?? ""} ·
 // API: one function sends every request and records it for the activity panel.
 // ============================================================
 async function api(method, path, body, { log = true } = {}) {
-  const options = { method, headers: {} };
+  // Time-Zone: the browser's zone, so "today" for planting dates is the user's local date.
+  const options = { method, headers: { "Time-Zone": Intl.DateTimeFormat().resolvedOptions().timeZone } };
   if (body !== undefined) {
     options.headers["content-type"] = "application/json";
     options.body = typeof body === "string" ? body : JSON.stringify(body);

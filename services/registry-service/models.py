@@ -6,14 +6,16 @@ Response models list exactly the spec's fields, so nothing else ever leaves the 
 import datetime
 import uuid
 from typing import Annotated
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from fastapi import Header
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints
 
 from errors import NotFoundError, ValidationFailedError
 
-# The first time zone on Earth to reach a new day. A planting date counts as
-# "in the future" only if it is still ahead there, so no farmer anywhere is
-# rejected for entering today's local date. Temporary: see DECISIONS.md O9.
+# The first time zone on Earth to reach a new day. Used when a request sends no
+# Time-Zone header: then a date counts as "in the future" only if it is still
+# ahead there, so no farmer anywhere is rejected for entering today's date.
 EARLIEST_TIMEZONE = datetime.timezone(datetime.timedelta(hours=14))
 
 
@@ -25,12 +27,34 @@ def normalize_uuid(value: str) -> str:
     return str(uuid.UUID(value))
 
 
-def check_planting_date(value: str) -> str:
-    """A real calendar date (not 2026-02-30) that is not in the future."""
-    day = datetime.date.fromisoformat(value)
-    if day > datetime.datetime.now(EARLIEST_TIMEZONE).date():
-        raise ValueError("must not be in the future")
+def check_real_date(value: str) -> str:
+    """A real calendar date: not 2026-02-30. (Whether it's in the future depends on
+    the client's time zone, so the routes check that with check_not_future.)"""
+    datetime.date.fromisoformat(value)
     return value
+
+
+def today_for_request(
+    time_zone: Annotated[str | None, Header(alias="Time-Zone")] = None,
+) -> datetime.date:
+    """Today's date where the client is, from a header like `Time-Zone: Asia/Jerusalem`.
+
+    Every real time zone is between UTC-12 and UTC+14, so a client can't push
+    "today" more than a day past UTC. No header: today in UTC+14, as before.
+    """
+    if time_zone is None:
+        return datetime.datetime.now(EARLIEST_TIMEZONE).date()
+    try:
+        zone = ZoneInfo(time_zone)
+    except (ZoneInfoNotFoundError, ValueError):
+        raise ValidationFailedError("Time-Zone: unknown time zone") from None
+    return datetime.datetime.now(zone).date()
+
+
+def check_not_future(planting_date: str, today: datetime.date) -> None:
+    """422 if the planting date is after the client's today."""
+    if datetime.date.fromisoformat(planting_date) > today:
+        raise ValidationFailedError("planting_date: must not be in the future")
 
 
 # --- Field types used in request bodies -----------------------------------
@@ -51,7 +75,7 @@ Longitude = Annotated[float, Field(ge=-180, le=180)]
 PlantingDate = Annotated[
     str,
     StringConstraints(pattern=r"^\d{4}-\d{2}-\d{2}$"),
-    AfterValidator(check_planting_date),
+    AfterValidator(check_real_date),
 ]
 
 

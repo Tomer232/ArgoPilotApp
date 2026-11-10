@@ -36,3 +36,11 @@ The break-the-API test wrote text into a number column of the database directly,
 - **Why:**
   - The API promises every error as problem+json with a code, and a plain-text 500 breaks that promise to clients.
   - The client's request was valid; the fault is the server's own data. 503 is the only server-side code the spec allows, and it comes with `Retry-After`.
+
+## 5. "Today" follows the client's time zone, bounded by UTC
+
+This revisits entry 3. I wanted "in the future" to mean the future where the request comes from: at the same moment, a date can already be today in India but still tomorrow in Jerusalem.
+
+- **Agent suggested:** three ways to know the client's zone: the client sends a `Time-Zone` header (recommended), work it out from the plot's lat/lon, or guess from the IP address (unreliable).
+- **I decided:** the header. Then I asked how to stop a client from claiming any zone it likes, and proposed a base time zone, such as the server's, that bounds what a client can claim. The agent agreed with the idea but suggested UTC as the base instead of the server's location, because servers move. Every real zone is between UTC−12 and UTC+14, and only real zone names are accepted, so no claim can move "today" more than a day past UTC. No header keeps the old UTC+14 rule; an unknown zone gives 422.
+- **Why:** a farmer's "today" is where the farmer is. The worst a lying client can do is claim UTC+14, which is exactly what we already allowed, so lying gains nothing. Old clients and curl keep working without the header.

@@ -1,18 +1,33 @@
 """Plots: create, read, update, delete.
 
-Field rules (area > 0, lat range, date not in the future, ...) live in models.py.
-This file adds the rules that need the database: references must exist,
-and a plot name must be unique inside its farm.
+Field rules (area > 0, lat range, a real date, ...) live in models.py.
+This file adds the rules that need the request or the database: the planting
+date is not in the client's future, references must exist, and a plot name
+must be unique inside its farm.
 """
 
+import datetime
 import sqlite3
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Depends, Response
 
 from db import connect
 from errors import ConflictError, NotFoundError, ValidationFailedError
-from models import Plot, PlotCreate, PlotUpdate, normalize_uuid, parse_id, sent_fields
+from models import (
+    Plot,
+    PlotCreate,
+    PlotUpdate,
+    check_not_future,
+    normalize_uuid,
+    parse_id,
+    sent_fields,
+    today_for_request,
+)
+
+# "Today" where the client is, from its Time-Zone header (see models.py).
+ClientToday = Annotated[datetime.date, Depends(today_for_request)]
 
 router = APIRouter()
 
@@ -49,8 +64,9 @@ def check_references(conn: sqlite3.Connection, plot: dict) -> None:
 
 
 @router.post("/v1/plots", status_code=201, response_model=Plot)
-def create_plot(body: PlotCreate):
+def create_plot(body: PlotCreate, today: ClientToday):
     """Create a plot. The server picks the id."""
+    check_not_future(body.planting_date, today)
     plot = {"id": str(uuid.uuid4()), **body.model_dump()}
     with connect() as conn:
         check_references(conn, plot)
@@ -93,11 +109,13 @@ def get_plot(plot_id: str):
 
 
 @router.patch("/v1/plots/{plot_id}", response_model=Plot)
-def update_plot(plot_id: str, body: PlotUpdate):
+def update_plot(plot_id: str, body: PlotUpdate, today: ClientToday):
     """Change only the fields sent, then check the result as a whole.
     Moving a plot to another farm is allowed if the name is free there."""
     plot_id = parse_id(plot_id, "plot")
     changes = sent_fields(body)
+    if "planting_date" in changes:
+        check_not_future(changes["planting_date"], today)
     with connect() as conn:
         plot = find_plot(conn, plot_id)
         plot.update(changes)
