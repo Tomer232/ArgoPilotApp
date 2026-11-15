@@ -21,6 +21,8 @@ Every design decision made while building `services/registry-service`, and who m
 | Y7 | Future work (after P1, separate branch): a UI, and deliberately breaking the database to prove every failure is handled | Not part of P1: the task says to delete unlisted functionality. **The UI part was later changed by Y8.** |
 | Y8 | Build a small UI now, on the same branch, in the P1 pull request, styled like a reference dashboard you supplied | You want visuals that show and exercise every feature. Trade-off accepted: a reviewer sees functionality the task doesn't list. |
 | Y9 | The two measurement scripts (`measure_latency.py`, `hammer.py`) are kept locally, not committed | They are tooling, not API features, and the task says to delete unlisted functionality. Replaces O36 and the "committed" part of O44. Trade-off: a reviewer cannot rerun the measurement; the README describes the method instead. |
+| Y10 | "Today" for the planting-date rule is the client's local date, from a `Time-Zone` header (e.g. `Asia/Jerusalem`) | A farmer's "today" is where they are. Replaces O9 when the header is sent. Protection against a lying client: every real zone is between UTC-12 and UTC+14, so a claimed zone can move "today" at most one day past UTC, never further. |
+| Y11 | The UI opens on a **Playground**: quick scenarios, a 3-step request builder (action, what, details, each with bad values to pick), and a result showing request → response, a one-line why, the journey through the code, and what changed | The demo is the most important part of the interview: anyone can try any request and see what happens and why, with little text. |
 
 ## Ours
 
@@ -34,7 +36,7 @@ Every design decision made while building `services/registry-service`, and who m
 | O6 | Names only need to be non-empty (after trimming); no max length | Exactly what the spec says. |
 | O7 | PATCH may move a plot to another farm | `farm_id` is a plot field and PATCH changes the fields in the body. The new farm must exist (422) and the name must be free there (409). |
 | O8 | Empty PATCH `{}` → 200, object unchanged | Industry practice (Stripe, GitHub); "PATCH changes only the fields in the body". |
-| O9 | "Today" = today in UTC+14, the first zone on Earth to reach a new day | Cheapest version of Y2: a date is rejected only if it is in the future everywhere. Nobody is wrongly rejected. Cost: a date up to about a day ahead can pass in western zones. **Temporary**: revisit with a per-plot time zone from lat/lon. |
+| O9 | "Today" = today in UTC+14, the first zone on Earth to reach a new day (**now only when no `Time-Zone` header is sent: see Y10**) | Cheapest version of Y2: a date is rejected only if it is in the future everywhere. Nobody is wrongly rejected. Cost: a date up to about a day ahead can pass in western zones. **Temporary**: revisit with a per-plot time zone from lat/lon. |
 | O10 | `Retry-After: 5` seconds on 503 | A missing or locked local SQLite file is usually fixed quickly. |
 | O11 | Database path from the `REGISTRY_DB_PATH` environment variable, default `registry.db` next to the code | Tests point it at a temporary copy and never touch real data. |
 | O12 | New database connection per request | Opening a local SQLite file takes well under 1 ms, so the p95 ≤ 100 ms target is safe. No thread-safety issues; a deleted file is noticed at once. |
@@ -75,6 +77,8 @@ Every design decision made while building `services/registry-service`, and who m
 | O47 | HEAD requests keep getting 405 | The spec lists only GET; the 405 says which methods do work. |
 | O48 | The `GET /v1/plots` size limit is documented, not fixed | **Found by the hammer**: past ~13,000 plots one response takes over 100 ms, so at 10 req/s requests arrive faster than they're answered and time out. The real fix (pagination) changes the spec's API, so it's the spec owner's decision. |
 | O49 | The 405 `Allow` header lists every method the URL accepts | **Found by the matrix**: `/v1/farms` said `Allow: POST`, leaving out GET. |
+| O50 | No `Time-Zone` header → today in UTC+14 (O9, unchanged); an unknown zone (e.g. `Mars/Base`) → 422 `VALIDATION`; the demo UI sends the browser's zone automatically | Old clients and curl keep working; a bad zone fails loudly like any bad input; the demo uses your real local date. Base is UTC, not the server's location, because servers move. |
+| O51 | `planting_date` stays text checked by a pattern plus `check_real_date`, not Pydantic's `datetime.date` type, for now. Revisit when the registry moves to SQLAlchemy | Suggested in the P1 interview, so it was tested first. FastAPI validates bodies in Python mode, so a strict `date` field rejects even `"2026-03-01"`. Turning strict off for the field lets in `"2026-03-01T00:00:00"` and Unix timestamps (`0` becomes 1970-01-01), which breaks our strict-types rule. With SQLAlchemy a `Date` column takes a `date` object directly, so the swap fits there. |
 
 ## Agent's
 
@@ -123,3 +127,5 @@ Every design decision made while building `services/registry-service`, and who m
 | A41 | The hammer reports the **achieved** rate next to the target rate | If the client can't send as fast as asked, the step measures the laptop, not the service. Seen: above ~200 req/s on this laptop, client and server compete for the same CPU. | `scripts/hammer.py` |
 | A42 | Matrix cases with no decision yet (`None`) only check the two rules | Their actual answers are listed for you: duplicate JSON keys (last wins), 1 MB names (accepted), no content-type (422), `+json` (201), trailing slash (307 redirect), `farm_id` twice (last wins), a garbage stored date (returned as-is). | `tests/test_matrix.py` |
 | A43 | One of my matrix expectations was wrong and was corrected | With the plots table dropped, deleting a farm correctly succeeds: nothing references it. | `tests/test_matrix.py` |
+| A44 | The future-date check moved from the Pydantic model to the plot routes (`check_not_future`), fed by a `today_for_request` dependency | A Pydantic validator can't see request headers; the model still checks the date is real (`check_real_date`). PATCH checks the date only when it is sent. | `models.py`, `plots.py` |
+| A45 | The playground's "why" line and the journey step are worked out in the browser from the status and the error `detail` | No new API functionality is needed for the demo. Trade-off: if an error message changes, the UI text must change with it. | `ui/index.html` `pgWhy`, `pgFailedStep` |
