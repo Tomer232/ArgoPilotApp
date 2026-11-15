@@ -48,3 +48,9 @@ def test_unknown_id_is_404(client, url, label):
 @pytest.mark.parametrize("url", ["/v1/crops", "/v1/crops/tomato", "/v1/soils", "/v1/soils/sand", "/v1/emitters", "/v1/emitters/dripnet-pc-1.0"])
 def test_other_methods_are_405(client, method, url):
     assert_problem(client.request(method, url), 405, None)
+
+
+@pytest.mark.parametrize("path", ["/v1/crops/a%00b", "/v1/soils/a%00b", "/v1/emitters/a%00b"])
+def test_catalogue_id_with_nul_is_404(client, path):
+    """A NUL in a catalogue id is just an unknown id, never a database error."""
+    assert_problem(client.get(path), 404, "NOT_FOUND")

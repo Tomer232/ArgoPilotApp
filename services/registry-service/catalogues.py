@@ -32,6 +32,9 @@ def get_all(table: Table) -> list[dict]:
 
 def get_one(table: Table, item_id: str, label: str) -> dict:
     """One row by id, or 404 with e.g. 'Unknown crop'."""
+    if "\x00" in item_id:
+        # No id contains NUL, and PostgreSQL can't even compare such text: skip the query.
+        raise NotFoundError(f"Unknown {label}")
     query = select(*public_columns(table)).where(table.c.id == item_id)
     with connect() as conn:
         row = conn.execute(query).mappings().first()

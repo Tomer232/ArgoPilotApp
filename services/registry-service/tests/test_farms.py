@@ -116,3 +116,18 @@ def test_delete_farm_after_its_plots_are_gone(client):
 
 def test_delete_unknown_farm_is_404(client):
     assert_problem(client.delete(f"/v1/farms/{UNKNOWN_ID}"), 404, "NOT_FOUND")
+
+
+# --- Name rule (decision 5): 1-200 characters after trimming, no NUL --------
+
+
+@pytest.mark.parametrize("name", ["a" * 201, "a\u0000b"], ids=["201 chars", "NUL"])
+def test_farm_name_rule(client, name):
+    """A name PostgreSQL can't store is 422 on create and on update."""
+    assert_problem(client.post("/v1/farms", json={"name": name}), 422, "VALIDATION")
+    assert_problem(client.patch(f"/v1/farms/{DEMO_FARM}", json={"name": name}), 422, "VALIDATION")
+
+
+def test_farm_name_200_chars_ok(client):
+    """Exactly 200 characters is still a valid name."""
+    assert client.post("/v1/farms", json={"name": "a" * 200}).status_code == 201

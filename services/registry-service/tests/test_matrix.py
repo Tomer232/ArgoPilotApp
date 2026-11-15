@@ -93,11 +93,15 @@ FIELD_CASES = (
         ("crop_id=TOMATO", {"crop_id": "TOMATO"}, 422),
         ("crop_id='tomato '", {"crop_id": "tomato "}, 422),
         ("emitter_id=SQL injection", {"emitter_id": "x' OR '1'='1"}, 422),
-        # Names: no max length, any text
-        ("name=10,000 chars", {"name": "a" * 10_000}, 201),
+        ("crop_id=NUL", {"crop_id": "a\u0000b"}, 422),
+        # Names: 1-200 characters after trimming, no NUL (decision 5)
+        ("name=10,000 chars", {"name": "a" * 10_000}, 422),
+        ("name=200 chars", {"name": "a" * 200}, 201),
+        ("name=201 chars", {"name": "a" * 201}, 422),
+        ("name=200 chars + spaces", {"name": "  " + "a" * 200 + " "}, 201),
         ("name=emoji", {"name": "🍅 Tomato row"}, 201),
         ("name=SQL injection", {"name": "x'); DROP TABLE plots;--"}, 201),
-        ("name=NUL character", {"name": "a\u0000b"}, 201),
+        ("name=NUL character", {"name": "a\u0000b"}, 422),
         ("name=right-to-left text", {"name": "חלקה צפונית"}, 201),
         ("farm_id=UPPERCASE", {"farm_id": DEMO_FARM.upper()}, 201),
         ("unknown field", {"color": "red"}, 422),
@@ -121,10 +125,10 @@ def test_patch_plot_field(client, case, changes, expected):
 
 def test_text_fields_round_trip(client):
     """Unusual but valid names come back exactly as sent, and SQL in a name is just text."""
-    for name in ["🍅 Tomato row", "x'); DROP TABLE plots;--", "a\u0000b", "חלקה צפונית"]:
+    for name in ["🍅 Tomato row", "x'); DROP TABLE plots;--", "חלקה צפונית"]:
         created = client.post("/v1/plots", json=plot_body(name=name)).json()
         assert client.get(f"/v1/plots/{created['id']}").json()["name"] == name
-    assert len(client.get("/v1/plots").json()) == 8  # the table is still there
+    assert len(client.get("/v1/plots").json()) == 7  # the table is still there
 
 
 # =========================================================================
