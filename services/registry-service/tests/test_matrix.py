@@ -17,9 +17,22 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import delete
+from sqlalchemy.exc import OperationalError
 
-from helpers import DEMO_FARM, EAST_FARM, NORTH_BLOCK, assert_problem, plot_body
+import db
+from helpers import (
+    DEMO_FARM,
+    EAST_FARM,
+    NORTH_BLOCK,
+    assert_problem,
+    plot_body,
+    postgres_only,
+    sqlite_only,
+)
 from main import app
+from plots import check_references
+from tables import farms
 
 CODES = {404: "NOT_FOUND", 405: None, 409: "CONFLICT", 422: "VALIDATION", 503: "UNAVAILABLE"}
 
@@ -259,6 +272,7 @@ DB_CASES = [
 ]
 
 
+@sqlite_only
 @pytest.mark.skipif(hasattr(os, "geteuid") and os.geteuid() == 0, reason="root ignores file permissions")
 @pytest.mark.parametrize("case, breaker, method, path, expected", DB_CASES, ids=[c[0] for c in DB_CASES])
 def test_broken_database(db_path, case, breaker, method, path, expected):
@@ -272,6 +286,7 @@ def test_broken_database(db_path, case, breaker, method, path, expected):
             os.chmod(db_path, 0o644)  # let pytest clean up the temp folder
 
 
+@sqlite_only
 def test_locked_database_is_503(db_path):
     """Another program holds an exclusive lock: after sqlite3's 5 s wait, a clean 503."""
     blocker = sqlite3.connect(db_path)
@@ -331,6 +346,22 @@ def test_delete_farm_while_plots_are_added(client):
     farm_exists = client.get(f"/v1/farms/{farm['id']}").status_code == 200
     plots = client.get(f"/v1/plots?farm_id={farm['id']}").json()
     assert farm_exists or plots == [], "plots were left pointing at a deleted farm"
+
+
+@postgres_only
+def test_plot_write_locks_its_farm(client):
+    """Once a plot write has checked its farm, deleting that farm must wait (decision 6).
+
+    Without the lock the delete would go through, the plot's INSERT would then break
+    the foreign key, and the client would get a false 409 "name taken".
+    """
+    farm = client.post("/v1/farms", json={"name": "Locked farm"}).json()
+    with db.engine.connect() as writer, db.engine.connect() as deleter:
+        check_references(writer, plot_body(farm_id=farm["id"]))  # the write's transaction stays open
+        deleter.exec_driver_sql("SET lock_timeout = '200ms'")
+        with pytest.raises(OperationalError, match="lock"):
+            deleter.execute(delete(farms).where(farms.c.id == farm["id"]))
+        writer.rollback()
 
 
 def test_reads_during_writes(client):

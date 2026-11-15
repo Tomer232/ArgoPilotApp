@@ -70,9 +70,19 @@ def find_plot(conn: Connection, plot_id: str) -> dict:
 
 
 def check_references(conn: Connection, plot: dict) -> None:
-    """422 if the plot's farm, crop, soil or emitter does not exist."""
+    """422 if the plot's farm, crop, soil or emitter does not exist.
+
+    The farm row is also locked (FOR SHARE) until this request ends. Otherwise, on
+    PostgreSQL, a farm deleted between this check and the plot's INSERT would make
+    the foreign key fail, and that error would be misread as "name taken".
+    A concurrent farm delete now waits, then correctly gets "Farm still has plots".
+    SQLite ignores the lock; it already lets only one writer in at a time.
+    Crops, soils and emitters can't be deleted through the API, so they need no lock.
+    """
     for table, field, label in REFERENCES:
         query = select(table.c.id).where(table.c.id == plot[field])
+        if table is farms:
+            query = query.with_for_update(read=True)
         found = conn.execute(query).first()
         if found is None:
             raise ValidationFailedError(f"Unknown {label}")

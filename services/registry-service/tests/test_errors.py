@@ -3,7 +3,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from helpers import assert_problem, use_database
+from helpers import assert_problem, sqlite_only, use_database
 from main import app
 
 
@@ -56,6 +56,7 @@ def test_unknown_query_parameter_is_422(client):
 # --- Database unreachable -------------------------------------------------
 
 
+@sqlite_only
 def test_missing_database_is_503_with_retry_after(tmp_path, monkeypatch):
     missing = tmp_path / "missing.db"
     use_database(monkeypatch, f"sqlite:///{missing}")
@@ -65,6 +66,7 @@ def test_missing_database_is_503_with_retry_after(tmp_path, monkeypatch):
     assert not missing.exists()  # mode=rw: no empty database was created
 
 
+@sqlite_only
 def test_corrupt_database_is_503(tmp_path, monkeypatch):
     garbage = tmp_path / "garbage.db"
     garbage.write_text("this is not a database")
@@ -72,6 +74,7 @@ def test_corrupt_database_is_503(tmp_path, monkeypatch):
     assert_problem(TestClient(app).get("/v1/plots"), 503, "UNAVAILABLE")
 
 
+@sqlite_only
 def test_database_removed_while_running_is_503(client, db_path):
     assert client.get("/v1/farms").status_code == 200
     db_path.unlink()

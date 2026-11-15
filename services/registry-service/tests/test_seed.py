@@ -1,5 +1,6 @@
 """seed.py loads exactly the original 15 rows, all or nothing, and never over existing tables."""
 
+import os
 import sqlite3
 from pathlib import Path
 
@@ -8,6 +9,7 @@ from sqlalchemy import inspect, text
 
 import seed
 from db import make_engine
+from helpers import postgres_only
 
 ORIGINAL = Path(__file__).parent / "data" / "original_seed.sql"
 TABLES = ["farms", "crops", "soils", "emitters", "plots"]
@@ -70,3 +72,16 @@ def test_relative_sqlite_path_is_in_service_folder():
     engine = make_engine("sqlite:///some-name.db")
     path = Path(engine.url.database.removeprefix("file:"))
     assert path.parent == Path(seed.__file__).parent
+
+
+@postgres_only
+def test_failed_seed_leaves_no_tables_on_postgres(db_path, monkeypatch):
+    """The same all-or-nothing rule on PostgreSQL (its DDL is transactional by itself)."""
+    engine = make_engine(os.environ["TEST_DATABASE_URL"])
+    seed.metadata.drop_all(engine)
+    plots = seed.SEED_ROWS["plots"]
+    monkeypatch.setattr(seed, "SEED_ROWS", {**seed.SEED_ROWS, "plots": plots + [plots[0]]})
+    with pytest.raises(Exception):
+        seed.seed_database(engine)
+    assert inspect(engine).get_table_names() == []
+    engine.dispose()
