@@ -3,7 +3,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from helpers import assert_problem
+from helpers import assert_problem, use_database
 from main import app
 
 
@@ -58,7 +58,7 @@ def test_unknown_query_parameter_is_422(client):
 
 def test_missing_database_is_503_with_retry_after(tmp_path, monkeypatch):
     missing = tmp_path / "missing.db"
-    monkeypatch.setenv("REGISTRY_DB_PATH", str(missing))
+    use_database(monkeypatch, f"sqlite:///{missing}")
     response = TestClient(app).get("/v1/farms")
     assert_problem(response, 503, "UNAVAILABLE")
     assert response.headers["retry-after"] == "5"
@@ -68,7 +68,7 @@ def test_missing_database_is_503_with_retry_after(tmp_path, monkeypatch):
 def test_corrupt_database_is_503(tmp_path, monkeypatch):
     garbage = tmp_path / "garbage.db"
     garbage.write_text("this is not a database")
-    monkeypatch.setenv("REGISTRY_DB_PATH", str(garbage))
+    use_database(monkeypatch, f"sqlite:///{garbage}")
     assert_problem(TestClient(app).get("/v1/plots"), 503, "UNAVAILABLE")
 
 

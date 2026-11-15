@@ -1,6 +1,8 @@
-"""Seed ids, a valid plot body, and a check for problem+json errors."""
+"""Seed ids, a valid plot body, a check for problem+json errors, and a database switch."""
 
 import datetime
+
+import db
 
 # Ids from seed_registry.sh
 DEMO_FARM = "b7e2c0a0-3c1d-4f0a-9a11-0c5d2e6f1001"  # North block, East block
@@ -47,3 +49,11 @@ def assert_problem(response, status: int, code: str | None) -> dict:
     else:
         assert body["code"] == code
     return body
+
+
+def use_database(monkeypatch, url: str):
+    """Point the app at another database for one test. Returns the engine."""
+    engine = db.make_engine(url)
+    monkeypatch.setenv("DATABASE_URL", url)
+    monkeypatch.setattr(db, "engine", engine)
+    return engine

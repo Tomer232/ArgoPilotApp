@@ -12,6 +12,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite:///unused-by-tests.db")
 import pytest  # noqa: E402  (must come after the DATABASE_URL default)
 from fastapi.testclient import TestClient
 
+from helpers import use_database
 from main import app
 
 SERVICE_DIR = Path(__file__).parent.parent
@@ -35,8 +36,9 @@ def db_path(seeded_db, tmp_path, monkeypatch) -> Path:
     """A private copy of the seeded database, and point the app at it."""
     path = tmp_path / "registry.db"
     shutil.copy(seeded_db, path)
-    monkeypatch.setenv("REGISTRY_DB_PATH", str(path))
-    return path
+    engine = use_database(monkeypatch, f"sqlite:///{path}")
+    yield path
+    engine.dispose()  # no connection survives into the next test
 
 
 @pytest.fixture

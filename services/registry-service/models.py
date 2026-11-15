@@ -155,7 +155,7 @@ class Plot(BaseModel):
     name: str
     area_m2: float
     crop_id: str
-    planting_date: str
+    planting_date: datetime.date
     soil_id: str
     row_spacing_m: float
     emitter_spacing_m: float
