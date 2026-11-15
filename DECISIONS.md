@@ -1,6 +1,6 @@
-# Decisions — P1 Registry service API
+# Decisions — AgroPilot
 
-Every design decision made while building `services/registry-service`, and who made it.
+Every design decision, and who made it. P1 (registry API) decisions end at Y12, O51, A45; P2 (PostgreSQL, weather, planner, frontend) decisions start at Y13, O53, A46. (O52 is taken on branch `exp/irrigation-volume`.)
 
 - **Yours**: you set the direction yourself, or went beyond the options offered.
 - **Ours**: the agent offered options with a recommendation, you chose.
@@ -24,6 +24,7 @@ Every design decision made while building `services/registry-service`, and who m
 | Y10 | "Today" for the planting-date rule is the client's local date, from a `Time-Zone` header (e.g. `Asia/Jerusalem`) | A farmer's "today" is where they are. Replaces O9 when the header is sent. Protection against a lying client: every real zone is between UTC-12 and UTC+14, so a claimed zone can move "today" at most one day past UTC, never further. |
 | Y11 | The UI opens on a **Playground**: quick scenarios, a 3-step request builder (action, what, details, each with bad values to pick), and a result showing request → response, a one-line why, the journey through the code, and what changed | The demo is the most important part of the interview: anyone can try any request and see what happens and why, with little text. |
 | Y12 | The two measurement scripts are committed after all, each marked **NOT A REQUIREMENT**, and logged in `docs/extras.md`. Anything else built outside the requirements follows the same rule: kept, clearly marked, logged | After the P1 interview: keeping tooling like this is fine. It keeps a record of how we measured, P2's PR needs measured NFR numbers, and `hammer.py` is how the open O48 limit was found. Replaces Y9. |
+| Y13 | Turn `/docs` (and `/openapi.json`) back on for `registry-service` and `planner-service` | P2's frontend prompt tells the agent to read the APIs at `/docs`. The agent recommended pointing it at the READMEs instead. Replaces O14 when built (at the frontend step). |
 
 ## Ours
 
@@ -42,7 +43,7 @@ Every design decision made while building `services/registry-service`, and who m
 | O11 | Database path from the `REGISTRY_DB_PATH` environment variable, default `registry.db` next to the code | Tests point it at a temporary copy and never touch real data. |
 | O12 | New database connection per request | Opening a local SQLite file takes well under 1 ms, so the p95 ≤ 100 ms target is safe. No thread-safety issues; a deleted file is noticed at once. |
 | O13 | `IntegrityError` passes to the routes; every other database error → 503 | `IntegrityError` means "the database refused this data" (→ 409 or 422). Anything else means the database can't be used. |
-| O14 | `/docs`, `/redoc`, `/openapi.json` turned off | The task does not list them and says to delete unlisted functionality. |
+| O14 | `/docs`, `/redoc`, `/openapi.json` turned off | The task does not list them and says to delete unlisted functionality. **Replaced by Y13 in P2.** |
 | O15 | FastAPI with Python's built-in `sqlite3`, no ORM | The seed script already owns the schema; an ORM would be a second definition of it. Fewer dependencies. |
 | O16 | `registry.db` is git-ignored; `seed_registry.sh` is committed | The database is generated; the script is the source. |
 | O17 | One file per area: `catalogues.py`, `farms.py`, `plots.py`, with shapes in `models.py` | Easy to find and explain: plot logic lives in `plots.py`. `main.py` only wires things together. |
@@ -80,6 +81,10 @@ Every design decision made while building `services/registry-service`, and who m
 | O49 | The 405 `Allow` header lists every method the URL accepts | **Found by the matrix**: `/v1/farms` said `Allow: POST`, leaving out GET. |
 | O50 | No `Time-Zone` header → today in UTC+14 (O9, unchanged); an unknown zone (e.g. `Mars/Base`) → 422 `VALIDATION`; the demo UI sends the browser's zone automatically | Old clients and curl keep working; a bad zone fails loudly like any bad input; the demo uses your real local date. Base is UTC, not the server's location, because servers move. |
 | O51 | `planting_date` stays text checked by a pattern plus `check_real_date`, not Pydantic's `datetime.date` type, for now. Revisit when the registry moves to SQLAlchemy | Suggested in the P1 interview, so it was tested first. FastAPI validates bodies in Python mode, so a strict `date` field rejects even `"2026-03-01"`. Turning strict off for the field lets in `"2026-03-01T00:00:00"` and Unix timestamps (`0` becomes 1970-01-01), which breaks our strict-types rule. With SQLAlchemy a `Date` column takes a `date` object directly, so the swap fits there. |
+| O53 | P2 order: branch, setup (PostgreSQL, Node, plugins, skills, `.env` deny rule), registry on PostgreSQL, weather-service, research + planner + `irrigation-calc-reference`, frontend, NFR measurements, PR | The planner needs both other services and the frontend needs all three. The riskiest change (the database) goes first, while nothing else depends on it yet. |
+| O54 | Kc values, growth stages and root depth per crop live in `planner-service`, taken from the FAO-56 research, not in the registry | The registry spec is fixed and has no such fields; the planner is the only service that needs them. |
+| O55 | NFR-2.5's "check value in the Definition of done" does not exist in `tasks/p2.md`; ask the lecturer, and until then check accuracy against our three hand-calculated cases only | Can't test against a number we don't have. |
+| O56 | Node.js LTS is installed in WSL with nvm | No sudo, lives in the home folder, and stops `npx` from resolving to the Windows Node. |
 
 ## Agent's
 
