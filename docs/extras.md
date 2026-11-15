@@ -6,6 +6,13 @@
 
 Each entry: what it is, why we made it, where it lives, and how to run it.
 
+## Measurement scripts (P1)
+
+- **What:** `measure_latency.py` measures NFR-1.1 (p95 of every GET at 10 req/s). `hammer.py` pushes rate, table size and a read/write mix until p95 passes 100 ms.
+- **Why:** to show NFR-1.1 holds with numbers, and to find where it breaks. `hammer.py` found the ~13,000-plot limit (DECISIONS O48, still open). P2 needs the same kind of numbers (NFR-2.2, NFR-2.3).
+- **Where:** `services/registry-service/scripts/`, on `main` (DECISIONS Y12).
+- **Run:** from `services/registry-service`. For `measure_latency.py`, start the service first (`uv run uvicorn main:app --port 8000`), then `uv run python scripts/measure_latency.py`. `uv run python scripts/hammer.py` starts its own servers and scratch databases (about 15 minutes; `--only rate|size|mixed` for one test).
+
 ## Ollama terminal agent (lesson 12)
 
 - **What:** a 47-line chat agent: `qwen3:1.7b` on Ollama, with one tool, `current_date()`.

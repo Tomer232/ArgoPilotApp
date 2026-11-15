@@ -65,5 +65,5 @@ Conventions that span files:
 ## Project constraints
 
 - The task says to build only what the spec lists and delete unlisted functionality (that is why `/docs`, `/openapi.json`, `Location` headers and pagination are absent). Treat anything outside the spec as a decision for the owner, and record it in `DECISIONS.md`.
-- Local measurement scripts under `services/registry-service/scripts/` are git-ignored on purpose (Y9); do not commit them.
+- Measurement scripts under `services/registry-service/scripts/` are committed tooling, **not a requirement** (Y12). Anything else built outside the requirements is logged in `docs/extras.md`.
 - Every function gets a short docstring. The owner is interviewed on this code and must be able to explain every line (see "How we work").
