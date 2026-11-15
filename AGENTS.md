@@ -23,6 +23,8 @@ The owner decides; the agent builds and supplies the information needed to decid
 - `services/registry-service/`: the only service today. FastAPI + Python's built-in `sqlite3` (no ORM), Python 3.12, managed with `uv`.
 - `experiments/ollama-agent/agent.py`: a standalone uv script (inline dependencies), unrelated to the service.
 - `DECISIONS.md`: every design decision, grouped as **Yours** (Y#), **Ours** (O#) and **Agent's** (A#). New decisions get the next number in the right group; superseded ones are marked, not deleted.
+- `.claude/skills/`: skills. Third-party ones (e.g. `skill-creator`) are installed with `npx skills add` and pinned in `skills-lock.json`. Don't edit them; update by reinstalling. Our own skills live here too.
+- `.claude/rules/`: rules that load only for matching paths (e.g. `registry-service.md`).
 - `docs/judgment-log.md`: the decisions where the agent's suggestion and the owner's choice differed, written in the owner's words.
 
 ## Commands
