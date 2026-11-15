@@ -1,6 +1,6 @@
 ---
 name: registry-api
-description: API conventions for services/registry-service (FastAPI + sqlite3). Use this skill whenever you add, change, rename or remove an endpoint, route, request/response model, query parameter or error response in registry-service, and whenever you write tests for one, even if the request only says "add a field", "support filtering by X" or "fix this status code".
+description: API conventions for services/registry-service (FastAPI + SQLAlchemy Core, on SQLite or PostgreSQL). Use this skill whenever you add, change, rename or remove an endpoint, route, request/response model, query parameter or error response in registry-service, and whenever you write tests for one, even if the request only says "add a field", "support filtering by X" or "fix this status code".
 ---
 
 # Registry API conventions
@@ -18,6 +18,11 @@ exactly like the existing ones in `farms.py` and `plots.py`. Read one of those f
   object around it. No rows is `200` with `[]`, never a 404.
 - A new query parameter must also be added to `ALLOWED_QUERY_PARAMS` in `main.py`.
   Otherwise it is rejected with 422.
+- Queries use SQLAlchemy Core on the `Table` objects in `tables.py`, inside
+  `with connect() as conn:`. A new column goes into `tables.py` (the only schema)
+  and, if the demo data needs it, `seed.py`. Lists order by the hidden `seq` column,
+  which never appears in a response. Catch `sqlalchemy.exc.IntegrityError`, not
+  `sqlite3`'s.
 
 ## 2. Only the spec's fields
 
