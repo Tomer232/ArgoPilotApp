@@ -1,0 +1,54 @@
+{
+  "skill_name": "registry-api",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add GET /v1/farms/{farm_id}/plots that returns the plots of one farm.",
+      "expected_output": "Full /v1 path, list[Plot] response, [] for a farm without plots, 404 NOT_FOUND for unknown and non-UUID farm ids, tests for each, suite run, flagged as outside the spec.",
+      "files": [],
+      "assertions": [
+        "Route decorator uses the full path /v1/farms/{farm_id}/plots with response_model=list[Plot]",
+        "A test checks a farm with no plots returns 200 and []",
+        "A test checks an unknown farm id returns 404 with code NOT_FOUND (via assert_problem)",
+        "A test checks a non-UUID farm id returns 404 with code NOT_FOUND",
+        "questions.md raises that the endpoint is not in the spec, or asks how an unknown farm should behave",
+        "No new HTTPException or hand-built error body: errors use the errors.py classes",
+        "Every new or changed function has a docstring",
+        "uv run pytest was run at the end and the final line shows all tests passed (no failures)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Plots need an optional `notes` field (free text). Add it to create, read and PATCH.",
+      "expected_output": "Flags notes as outside the spec, bounds its length, PATCH via sent_fields, tests success and every 422.",
+      "files": [],
+      "assertions": [
+        "questions.md raises that `notes` is not a field in the spec",
+        "The notes field has a maximum length",
+        "PATCH of notes goes through sent_fields (a test shows other fields stay unchanged, or the existing PATCH path is reused)",
+        "A test checks an invalid notes value (too long or wrong type) returns 422 with code VALIDATION",
+        "A test checks PATCH with notes: null returns 422 VALIDATION, or questions.md asks how clearing notes should work",
+        "The plots table schema in seed_registry.sh has the new column",
+        "No new HTTPException or hand-built error body: errors use the errors.py classes",
+        "Every new or changed function has a docstring",
+        "uv run pytest was run at the end and the final line shows all tests passed (no failures)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "GET /v1/crops?name=tomato should filter crops by name.",
+      "expected_output": "Adds name to ALLOWED_QUERY_PARAMS, [] on no match, asks about matching rules, tests success and failure.",
+      "files": [],
+      "assertions": [
+        "`name` is added for /v1/crops in ALLOWED_QUERY_PARAMS in main.py",
+        "A test checks a name with no match returns 200 and []",
+        "A test checks a matching name returns only the matching crop(s)",
+        "questions.md asks about matching rules (exact vs case-insensitive vs partial) or that the filter is not in the spec",
+        "At least one failure case is tested (e.g. an unknown query parameter or an invalid name gives 422 VALIDATION)",
+        "No new HTTPException or hand-built error body: errors use the errors.py classes",
+        "Every new or changed function has a docstring",
+        "uv run pytest was run at the end and the final line shows all tests passed (no failures)"
+      ]
+    }
+  ]
+}
