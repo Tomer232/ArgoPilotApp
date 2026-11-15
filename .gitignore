@@ -28,3 +28,4 @@ htmlcov/
 .idea/
 .vscode/*
 !.vscode/launch.json
+.claude/skills/registry-api-workspace/

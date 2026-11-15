@@ -27,3 +27,10 @@ Each entry: what it is, why we made it, where it lives, and how to run it.
 - **Where:** branch `exp/irrigation-volume` only. **Never merged**: it would add an unlisted endpoint to the registry, and in P2 irrigation math belongs in the planner.
 - **What we learned:** the agent followed the rule but read `gt=0` as "bounded". `/code-review` found that huge inputs returned `200 {"volume_liters": null}` and tiny ones `0.0`. We fixed it with realistic ranges, and sharpened the rule to "a realistic minimum **and** maximum".
 - **Run:** `git switch exp/irrigation-volume`, then start the registry and `curl -X POST localhost:8000/v1/irrigation/volume -H 'Content-Type: application/json' -d '{"area_m2": 100, "depth_mm": 5}'`.
+
+## `registry-api` skill (lesson 13)
+
+- **What:** a project skill with our API conventions: `/v1` routes, JSON-array lists, only the spec's fields, PATCH sends only changed fields, problem+json errors with stable codes (405 has none on purpose), tests for every outcome, `uv run pytest` before "done", ask when the spec is silent.
+- **Why:** lesson 13 exercise, written with `/skill-creator`, so every agent that touches an endpoint follows the same conventions without being told.
+- **Where:** `.claude/skills/registry-api/SKILL.md`. Eval runs go in `.claude/skills/registry-api-workspace/` (not committed).
+- **Run:** loads on its own when an agent works on a registry endpoint, or type `/registry-api`.
