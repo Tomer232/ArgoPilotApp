@@ -78,6 +78,7 @@ Every design decision made while building `services/registry-service`, and who m
 | O48 | The `GET /v1/plots` size limit is documented, not fixed | **Found by the hammer**: past ~13,000 plots one response takes over 100 ms, so at 10 req/s requests arrive faster than they're answered and time out. The real fix (pagination) changes the spec's API, so it's the spec owner's decision. |
 | O49 | The 405 `Allow` header lists every method the URL accepts | **Found by the matrix**: `/v1/farms` said `Allow: POST`, leaving out GET. |
 | O50 | No `Time-Zone` header → today in UTC+14 (O9, unchanged); an unknown zone (e.g. `Mars/Base`) → 422 `VALIDATION`; the demo UI sends the browser's zone automatically | Old clients and curl keep working; a bad zone fails loudly like any bad input; the demo uses your real local date. Base is UTC, not the server's location, because servers move. |
+| O51 | `planting_date` stays text checked by a pattern plus `check_real_date`, not Pydantic's `datetime.date` type, for now. Revisit when the registry moves to SQLAlchemy | Suggested in the P1 interview, so it was tested first. FastAPI validates bodies in Python mode, so a strict `date` field rejects even `"2026-03-01"`. Turning strict off for the field lets in `"2026-03-01T00:00:00"` and Unix timestamps (`0` becomes 1970-01-01), which breaks our strict-types rule. With SQLAlchemy a `Date` column takes a `date` object directly, so the swap fits there. |
 
 ## Agent's
 
