@@ -8,6 +8,11 @@ export type Farm = {
   name: string;
 };
 
+export type Crop = {
+  id: string;
+  name: string;
+};
+
 export type Plot = {
   id: string;
   farm_id: string;
@@ -32,6 +37,11 @@ function getFromRegistry<T>(path: string): Promise<Result<T>> {
 /** Every farm. */
 export function listFarms(): Promise<Result<Farm[]>> {
   return getFromRegistry<Farm[]>("/v1/farms");
+}
+
+/** Every crop, for showing a crop's name instead of its id. */
+export function listCrops(): Promise<Result<Crop[]>> {
+  return getFromRegistry<Crop[]>("/v1/crops");
 }
 
 /** Every plot, of every farm. */
