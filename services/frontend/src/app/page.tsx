@@ -2,6 +2,7 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ProblemNotice } from "@/components/problem-notice";
+import { formatArea } from "@/lib/format";
 import type { Problem } from "@/lib/http";
 import { listCrops, listFarms, listPlots, type Plot } from "@/lib/registry";
 
@@ -80,9 +81,4 @@ function PlotLinks({ plots, cropNames }: { plots: Plot[]; cropNames: Map<string,
       ))}
     </ul>
   );
-}
-
-/** 1000 becomes "1,000 m²". */
-function formatArea(areaM2: number): string {
-  return `${areaM2.toLocaleString("en-US")} m²`;
 }
