@@ -21,6 +21,7 @@ The owner decides; the agent builds and supplies the information needed to decid
 ## Repository layout
 
 - `services/weather-service/`: daily ET0 and rain from Open-Meteo, cached in memory per 0.1° cell (port 8001). FastAPI + httpx, no database; settings in `.env`; `uv run pytest` never calls the real provider. See its README.
+- `services/planner-service/`: the daily irrigation plan per plot (port 8002), from registry-service and weather-service. FastAPI + httpx, no database, no cache. `engine.py` is the FAO-56 calculation, written from the `irrigation-calc-reference` skill; `upstream.py` is the only code that calls the other services; `uv run pytest` never calls them. See its README.
 - `services/registry-service/`: FastAPI + SQLAlchemy Core (no ORM classes), PostgreSQL in production and SQLite for local work and tests, Python 3.12, managed with `uv`.
 - `experiments/ollama-agent/agent.py`: a standalone uv script (inline dependencies), unrelated to the service.
 - `DECISIONS.md`: every design decision, grouped as **Yours** (Y#), **Ours** (O#) and **Agent's** (A#). New decisions get the next number in the right group; superseded ones are marked, not deleted.
