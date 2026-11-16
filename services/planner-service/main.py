@@ -2,6 +2,7 @@
 
 from fastapi import Depends, FastAPI, Request
 
+import plan
 from errors import ValidationFailedError, register_error_handlers
 
 # Query parameters each route accepts, by the route's path template. Anything else
@@ -26,6 +27,7 @@ app = FastAPI(
     dependencies=[Depends(reject_unknown_query_params)],
 )
 register_error_handlers(app)
+app.include_router(plan.router)
 
 
 @app.get("/health")
