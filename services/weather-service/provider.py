@@ -15,6 +15,7 @@ from config import settings
 
 logger = logging.getLogger("weather")
 
+SOURCE = "open-meteo"  # the "source" field of every answer
 DAYS_FETCHED = 8  # one more than the API serves, so a day-old forecast still covers 7 days (O72)
 
 # Open-Meteo's daily variable names, and the unit we accept for each.

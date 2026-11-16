@@ -2,6 +2,7 @@
 
 from fastapi import Depends, FastAPI, Request
 
+import forecast
 from errors import ValidationFailedError, register_error_handlers
 
 # Query parameters each URL accepts. Anything else is a 422, so a typo like
@@ -27,6 +28,7 @@ app = FastAPI(
     dependencies=[Depends(reject_unknown_query_params)],
 )
 register_error_handlers(app)
+app.include_router(forecast.router)
 
 
 @app.get("/health")
