@@ -27,3 +27,27 @@ def assert_problem(response, status: int, code: str | None) -> dict:
     else:
         assert body["code"] == code
     return body
+
+
+DAYS_FETCHED = 8
+
+
+def provider_body() -> dict:
+    """A valid Open-Meteo answer for 8 days, shaped like the real one (see the README).
+    Tests change one part of it to break it."""
+    return {
+        "latitude": 31.25,
+        "longitude": 34.75,
+        "utc_offset_seconds": 7200,
+        "timezone": "Asia/Jerusalem",
+        "daily_units": {
+            "time": "iso8601",
+            "et0_fao_evapotranspiration": "mm",
+            "precipitation_sum": "mm",
+        },
+        "daily": {
+            "time": [f"2026-11-{day}" for day in range(16, 24)],
+            "et0_fao_evapotranspiration": [2.78, 2.64, 2.47, 3.0, 3.11, 3.09, 2.29, 2.34],
+            "precipitation_sum": [0.0, 0.0, 0.0, 4.2, 0.0, 0.0, 0.3, 0.15],
+        },
+    }
