@@ -1,12 +1,13 @@
 """Database access through SQLAlchemy: SQLite locally, PostgreSQL in production."""
 
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
 from sqlalchemy import Connection, Engine, create_engine, event, make_url
 from sqlalchemy.engine import URL
-from sqlalchemy.exc import DBAPIError, IntegrityError
+from sqlalchemy.exc import ArgumentError, DBAPIError, IntegrityError
 from sqlalchemy.pool import NullPool
 
 from config import SERVICE_DIR, settings
@@ -37,6 +38,8 @@ def make_engine(url: str, *, creating: bool = False) -> Engine:
 
 def sqlite_path(url: URL) -> Path:
     """The SQLite file of a URL. A relative path means the service folder."""
+    if not url.database:
+        raise ArgumentError("A SQLite URL needs a file path, e.g. sqlite:///registry.db")
     path = Path(url.database)
     return path if path.is_absolute() else SERVICE_DIR / path
 
@@ -71,9 +74,22 @@ def make_ddl_transactional(engine: Engine) -> None:
         conn.exec_driver_sql("BEGIN")
 
 
+def engine_or_exit(url: str) -> Engine:
+    """The service's engine, or stop now with one clear line if DATABASE_URL is malformed."""
+    try:
+        return make_engine(url)
+    except ArgumentError:
+        print(
+            "DATABASE_URL is not a valid database URL. "
+            "Use sqlite:///registry.db or postgresql+psycopg://user:password@host:5432/registry.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+
 # One engine for the whole process, built from DATABASE_URL.
 # connect() looks it up on every call, so tests can swap it for their own copy.
-engine = make_engine(settings.database_url)
+engine = engine_or_exit(settings.database_url)
 
 
 @contextmanager
@@ -95,4 +111,7 @@ def connect() -> Iterator[Connection]:
     except IntegrityError:
         raise
     except (DBAPIError, ValueError) as exc:
+        # ValueError here means a stored value that can't be read back. So a route must
+        # not let its own ValueError (e.g. from parsing input) escape this block: it
+        # would become a 503 instead of a 422. See list_plots, which catches its own.
         raise UnavailableError("Database unavailable") from exc

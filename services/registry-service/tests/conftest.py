@@ -7,9 +7,10 @@ from pathlib import Path
 
 # config.py stops the process without DATABASE_URL. Tests need no .env: this file
 # is never opened (mode=rw never creates it); each test points the app at its copy.
-os.environ.setdefault("DATABASE_URL", "sqlite:///unused-by-tests.db")
+# Always overwritten, never taken from the shell, so a production URL there is never used.
+os.environ["DATABASE_URL"] = "sqlite:///unused-by-tests.db"
 
-import pytest  # noqa: E402  (must come after the DATABASE_URL default)
+import pytest  # noqa: E402  (must come after DATABASE_URL is set)
 from fastapi.testclient import TestClient
 from sqlalchemy import make_url
 

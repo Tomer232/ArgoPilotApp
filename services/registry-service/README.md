@@ -19,7 +19,7 @@ uv run uvicorn main:app --port 8000
 - Health check: `/health`
 - Demo UI: `/ui`, which opens on a playground for trying any request
 
-**Settings.** The one required setting is `DATABASE_URL`, read from the environment or from `.env` (the environment wins). Without it the service stops at startup with `Missing required setting DATABASE_URL. Copy .env.example to .env and fill it in.` `.env.example` has a line for each database:
+**Settings.** The one required setting is `DATABASE_URL`, read from the environment or from `.env` (the environment wins). Without it the service stops at startup with `Missing required setting DATABASE_URL. Copy .env.example to .env and fill it in.` A malformed URL (for example `postgres://...` instead of `postgresql+psycopg://...`) also stops it with one line: `DATABASE_URL is not a valid database URL. ...`. `.env.example` has a line for each database:
 
 | Database | `DATABASE_URL` |
 | --- | --- |
@@ -52,7 +52,7 @@ It is all or nothing, in one transaction. If any of the five tables already exis
 ## Test it
 
 ```bash
-uv run pytest          # SQLite: 444 passed, 2 skipped (PostgreSQL-only tests), about 10 s
+uv run pytest          # SQLite: 448 passed, 2 skipped (PostgreSQL-only tests), about 10 s
 ```
 
 Tests need no `.env`. Each test gets its own copy of a freshly seeded SQLite file.
@@ -64,7 +64,7 @@ sudo -u postgres createdb -O registry registry_test
 TEST_DATABASE_URL='postgresql+psycopg://registry:<password>@localhost:5432/registry_test?connect_timeout=3&options=-c%20statement_timeout%3D5000' uv run pytest
 ```
 
-Result: 429 passed, 17 skipped. The skipped ones break a SQLite file (missing, read-only, corrupt, locked), which doesn't exist on PostgreSQL. Two tests run only on PostgreSQL: the farm-row lock during plot writes, and the all-or-nothing seed.
+Result: 433 passed, 17 skipped. The skipped ones break a SQLite file (missing, read-only, corrupt, locked), which doesn't exist on PostgreSQL. Two tests run only on PostgreSQL: the farm-row lock during plot writes, and the all-or-nothing seed.
 
 `tests/test_matrix.py` is the break-the-API matrix. It covers bad field values, protocol abuse (wrong content type, broken JSON, huge bodies), broken databases (missing, read-only, locked, corrupt, bad rows) and concurrent writes.
 
