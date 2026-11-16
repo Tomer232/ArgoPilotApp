@@ -21,6 +21,7 @@ from sqlalchemy import delete
 from sqlalchemy.exc import OperationalError
 
 import db
+import plots as plots_routes
 from helpers import (
     DEMO_FARM,
     EAST_FARM,
@@ -330,6 +331,32 @@ def test_many_updates_to_one_plot(client):
     responses = in_parallel(30, lambda c, i: c.patch(f"/v1/plots/{NORTH_BLOCK}", json={"area_m2": 100 + i}))
     assert all(r.status_code == 200 for r in responses), [r.status_code for r in responses]
     assert client.get(f"/v1/plots/{NORTH_BLOCK}").json()["area_m2"] in {100 + i for i in range(30)}
+
+
+def test_two_patches_to_different_fields_both_stick(client, monkeypatch):
+    """Two PATCHes read the same plot, then each changes a different field: both changes are kept.
+
+    A barrier inside find_plot makes both requests finish reading before either writes.
+    """
+    both_have_read = threading.Barrier(2, timeout=5)
+    real_find_plot = plots_routes.find_plot
+    reads = []
+
+    def find_plot_then_wait(conn, plot_id):
+        plot = real_find_plot(conn, plot_id)
+        reads.append(plot_id)
+        if len(reads) <= 2:  # only the first read of each PATCH waits, not the read-back
+            both_have_read.wait()
+        return plot
+
+    bodies = [{"name": "Renamed"}, {"area_m2": 4242}]
+    with monkeypatch.context() as patch:
+        patch.setattr(plots_routes, "find_plot", find_plot_then_wait)
+        responses = in_parallel(2, lambda c, i: c.patch(f"/v1/plots/{NORTH_BLOCK}", json=bodies[i]))
+
+    assert [r.status_code for r in responses] == [200, 200]
+    stored = client.get(f"/v1/plots/{NORTH_BLOCK}").json()
+    assert (stored["name"], stored["area_m2"]) == ("Renamed", 4242)
 
 
 def test_delete_farm_while_plots_are_added(client):

@@ -76,7 +76,9 @@ def check_references(conn: Connection, plot: dict) -> None:
     PostgreSQL, a farm deleted between this check and the plot's INSERT would make
     the foreign key fail, and that error would be misread as "name taken".
     A concurrent farm delete now waits, then correctly gets "Farm still has plots".
-    SQLite ignores the lock; it already lets only one writer in at a time.
+    SQLite ignores the lock, and there this check and the INSERT are not one
+    transaction, so the false 409 can still happen. Accepted: SQLite is only for
+    local work (decision O63).
     Crops, soils and emitters can't be deleted through the API, so they need no lock.
     """
     for table, field, label in REFERENCES:
@@ -130,7 +132,12 @@ def get_plot(plot_id: str):
 @router.patch("/v1/plots/{plot_id}", response_model=Plot)
 def update_plot(plot_id: str, body: PlotUpdate, today: ClientToday):
     """Change only the fields sent, then check the result as a whole.
-    Moving a plot to another farm is allowed if the name is free there."""
+    Moving a plot to another farm is allowed if the name is free there.
+
+    Only the sent fields are written, so two PATCHes that change different fields
+    at the same time both stick. The plot is read again after the write, so the
+    response shows what is stored, including a concurrent PATCH's change.
+    """
     plot_id = parse_id(plot_id, "plot")
     changes = sent_fields(body)
     if "planting_date" in changes:
@@ -138,13 +145,15 @@ def update_plot(plot_id: str, body: PlotUpdate, today: ClientToday):
         changes["planting_date"] = datetime.date.fromisoformat(changes["planting_date"])
     with connect() as conn:
         plot = find_plot(conn, plot_id)
+        if not changes:
+            return plot  # {} is 200, unchanged
         plot.update(changes)
         check_references(conn, plot)
         try:
-            conn.execute(update(plots).where(plots.c.id == plot_id).values(plot))
+            conn.execute(update(plots).where(plots.c.id == plot_id).values(changes))
         except IntegrityError:
             raise ConflictError(NAME_TAKEN) from None
-    return plot
+        return find_plot(conn, plot_id)
 
 
 @router.delete("/v1/plots/{plot_id}", status_code=204, response_class=Response)
