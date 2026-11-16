@@ -20,7 +20,8 @@ The owner decides; the agent builds and supplies the information needed to decid
 
 ## Repository layout
 
-- `services/registry-service/`: the only service today. FastAPI + SQLAlchemy Core (no ORM classes), PostgreSQL in production and SQLite for local work and tests, Python 3.12, managed with `uv`.
+- `services/weather-service/`: daily ET0 and rain from Open-Meteo, cached in memory per 0.1° cell (port 8001). FastAPI + httpx, no database; settings in `.env`; `uv run pytest` never calls the real provider. See its README.
+- `services/registry-service/`: FastAPI + SQLAlchemy Core (no ORM classes), PostgreSQL in production and SQLite for local work and tests, Python 3.12, managed with `uv`.
 - `experiments/ollama-agent/agent.py`: a standalone uv script (inline dependencies), unrelated to the service.
 - `DECISIONS.md`: every design decision, grouped as **Yours** (Y#), **Ours** (O#) and **Agent's** (A#). New decisions get the next number in the right group; superseded ones are marked, not deleted.
 - `.claude/skills/`: skills. Third-party ones (e.g. `skill-creator`) are installed with `npx skills add` and pinned in `skills-lock.json`. Don't edit them; update by reinstalling. Our own skills live here too.

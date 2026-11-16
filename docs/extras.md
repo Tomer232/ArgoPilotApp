@@ -13,6 +13,13 @@ Each entry: what it is, why we made it, where it lives, and how to run it.
 - **Where:** `services/registry-service/scripts/`, on `main` (DECISIONS Y12).
 - **Run:** from `services/registry-service`. For `measure_latency.py`, start the service first (`uv run uvicorn main:app --port 8000`), then `uv run python scripts/measure_latency.py`. `uv run python scripts/hammer.py` starts its own servers and scratch databases (about 15 minutes; `--only rate|size|mixed` for one test).
 
+## Weather latency script (P2)
+
+- **What:** `measure_latency.py` measures NFR-2.3 (p95 of a fresh forecast at 10 req/s). It fails the run if any measured request called the provider.
+- **Why:** to show NFR-2.3 holds with a number (p95 5.7 ms, in the service README).
+- **Where:** `services/weather-service/scripts/` (DECISIONS Y12).
+- **Run:** from `services/weather-service`, start the service (`uv run uvicorn main:app --port 8001`), then `uv run python scripts/measure_latency.py`.
+
 ## Ollama terminal agent (lesson 12)
 
 - **What:** a 47-line chat agent: `qwen3:1.7b` on Ollama, with one tool, `current_date()`.
