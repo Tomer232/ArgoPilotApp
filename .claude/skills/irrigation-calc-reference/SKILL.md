@@ -71,9 +71,11 @@ day in order (FAO Ch. 8 water balance, single Kc):
   - `litres` to 1 decimal
   - `run_minutes` with `ceil`
 - Round **half up**, the school way (0.7925 -> 0.793, 27.065 -> 27.07), with `Decimal`.
-  Plain `round()` gives 0.792 and 27.06, because those floats are stored as 0.79249999...
-  and 27.064999..., and then the engine wouldn't match the hand-calculated cases digit for digit.
-- Before `ceil`, round to 6 decimals, so a float like 720.0000001 doesn't become 721.
+- Floats carry noise: 0.7925 is stored as 0.79249999..., and 41.5 - 14.435 comes out as
+  27.064999999999998. So first write the value with **9 decimals** (`f"{x:.9f}"` gives 27.065000000),
+  then round half up. Plain `round()`, or `Decimal(x)` straight from the float, gives 0.792 and 27.06,
+  and the engine wouldn't match the hand-calculated cases.
+- The same 9-decimal step comes before `ceil`, so 901.0000000001 minutes is 901, not 902.
 
 ## Checking your work
 

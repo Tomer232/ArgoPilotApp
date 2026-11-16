@@ -1,0 +1,18 @@
+[project]
+name = "planner-service"
+version = "0.1.0"
+description = "AgroPilot planner service: a daily drip-irrigation plan per plot (FAO-56)."
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[dependency-groups]
+dev = [
+    "pytest~=9.2",
+]
