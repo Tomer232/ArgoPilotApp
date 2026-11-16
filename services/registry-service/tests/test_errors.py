@@ -15,9 +15,10 @@ def test_unknown_url_is_404(client):
     assert_problem(client.get("/v1/nothing-here"), 404, "NOT_FOUND")
 
 
-def test_docs_pages_are_off(client):
-    for url in ["/docs", "/redoc", "/openapi.json"]:
-        assert_problem(client.get(url), 404, "NOT_FOUND")
+def test_docs_are_on(client):
+    """The frontend's prompt reads the API at /docs (Y13)."""
+    assert client.get("/docs").status_code == 200
+    assert client.get("/openapi.json").json()["info"]["title"] == "AgroPilot registry-service"
 
 
 def test_wrong_method_is_405_without_code(client):

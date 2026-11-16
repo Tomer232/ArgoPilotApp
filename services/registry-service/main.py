@@ -21,13 +21,10 @@ def reject_unknown_query_params(request: Request) -> None:
         raise ValidationFailedError(f"Unknown query parameter: {', '.join(sorted(unknown))}")
 
 
-# /docs, /redoc and /openapi.json are off: the task does not list them.
+# /docs and /openapi.json are on: the frontend's prompt reads the API there (Y13, replaces O14).
 app = FastAPI(
     title="AgroPilot registry-service",
     version="0.1.0",
-    docs_url=None,
-    redoc_url=None,
-    openapi_url=None,
     dependencies=[Depends(reject_unknown_query_params)],
 )
 register_error_handlers(app)
