@@ -66,8 +66,11 @@ Start with step 0, once. Then, for each forecast day in order (FAO Ch. 8 water b
 5. **Crop water need** `need_mm = Kc x ET0` (FAO Eq. 58).
 6. **Rain that counts**: `rain_mm` if `rain_mm >= 0.2 x ET0`, else 0. A small rain just evaporates (FAO Ch. 8).
    No runoff (Annex 8).
-7. **Depletion at the end of the day, without irrigation**: `Dr_end = max(0, Dr_prev - rain_counted + need_mm)`.
-   The `max(0, ...)`: water above full drains away the same day (FAO Eq. 86, 88).
+7. **Depletion at the end of the day, without irrigation**: `Dr_end = min(TAW, max(0, Dr_prev - rain_counted + need_mm))`.
+   The `max(0, ...)`: water above full drains away the same day (FAO Eq. 86, 88). The `min(TAW, ...)`: the
+   bucket can't go below empty, because the crop can't take water that isn't there (FAO Eq. 86:
+   `0 <= Dr <= TAW`). So an empty start refills exactly TAW, and a capped day never ends below 0 mm.
+   Source of the upper bound: the owner's decision of 2026-11-17, after QA found levels below empty (QA-1).
 8. **Irrigate?** If the bucket would end the day **below the trigger** (`TAW - Dr_end < trigger`), irrigate
    today (O79; FAO: irrigation <= depletion, nothing drains). Otherwise `irrigation_mm = 0`.
    The wish is to refill to full, but a drip system can only run 24 hours a day, so there is a **cap**:

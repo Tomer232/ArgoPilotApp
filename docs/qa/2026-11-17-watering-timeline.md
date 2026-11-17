@@ -20,6 +20,8 @@ Top findings: the planner returns a negative soil-water level (bucket below empt
 
 ### QA-1 Soil water goes below empty: negative bucket level in the plan and on the page (high, services)
 
+**Status: fixed** (DECISIONS O97): depletion now stops at TAW; test `test_bucket_never_goes_below_empty`.
+
 - **Steps:**
   ```bash
   curl -s -X POST localhost:8000/v1/plots -H 'Content-Type: application/json' -d '{"farm_id":"b7e2c0a0-3c1d-4f0a-9a11-0c5d2e6f1001","name":"QA slow drip","area_m2":1000,"crop_id":"tomato","planting_date":"2026-11-10","soil_id":"sand","row_spacing_m":10,"emitter_spacing_m":10,"emitter_id":"dripnet-pc-0.6","lat":31.25,"lon":34.79}'

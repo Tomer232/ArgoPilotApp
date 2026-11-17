@@ -274,9 +274,10 @@ def test_start_below_half_irrigates_on_day_one_and_refills_to_full():
 
 
 def test_start_0_begins_with_depletion_equal_to_taw():
-    """Empty bucket, no rain: Dr = TAW 70 plus the day's need 2.4; irrigation refills 72.4."""
+    """Empty bucket, no rain: Dr = TAW 70, and the day's need 2.4 can't empty it further
+    (FAO Eq. 86, QA-1), so Dr stays 70 and irrigation refills 70."""
     [day] = plan_days(plot_on(100), weather("2026-11-16", [3.0], [0]), start_pct=0)
-    assert day.irrigation_mm == pytest.approx(72.4)
+    assert day.irrigation_mm == pytest.approx(70)
     assert day.bucket_end_mm == pytest.approx(70)
 
 
@@ -289,17 +290,18 @@ def test_start_above_half_can_stay_dry():
 
 def test_capped_day_is_exactly_1440_minutes_and_ends_below_full():
     """plot_on: 2 L/h over 1.0 x 0.5 m is 4 mm/h, so 96 mm a day at most. TAW 70 here, so use a
-    bigger soil: 200 mm/m gives TAW 140 and an empty start (Dr 140 + need 2.4) wants 142.4 > 96."""
+    bigger soil: 200 mm/m gives TAW 140 and an empty start (Dr 140; the need 2.4 can't go below empty)
+    wants 140 > 96."""
     [day] = plan_days(plot_on(200), weather("2026-11-16", [3.0], [0]), start_pct=0)
     assert day.capped is True
     assert day.irrigation_mm == pytest.approx(96)
     assert day.run_minutes == 1440
-    assert day.depletion_mm == pytest.approx(140 + 2.4 - 96)
-    assert day.bucket_end_mm == pytest.approx(140 - 46.4)
+    assert day.depletion_mm == pytest.approx(140 - 96)
+    assert day.bucket_end_mm == pytest.approx(96)
 
 
 def test_the_day_after_a_capped_day_irrigates_only_below_the_trigger():
-    """Day 1 is capped and ends at 93.6 of 140 (above the 70 trigger): day 2 waters nothing."""
+    """Day 1 is capped and ends at 96 of 140 (above the 70 trigger): day 2 waters nothing."""
     days = plan_days(plot_on(200), weather("2026-11-16", [3.0, 3.0], [0, 0]), start_pct=0)
     assert [d.capped for d in days] == [True, False]
     assert days[1].irrigation_mm == 0
@@ -351,3 +353,17 @@ def test_round_half_up(value, places, rounded):
 @pytest.mark.parametrize("value, minutes", [(901.35, 902), (901.0000000001, 901), (720.0, 720), (0.01, 1)])
 def test_round_up(value, minutes):
     assert round_up(value) == minutes
+
+
+def test_bucket_never_goes_below_empty():
+    """QA-1, FAO Eq. 86 (0 <= Dr <= TAW). A drip far too slow for the need: 0.02 L/h over 1.0 x 0.5 m
+    is 0.04 mm/h, 0.96 mm a day; tomato need 0.8 x 3 = 2.4 mm. Empty start, TAW 70.
+    Each day Dr would be 70 + 2.4 but stops at 70 (the crop can't take water that isn't there),
+    the cap gives 0.96, so every day ends at 0.96 mm, never below 0."""
+    slow = dataclasses.replace(plot_on(100), flow_lph=0.02)
+    days = plan_days(slow, weather("2026-11-16", [3.0, 3.0, 3.0], [0, 0, 0]), start_pct=0)
+    assert [d.capped for d in days] == [True, True, True]
+    for day in days:
+        assert day.irrigation_mm == pytest.approx(0.96)
+        assert day.depletion_mm == pytest.approx(70 - 0.96)
+        assert day.bucket_end_mm == pytest.approx(0.96)

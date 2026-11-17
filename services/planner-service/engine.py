@@ -176,10 +176,11 @@ def plan_days(
         need = kc * day.et0_mm  # step 5
         rain = counted_rain(day.rain_mm, day.et0_mm)  # step 6
 
-        # Step 7: water above full drains away the same day.
+        # Step 7: water above full drains away the same day, and the bucket can't go below empty:
+        # the crop can't take water that isn't there (FAO Eq. 86: 0 <= Dr <= TAW).
         without_irrigation = depletion - rain + need
         drained = max(0.0, -without_irrigation)
-        depletion = max(0.0, without_irrigation)
+        depletion = min(capacity, max(0.0, without_irrigation))
 
         # Step 8: would the bucket end the day below the trigger? Then refill it today, as far
         # as the drip system can in 24 hours. A capped day leaves some depletion for tomorrow.
