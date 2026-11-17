@@ -6,8 +6,8 @@ export function PlotNotFound() {
   return (
     <>
       <PageHeader title="Plot not found" subtitle="There is no plot with this address." />
-      <Link href="/" className="font-medium text-water underline underline-offset-4">
-        Choose a plot from the list
+      <Link href="/plots" className="font-medium text-water underline underline-offset-4">
+        Go to the plot list
       </Link>
     </>
   );

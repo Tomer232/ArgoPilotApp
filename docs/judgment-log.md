@@ -84,3 +84,11 @@ p2.md says to irrigate below half. FAO gives each crop its own level (tomato 60%
 - **Agent suggested:** let the grower choose half, the crop value or a custom value, but only from 30% to 70%, FAO's range.
 - **I decided:** any value from 1% to 99%. Outside 30-70% the page shows a warning and the recommended crop value (Y15).
 - **Why:** the grower knows the field; the page should advise, not refuse.
+
+## 11. Keeping pages the spec didn't ask for (P2)
+
+The frontend redesign added list pages for farms, plots, crops, soils and emitters, a plot dropdown, and a home page that plans every plot. The frontend prompt says "No other pages or features".
+
+- **Agent suggested:** delete all three: they are out of spec, and the home summary calls the planner once per plot on every load.
+- **I decided:** keep them and record them as deviations (Y20-Y22, `docs/extras.md`).
+- **Why:** the grower should see the whole registry from the app, and that is what a good product looks like at this stage. The lecturer said we may add functionality as we see fit and need. Stepping out of the given requirements is fine, just not too far.

@@ -50,3 +50,13 @@ export function formatFetchedAt(isoTimestamp: string): string {
 export function formatWeekday(isoDate: string): string {
   return new Date(`${isoDate}T00:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", timeZone: "UTC" });
 }
+
+/** "2026-03-01" becomes "1 Mar 2026": a date further away, where the year matters. Read in UTC. */
+export function formatDate(isoDate: string): string {
+  return new Date(`${isoDate}T00:00:00Z`).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}

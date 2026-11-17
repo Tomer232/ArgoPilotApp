@@ -76,3 +76,10 @@ Each entry: what it is, why we made it, where it lives, and how to run it.
 - **Why:** the PR is what gets graded; this makes every number and claim in it checked (DECISIONS O102).
 - **Where:** `.claude/skills/submit-task/` (PR body template in `references/`); the body goes to `docs/pr/<task>.md`.
 - **Run:** ask Claude Code "/submit-task" or "prepare the PR".
+
+## Frontend extras (P2)
+
+- **What:** five read-only list pages (`/farms`, `/plots`, `/crops`, `/soils`, `/emitters`) linked from the sidebar with row counts; a plot dropdown in the plot page's title; today's answer for every plot on the home page, with "N of M plots need water today".
+- **Why:** the grower should see the whole registry from the app (DECISIONS Y20-Y22). The frontend prompt says "No other pages or features"; the lecturer allows functionality we see fit and need, within reason, so these are a recorded, small deviation.
+- **Where:** `services/frontend/src/app/{farms,plots,crops,soils,emitters}/page.tsx`, `src/components/app-nav.tsx`, `list-page.tsx`, `simple-table.tsx`, `plot-switcher.tsx`; the home summary in `src/app/page.tsx`.
+- **Run:** start the stack, open http://localhost:3000 and use the sidebar, or the plot name on a plot page.

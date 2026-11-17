@@ -3,7 +3,8 @@ import { cn } from "@/lib/utils";
 
 /**
  * Is each of the three services up (FR-2.19)? Checked fresh on every page load.
- * In the sidebar it is a card with a headline; in the phone's top bar, just the three names.
+ * In the sidebar it is a card with a headline; in the phone's top bar, just the three names
+ * ("down" in red when one is down).
  */
 export async function StatusCard() {
   const services = await checkServices();
@@ -14,7 +15,7 @@ export async function StatusCard() {
         <Dot up={down.length === 0} />
         {down.length === 0 ? "All systems normal" : `${down.length} of ${services.length} down`}
       </p>
-      <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs lg:mt-2 lg:flex-col lg:gap-1">
+      <ul className="flex flex-wrap justify-end gap-x-2.5 gap-y-1 text-xs lg:mt-2 lg:flex-col lg:gap-1">
         {services.map((service) => (
           <li
             key={service.name}
@@ -24,7 +25,8 @@ export async function StatusCard() {
             )}
           >
             <Dot up={service.up} />
-            {service.name} {service.up ? "up" : "down"}
+            {service.name}
+            {service.up ? <span className="hidden lg:inline">up</span> : "down"}
           </li>
         ))}
       </ul>

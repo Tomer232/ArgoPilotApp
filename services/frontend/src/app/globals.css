@@ -35,6 +35,7 @@
   --color-water-soft: var(--water-soft);
   --color-leaf-soft: var(--leaf-soft);
   --color-soil-soft: var(--soil-soft);
+  --color-low: var(--low);
   --color-stale-soft: var(--stale-soft);
   --color-alarm-soft: var(--alarm-soft);
   --radius-sm: calc(var(--radius) * 0.6);
@@ -56,12 +57,13 @@
 
   --brand: #1f7a4d; /* AgroPilot itself: the logo mark and the main buttons */
   --brand-foreground: #ffffff;
-  --water: #3f66cc; /* irrigate: run time, litres, the watering timeline */
+  --water: #2f6fde; /* irrigate: run time, litres, the watering timeline */
   --water-soft: #e8eefb;
   --leaf: #23784f; /* no irrigation needed, a service is up */
   --leaf-soft: #e3f4ec;
-  --soil: #a07650; /* the soil bucket */
-  --soil-soft: #f1e9e1;
+  --soil: #a9c8f5; /* water held in the soil (the bucket bars): a pale water blue */
+  --soil-soft: #edf3fd;
+  --low: #f3bd5b; /* soil water below the trigger: a clear light amber, never brown */
   --stale: #b3601f; /* stale forecast */
   --stale-soft: #fcefe3;
   --alarm: #c0353a; /* a service is down, an error */
@@ -86,6 +88,9 @@
   --input: #e0e0e4;
   --ring: var(--brand);
   --radius: 0.75rem;
+
+  /* Motion, after Emil Kowalski: ease-out that starts fast, short durations. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 @layer base {
@@ -97,5 +102,53 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* Pressable things answer the press: a small shrink, fast, no easing delay. */
+@layer components {
+  [data-slot="button"],
+  [data-slot="select-trigger"],
+  .pressable {
+    transition-property: transform, background-color, border-color, color, box-shadow;
+    transition-duration: 160ms;
+    transition-timing-function: var(--ease-out);
+  }
+  [data-slot="button"]:active,
+  [data-slot="select-trigger"]:active,
+  .pressable:active {
+    transform: scale(0.97);
+  }
+
+  /* A level bar (soil water): its fill is clipped, so a new value slides to its place. */
+  .level-fill {
+    transition: clip-path 360ms var(--ease-out);
+    @starting-style {
+      clip-path: inset(0 100% 0 0 round 999px);
+    }
+  }
+
+  /* While a new plan loads after a change, the old numbers fade back. */
+  .pending-area {
+    transition: opacity 150ms var(--ease-out);
+  }
+  .pending-area[data-pending="true"] {
+    opacity: 0.55;
+  }
+
+  h1,
+  .tight {
+    letter-spacing: -0.02em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="button"]:active,
+  [data-slot="select-trigger"]:active,
+  .pressable:active {
+    transform: none;
+  }
+  .level-fill {
+    transition: none;
   }
 }

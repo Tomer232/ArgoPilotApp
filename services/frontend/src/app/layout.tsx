@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Geist } from "next/font/google";
 import { Sprout } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
+import { AppNav, AppNavFallback } from "@/components/app-nav";
+import { MobileNav } from "@/components/mobile-nav";
 import { StatusCard, StatusCardFallback } from "@/components/status-card";
 import "./globals.css";
 
-// The same family as the P1 registry dashboard.
-const inter = Inter({
+// Geist: crisp at small sizes, with good fixed-width digits for the plan's numbers.
+const geist = Geist({
   variable: "--font-sans",
   subsets: ["latin"],
 });
@@ -18,27 +20,30 @@ export const metadata: Metadata = {
 };
 
 /**
- * The shell shared by every page, in the P1 dashboard style: a sidebar with the name and the
- * service status on wide screens, a top bar with the same two on a phone, and the page in a
- * light panel next to it.
+ * The shell shared by every page, in the P1 dashboard style. Wide screens: a sidebar with the
+ * name, the sections and the service status, and the page in a light panel next to it.
+ * Phones: a top bar with a menu button (the sections in a drawer), the name and the status.
  */
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full text-sm">
-        <div className="flex min-h-screen flex-col gap-3 lg:flex-row lg:p-3">
-          <aside className="flex items-center justify-between gap-3 border-b bg-background px-4 py-3 lg:sticky lg:top-3 lg:h-[calc(100vh-1.5rem)] lg:w-56 lg:shrink-0 lg:flex-col lg:items-stretch lg:justify-start lg:rounded-2xl lg:border lg:p-3">
+    <html lang="en" className={`${geist.variable} h-full antialiased`}>
+      <body className="min-h-full text-sm tabular-nums">
+        <div className="flex min-h-screen flex-col lg:flex-row lg:gap-3 lg:p-3">
+          <aside className="sticky top-0 z-30 flex items-center gap-2 border-b bg-background px-4 py-2.5 lg:top-3 lg:h-[calc(100vh-1.5rem)] lg:w-56 lg:shrink-0 lg:flex-col lg:items-stretch lg:gap-0 lg:rounded-2xl lg:border lg:p-3">
+            <div className="lg:hidden">
+              <MobileNav>
+                <Suspense fallback={<AppNavFallback />}>
+                  <AppNav />
+                </Suspense>
+              </MobileNav>
+            </div>
             <Brand />
-            <nav aria-label="Main" className="hidden lg:mt-3 lg:block">
-              <Link
-                href="/"
-                className="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 hover:bg-muted"
-              >
-                <Sprout aria-hidden className="size-4 text-muted-foreground" />
-                Plots
-              </Link>
-            </nav>
-            <div className="lg:mt-auto">
+            <div className="hidden lg:mt-3 lg:block">
+              <Suspense fallback={<AppNavFallback />}>
+                <AppNav />
+              </Suspense>
+            </div>
+            <div className="ml-auto lg:mt-auto lg:ml-0">
               <Suspense fallback={<StatusCardFallback />}>
                 <StatusCard />
               </Suspense>
@@ -51,7 +56,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   );
 }
 
-/** The green mark and the name, a link to the plot list. */
+/** The green mark and the name, a link to the overview. */
 function Brand() {
   return (
     <Link href="/" className="flex items-center gap-2.5 lg:border-b lg:px-1.5 lg:pb-3">

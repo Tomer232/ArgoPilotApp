@@ -1,4 +1,4 @@
-// Calls to registry-service. Field names match its API (GET /v1/farms, /v1/plots).
+// Calls to registry-service. Field names match its API (GET /v1/farms, /v1/plots, the catalogues).
 
 import { getConfig } from "./config";
 import { getJson, type Result } from "./http";
@@ -11,6 +11,18 @@ export type Farm = {
 export type Crop = {
   id: string;
   name: string;
+};
+
+export type Soil = {
+  id: string;
+  name: string;
+  available_water_mm_per_m: number;
+};
+
+export type Emitter = {
+  id: string;
+  name: string;
+  flow_lph: number;
 };
 
 export type Plot = {
@@ -42,6 +54,16 @@ export function listFarms(): Promise<Result<Farm[]>> {
 /** Every crop, for showing a crop's name instead of its id. */
 export function listCrops(): Promise<Result<Crop[]>> {
   return getFromRegistry<Crop[]>("/v1/crops");
+}
+
+/** Every soil, with the water it holds per metre of root depth. */
+export function listSoils(): Promise<Result<Soil[]>> {
+  return getFromRegistry<Soil[]>("/v1/soils");
+}
+
+/** Every emitter, with its flow in litres per hour. */
+export function listEmitters(): Promise<Result<Emitter[]>> {
+  return getFromRegistry<Emitter[]>("/v1/emitters");
 }
 
 /** Every plot, of every farm. */

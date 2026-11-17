@@ -8,10 +8,16 @@ import {
   barPosition,
   buildWindows,
   clockTime,
+  dayMarks,
   DEFAULT_START,
+  hourTicks,
+  isWatering,
+  labelPosition,
   MINUTES_PER_DAY,
   momentText,
   parseStart,
+  timelineEnd,
+  windowLabels,
   windowText,
 } from "./timeline";
 
@@ -262,5 +268,121 @@ describe("windowText", () => {
 
   it("writes a run under an hour in minutes only", () => {
     expect(windowText({ startMin: 360, endMin: 405, stale: false }, "2026-11-17")).toBe("Tue 06:00 - Tue 06:45, 45 min");
+  });
+});
+
+describe("timelineEnd", () => {
+  const run = (startMin: number, endMin: number) => ({ startMin, endMin, stale: false });
+
+  it("shows the whole plan when nothing is watered", () => {
+    expect(timelineEnd([], 7)).toBe(7 * MINUTES_PER_DAY);
+  });
+
+  it("ends one hour after the last run, rounded up to a whole hour", () => {
+    // Day 3 run ends at 2 x 1440 + 405 = 3285 (06:45); rounded up to 07:00 (3300), plus 1 h is 3360.
+    expect(timelineEnd([run(360, 400), run(3240, 3285)], 7)).toBe(3360);
+  });
+
+  it("adds one hour when the last run ends on a whole hour", () => {
+    // Ends at 30 h (1800): the bar ends at 31 h (1860).
+    expect(timelineEnd([run(360, 1800)], 7)).toBe(1860);
+  });
+
+  it("never ends before the end of today", () => {
+    // A run 06:00-06:45 would give 08:00, but the bar shows at least all of today.
+    expect(timelineEnd([run(360, 405)], 7)).toBe(MINUTES_PER_DAY);
+  });
+
+  it("never ends after the end of the plan", () => {
+    // A run on the last of 2 days that passes midnight is cut at 2880.
+    expect(timelineEnd([run(2760, 2940)], 2)).toBe(2 * MINUTES_PER_DAY);
+  });
+});
+
+describe("hourTicks", () => {
+  it("marks every whole hour inside the bar, not its two ends", () => {
+    const ticks = hourTicks(MINUTES_PER_DAY);
+    expect(ticks).toHaveLength(23);
+    expect(ticks[0]).toEqual({ minutes: 60, midnight: false });
+    expect(ticks[22]).toEqual({ minutes: 1380, midnight: false });
+  });
+
+  it("flags the marks that fall on midnight", () => {
+    // A 2-day bar: 47 marks, and only 24:00 (1440) is a midnight.
+    const midnights = hourTicks(2 * MINUTES_PER_DAY).filter((tick) => tick.midnight);
+    expect(midnights).toEqual([{ minutes: 1440, midnight: true }]);
+  });
+});
+
+describe("windowLabels", () => {
+  const run = (startMin: number, endMin: number) => ({ startMin, endMin, stale: false });
+
+  it("writes the start and end time of a long run", () => {
+    // 06:00 to 30 h (06:00 next day) on a 31 h bar.
+    expect(windowLabels([run(360, 1800)], 1860)).toEqual([
+      { minutes: 360, text: "06:00" },
+      { minutes: 1800, text: "06:00" },
+    ]);
+  });
+
+  it("writes one label at the middle of a run too short for two", () => {
+    // 45 minutes on a 24 h bar is 3%, so one label at (360 + 405) / 2.
+    expect(windowLabels([run(360, 405)], MINUTES_PER_DAY)).toEqual([{ minutes: 382.5, text: "06:00-06:45" }]);
+  });
+
+  it("drops a label too close to the one before it", () => {
+    // Two capped days that touch: day 1 ends at 1800 where day 2 starts, so "06:00" appears once there.
+    expect(windowLabels([run(360, 1800), run(1800, 3240)], 3300)).toEqual([
+      { minutes: 360, text: "06:00" },
+      { minutes: 1800, text: "06:00" },
+      { minutes: 3240, text: "06:00" },
+    ]);
+  });
+
+  it("puts the end label of a run cut by the bar at the bar's end, with the run's real end time", () => {
+    expect(windowLabels([run(2760, 2940)], 2880)).toEqual([{ minutes: 2820, text: "22:00-01:00" }]);
+  });
+});
+
+describe("dayMarks", () => {
+  it("names each midnight inside the bar", () => {
+    // 17 Nov 2026 is a Tuesday; a 3-day bar has Wed and Thu at 1440 and 2880.
+    expect(dayMarks("2026-11-17", 3 * MINUTES_PER_DAY).map((mark) => mark.text)).toEqual(["Wed", "Thu"]);
+  });
+
+  it("leaves out a midnight that would touch the end label", () => {
+    // Bar ends at 3360 (Thu 08:00): Thu midnight is at 2880 / 3360 = 86%, closer than 18% to the end.
+    expect(dayMarks("2026-11-17", 3360).map((mark) => mark.text)).toEqual(["Wed"]);
+  });
+
+  it("leaves out a midnight too close to the bar's end", () => {
+    // A 25 h bar: midnight is at 96%, next to the end label, so no day name.
+    expect(dayMarks("2026-11-17", 1500)).toEqual([]);
+  });
+});
+
+describe("labelPosition", () => {
+  it("centres a label on its time", () => {
+    expect(labelPosition(720, 1440)).toEqual({ left: "50%", transform: "translateX(-50%)" });
+  });
+
+  it("lines a label up with the edge near either end of the bar", () => {
+    expect(labelPosition(0, 1440).transform).toBe("translateX(0)");
+    expect(labelPosition(1440, 1440).transform).toBe("translateX(-100%)");
+  });
+});
+
+describe("isWatering", () => {
+  const runs = [{ startMin: 360, endMin: 1800, stale: false }];
+
+  it("is true inside a run", () => {
+    expect(isWatering(720, runs)).toBe(true);
+  });
+
+  it("is false outside a run and on its two edges", () => {
+    // The edge marks sit on the gray, where the blue starts or stops.
+    expect(isWatering(60, runs)).toBe(false);
+    expect(isWatering(360, runs)).toBe(false);
+    expect(isWatering(1800, runs)).toBe(false);
   });
 });
