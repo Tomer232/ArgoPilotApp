@@ -1,6 +1,6 @@
 # Frontend
 
-The grower's web page for AgroPilot (port 3000). It lists every farm with its plots, and for one plot shows today's answer first ("Water for 38 min" or "No irrigation today"), then the 7-day plan as a table and a timeline. A status card says whether each of the three services is up. Next.js 16 (App Router), React 19, Tailwind 4 and shadcn/ui components, styled like the P1 registry dashboard.
+The grower's web page for AgroPilot (port 3000). It lists every farm with its plots, and for one plot shows today's answer first ("Water for 38 min" or "No irrigation today"), then the 7-day plan as a watering timeline and a table or chart. Read-only list pages show the rest of the registry (farms, plots, crops, soils, emitters). A status card says whether each of the three services is up. Next.js 16 (App Router), React 19, Tailwind 4 and shadcn/ui components, styled like the P1 registry dashboard.
 
 The browser never calls the services. Every call to `registry-service`, `weather-service` and `planner-service` is made by the Next.js server while it renders the page, fresh on every load (`cache: "no-store"`). The grower's choices (soil level, trigger, start time) live in the page address, so a plain link or GET form changes them and there is no client-side state.
 
@@ -38,9 +38,10 @@ npm test                        # Vitest, for the logic in src/lib
 
 | Address | What it shows |
 | --- | --- |
-| `/` | Every farm as a card, with its plots: name, crop, area (FR-2.15) |
-| `/plots/{id}` | Today's recommendation, the drip system's numbers, the soil-level and trigger pickers, the 7-day table and the watering timeline (FR-2.16) |
-| `/plots/{id}?start_pct=37.5&trigger_pct=60&start=05:30` | The same, with the grower's choices: soil level today (0-100), trigger (1-99), watering start time (HH:MM, default 06:00) |
+| `/` | Every farm as a card, with its plots: name, crop, area and today's answer; the header counts the plots that need water today (FR-2.15, Y22) |
+| `/plots/{id}` | Today's answer, today's soil water as an upright column, the soil-level and trigger pickers; then the 7-day watering timeline (with a "now" line and notes, Y18-Y19) and the days as a table or a chart (FR-2.16, Y24, Y26) |
+| `/plots/{id}?start_pct=37.5&trigger_pct=60&start=05:30&view=chart` | The same, with the grower's choices: soil level today (0-100), trigger (1-99), watering start time (HH:MM, default 06:00; "Now" sets the current time), and `view=chart` for the chart (default: table) |
+| `/farms`, `/plots`, `/crops`, `/soils`, `/emitters` | Read-only tables from the registry, linked from the sidebar with row counts; a plot row opens its page (Y20, not in the spec) |
 
 What the pages do when something goes wrong:
 
@@ -53,14 +54,16 @@ What the pages do when something goes wrong:
 | Path | What it is |
 | --- | --- |
 | `src/app/layout.tsx` | The shell: sidebar (phone: top bar) with the name and the status card, and the page panel |
-| `src/app/page.tsx` | The plot list |
+| `src/app/page.tsx` | The overview: every farm with its plots |
+| `src/app/{farms,plots,crops,soils,emitters}/page.tsx` | The list pages (Y20) |
 | `src/app/plots/[id]/page.tsx` | The plot page |
 | `src/app/plot-not-found/page.tsx` | Where `proxy.ts` sends an unknown plot, with status 404 |
 | `src/proxy.ts` | The unknown-plot check before `/plots/{id}` renders |
-| `src/components/` | One file per part of the page (`today-recommendation`, `plan-table`, `watering-timeline`, the pickers, ...) and the shared `panel`, `pill`, `page-header` |
-| `src/components/ui/` | shadcn/ui components (`button`, `card`, `alert`, `badge`, `input`, `table`), added with `npx shadcn add` |
+| `src/components/` | One file per part of the page (`today-recommendation`, `soil-column`, `week-plan`, `timeline-bar`, `run-list`, `plan-chart`, `plan-controls` with the pickers, the Table/Chart switch and the "Updating" spinner, ...), the navigation (`app-nav`, `mobile-nav`, `plot-switcher`) and the shared `panel`, `pill`, `page-header`, `simple-table` |
+| `src/components/ui/` | shadcn/ui components (`button`, `card`, `alert`, `badge`, `input`, `table`, `select`, `sheet`, `separator`, `chart`), added with `npx shadcn add`; `chart` brings `recharts` |
 | `src/lib/http.ts` | The only code that sends requests: `getJson` never throws, it returns the data or a Problem that names the service |
 | `src/lib/registry.ts`, `planner.ts`, `health.ts` | One function per service call, with the answer's types |
 | `src/lib/config.ts` | Reads and checks the settings |
-| `src/lib/format.ts`, `timeline.ts`, `plan-query.ts`, `soil-feel.ts` | Display helpers, the timeline's windows, the address with the grower's choices, the soil-feel rows per soil |
+| `src/lib/format.ts`, `timeline.ts`, `plan-query.ts`, `soil-feel.ts` | Display helpers, the timeline's windows and notes, the address with the grower's choices, the soil-feel rows per soil |
+| `src/lib/use-now.ts` | The phone's clock on the timeline, read in the browser every minute (Y18) |
 | `src/app/globals.css` | The colors: one meaning each (water blue, leaf green, soil brown, stale amber, alarm red) plus the brand green |

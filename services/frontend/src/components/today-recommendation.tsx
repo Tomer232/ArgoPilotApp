@@ -1,7 +1,7 @@
 import { Droplets, Leaf } from "lucide-react";
-import { LevelBar } from "@/components/level-bar";
-import { PendingArea, SoilSelect, TriggerSelect } from "@/components/plan-controls";
+import { PendingArea, PendingSpinner, SoilSelect, TriggerSelect } from "@/components/plan-controls";
 import { Pill } from "@/components/pill";
+import { SoilColumn } from "@/components/soil-column";
 import { StaleLabel } from "@/components/stale-label";
 import { formatDay, formatDuration, formatFetchedAt, formatLitres } from "@/lib/format";
 import type { Plan, PlanDay } from "@/lib/planner";
@@ -14,7 +14,9 @@ const USUAL_MAX_PCT = 70;
 
 /**
  * The first card: today's answer, big ("Water for 38 min" or "No irrigation today", FR-2.16),
- * the two choices that change it, and the soil water with the drip system's numbers under it.
+ * today's soil water as an upright column between them, and the two choices that change it.
+ * Each number sits next to what it explains: the forecast time in the header, the drip system's
+ * numbers under the answer, the trigger in mm under the trigger choice.
  */
 export function TodayRecommendation({ plan, query, cropName }: { plan: Plan; query: PlanQuery; cropName: string }) {
   const today = plan.days[0];
@@ -22,14 +24,26 @@ export function TodayRecommendation({ plan, query, cropName }: { plan: Plan; que
   return (
     <section aria-labelledby="today" className="overflow-hidden rounded-xl border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3 sm:px-5">
-        <h2 id="today" className="font-semibold">
-          Today <span className="ml-1 font-normal text-muted-foreground">{formatDay(today.date)}</span>
-        </h2>
-        {today.stale && <StaleLabel />}
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+          <h2 id="today" className="font-semibold">
+            Today <span className="ml-1 font-normal text-muted-foreground">{formatDay(today.date)}</span>
+          </h2>
+          <span className="text-xs text-muted-foreground">Forecast from {formatFetchedAt(plan.forecast_fetched_at)}</span>
+        </div>
+        <span className="flex items-center gap-3">
+          <PendingSpinner />
+          {today.stale && <StaleLabel />}
+        </span>
       </div>
 
-      <div className="grid gap-6 p-4 sm:p-5 md:grid-cols-[minmax(0,1fr)_17rem]">
-        <PendingArea>{irrigate ? <WaterToday day={today} /> : <NoIrrigationToday />}</PendingArea>
+      <div className="grid gap-6 p-4 sm:p-5 md:grid-cols-[minmax(0,1fr)_auto_17rem]">
+        <PendingArea>
+          {irrigate ? <WaterToday day={today} /> : <NoIrrigationToday />}
+          <DripFacts plan={plan} today={today} />
+        </PendingArea>
+        <PendingArea className="justify-self-center pr-8">
+          <SoilColumn day={today} triggerPct={plan.trigger_pct} />
+        </PendingArea>
         <div key={JSON.stringify(query)} className="grid content-start gap-4">
           <SoilSelect rows={getSoilFeelRows(plan.soil_id)} chosen={query.start_pct} />
           <TriggerSelect triggerPct={plan.trigger_pct} cropTriggerPct={plan.crop_trigger_pct} />
@@ -37,26 +51,6 @@ export function TodayRecommendation({ plan, query, cropName }: { plan: Plan; que
         </div>
       </div>
 
-      <PendingArea className="border-t bg-muted/40 px-4 py-4 sm:px-5">
-        <div className="flex items-baseline justify-between gap-3">
-          <span className="text-muted-foreground">Soil water at the end of today</span>
-          <span className="font-medium">
-            {today.bucket_end_mm} <span className="font-normal text-muted-foreground">of {today.bucket_capacity_mm} mm</span>
-          </span>
-        </div>
-        <LevelBar day={today} className="mt-2.5" />
-        <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
-          <Fact label="Trigger" value={`${plan.trigger_pct}%`} note={`${today.trigger_mm} mm`} />
-          <Fact label="Drip rate" value={`${plan.drip_mm_per_hour} mm/h`} />
-          <Fact label={`Refill from ${plan.trigger_pct}%`} value={formatDuration(refillMinutes(plan, today))} />
-          <Fact label="Forecast from" value={formatFetchedAt(plan.forecast_fetched_at)} />
-        </dl>
-        {plan.days.some((day) => day.capped) && (
-          <p className="mt-3 text-muted-foreground">
-            Some days need more than 24 h of watering, so the plan spreads it over the following days.
-          </p>
-        )}
-      </PendingArea>
     </section>
   );
 }
@@ -65,6 +59,22 @@ export function TodayRecommendation({ plan, query, cropName }: { plan: Plan; que
 function refillMinutes(plan: Plan, today: PlanDay): number {
   const refillMm = (today.bucket_capacity_mm * (100 - plan.trigger_pct)) / 100;
   return (refillMm / plan.drip_mm_per_hour) * 60;
+}
+
+/** Under the answer: the drip system's rate, how long a refill from the trigger takes, and the 24 h spread. */
+function DripFacts({ plan, today }: { plan: Plan; today: PlanDay }) {
+  return (
+    <div className="mt-4 grid gap-1 text-xs text-muted-foreground">
+      <p>
+        Drip rate <span className="font-medium text-foreground">{plan.drip_mm_per_hour} mm/h</span>
+        {" · "}refill from {plan.trigger_pct}% to full{" "}
+        <span className="font-medium text-foreground">{formatDuration(refillMinutes(plan, today))}</span>
+      </p>
+      {plan.days.some((day) => day.capped) && (
+        <p>Some days need more than 24 h of watering, so the plan spreads it over the following days.</p>
+      )}
+    </div>
+  );
 }
 
 /** The irrigation answer: run time, big, then the water it gives. */
@@ -109,6 +119,10 @@ function ChoiceNote({ plan, query, cropName }: { plan: Plan; query: PlanQuery; c
   return (
     <div className="grid gap-2 text-xs">
       <p className="text-muted-foreground">
+        Water starts below <span className="font-medium text-foreground">{plan.days[0].trigger_mm} mm</span> of soil
+        water ({plan.trigger_pct}%).
+      </p>
+      <p className="text-muted-foreground">
         {query.start_pct === undefined
           ? "No soil level chosen: the plan assumes the soil is at field capacity."
           : `Soil level ${plan.start_pct}% is an estimate, not a measurement.`}
@@ -119,19 +133,6 @@ function ChoiceNote({ plan, query, cropName }: { plan: Plan; query: PlanQuery; c
           {plan.crop_trigger_pct}%.
         </p>
       )}
-    </div>
-  );
-}
-
-/** One number with its label. */
-function Fact({ label, value, note }: { label: string; value: string; note?: string }) {
-  return (
-    <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 font-medium">
-        {value}
-        {note && <span className="ml-1 text-xs font-normal text-muted-foreground">{note}</span>}
-      </dd>
     </div>
   );
 }

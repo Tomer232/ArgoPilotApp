@@ -1,11 +1,15 @@
 // The choices the grower makes on the plot page. They live in the page address, so every link
 // and form must carry the ones it does not change.
 
-/** The three choices, as the text in the address (the planner checks start_pct and trigger_pct). */
+/**
+ * The choices, as the text in the address (the planner checks start_pct and trigger_pct).
+ * `view` is "chart" to show the 7 days as a chart instead of the table (Y26).
+ */
 export type PlanQuery = {
   start_pct?: string;
   trigger_pct?: string;
   start?: string;
+  view?: string;
 };
 
 /** The address (query only) of this page with `changes` applied on top of `query`. */

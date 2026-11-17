@@ -160,3 +160,47 @@ export function labelPosition(minutes: number, end: number): { left: string; tra
 export function isWatering(minutes: number, windows: Window[]): boolean {
   return windows.some((window) => window.startMin < minutes && minutes < window.endMin);
 }
+
+/**
+ * The plan day a run belongs to (0 is today). A run always starts on its own day: the 24-hour cap
+ * means the run before it ends before the next day's midnight, so the start minute tells the day.
+ */
+export function runDay(window: Window): number {
+  return Math.floor(window.startMin / MINUTES_PER_DAY);
+}
+
+/**
+ * The note under a run that goes on past its day's midnight (Y19), or null if it ends by 00:00.
+ * The plan counts all of its water on the day it starts.
+ */
+export function midnightNote(window: Window, firstDate: string): string | null {
+  const day = runDay(window);
+  if (window.endMin <= (day + 1) * MINUTES_PER_DAY) {
+    return null;
+  }
+  if (day === 0) {
+    return "Ends tomorrow; the plan counts it as today's water.";
+  }
+  return `Ends the next day; the plan counts it as ${formatWeekday(addDays(firstDate, day))}'s water.`;
+}
+
+/**
+ * Where "now" sits on the timeline, in minutes from 00:00 today, or null when the phone's date is not
+ * the plan's first day (Y18). `now` is the grower's own clock, read in the phone's time zone.
+ */
+export function nowOnPlan(now: Date, firstDate: string): number | null {
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const date = String(now.getDate()).padStart(2, "0");
+  if (`${now.getFullYear()}-${month}-${date}` !== firstDate) {
+    return null;
+  }
+  return now.getHours() * 60 + now.getMinutes();
+}
+
+/** The note under today's run once its start time has passed (Y18), or null. */
+export function startPassedNote(window: Window, nowMin: number | null): string | null {
+  if (nowMin === null || runDay(window) !== 0 || nowMin <= window.startMin) {
+    return null;
+  }
+  return "Start time passed: run the full time from now";
+}

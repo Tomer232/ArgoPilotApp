@@ -25,6 +25,7 @@ export default function PlotPage({ params, searchParams }: PageProps<"/plots/[id
               start_pct: firstValue(query.start_pct),
               trigger_pct: firstValue(query.trigger_pct),
               start: firstValue(query.start),
+              view: firstValue(query.view),
             }}
           />
         ))}

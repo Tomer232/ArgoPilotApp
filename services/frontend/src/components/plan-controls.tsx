@@ -2,8 +2,10 @@
 
 // The grower's choices on the plot page: soil today, the trigger and the start time.
 // Each choice changes the page address; the server then renders the new plan. While it
-// loads, the old numbers fade back (PendingArea) so the grower sees that something is happening.
+// loads, the old numbers stay as they are and a small spinner in the card headers (PendingSpinner)
+// shows that something is happening.
 
+import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useState, useTransition, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -27,13 +29,27 @@ export function PlanNavigationProvider({ query, children }: { query: PlanQuery; 
   return <PlanNavigationContext.Provider value={{ change, pending }}>{children}</PlanNavigationContext.Provider>;
 }
 
-/** Wraps numbers that a choice changes: they fade back while the new plan loads. */
+/** Wraps numbers that a choice changes; marks them busy for screen readers while the new plan loads. */
 export function PendingArea({ className, children }: { className?: string; children: ReactNode }) {
   const { pending } = useContext(PlanNavigationContext);
   return (
-    <div className={`pending-area ${className ?? ""}`} data-pending={pending} aria-busy={pending}>
+    <div className={className} aria-busy={pending}>
       {children}
     </div>
+  );
+}
+
+/** A small spinning icon and "Updating", shown only while a new plan loads. */
+export function PendingSpinner() {
+  const { pending } = useContext(PlanNavigationContext);
+  if (!pending) {
+    return null;
+  }
+  return (
+    <span role="status" className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <LoaderCircle aria-hidden className="size-3.5 animate-spin" />
+      Updating
+    </span>
   );
 }
 
@@ -133,26 +149,53 @@ export function TriggerSelect({ triggerPct, cropTriggerPct }: { triggerPct: numb
 /** Every half hour of the day, "00:00" to "23:30". */
 const HALF_HOURS = Array.from({ length: 48 }, (_, index) => clockTime(index * 30));
 
-/** "Start watering at": a half-hour from the list. A time from the address that is not on it is added. */
+/**
+ * "Start watering at": a half-hour from the list, or "Now" for the phone's current time.
+ * A time from the address that is not on the list is added to it.
+ */
 export function StartSelect({ start }: { start: string }) {
   const { change } = useContext(PlanNavigationContext);
   const times = HALF_HOURS.includes(start) ? HALF_HOURS : [...HALF_HOURS, start].sort();
+  const startNow = () => {
+    const now = new Date();
+    change({ start: clockTime(now.getHours() * 60 + now.getMinutes()) });
+  };
   return (
-    <label className="flex items-center gap-2 text-xs text-muted-foreground">
-      Start at
-      <Select value={start} onValueChange={(value) => value && change({ start: value })}>
-        <SelectTrigger size="sm" className="w-24 bg-card text-foreground">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="max-h-72">
-          {times.map((time) => (
-            <SelectItem key={time} value={time}>
-              {time}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </label>
+    <div className="flex items-center gap-2">
+      <label className="flex items-center gap-2 text-xs text-muted-foreground">
+        Start at
+        <Select value={start} onValueChange={(value) => value && change({ start: value })}>
+          <SelectTrigger size="sm" className="w-24 bg-card text-foreground">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="max-h-72">
+            {times.map((time) => (
+              <SelectItem key={time} value={time}>
+                {time}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </label>
+      <Button type="button" variant="outline" size="sm" onClick={startNow}>
+        Now
+      </Button>
+    </div>
+  );
+}
+
+/** "Table | Chart": how the next days are shown (Y26). The table is the default, so it leaves no `view` in the address. */
+export function ViewToggle({ chart }: { chart: boolean }) {
+  const { change } = useContext(PlanNavigationContext);
+  return (
+    <div role="group" aria-label="Show the days as" className="flex gap-1">
+      <Button type="button" size="sm" variant={chart ? "ghost" : "secondary"} aria-pressed={!chart} onClick={() => change({ view: undefined })}>
+        Table
+      </Button>
+      <Button type="button" size="sm" variant={chart ? "secondary" : "ghost"} aria-pressed={chart} onClick={() => change({ view: "chart" })}>
+        Chart
+      </Button>
+    </div>
   );
 }
 

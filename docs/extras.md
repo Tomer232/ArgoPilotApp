@@ -79,7 +79,7 @@ Each entry: what it is, why we made it, where it lives, and how to run it.
 
 ## Frontend extras (P2)
 
-- **What:** five read-only list pages (`/farms`, `/plots`, `/crops`, `/soils`, `/emitters`) linked from the sidebar with row counts; a plot dropdown in the plot page's title; today's answer for every plot on the home page, with "N of M plots need water today".
+- **What:** a "Table / Chart" switch for the plot page's 7 days (Y26, adds `recharts`); five read-only list pages (`/farms`, `/plots`, `/crops`, `/soils`, `/emitters`) linked from the sidebar with row counts; a plot dropdown in the plot page's title; today's answer for every plot on the home page, with "N of M plots need water today".
 - **Why:** the grower should see the whole registry from the app (DECISIONS Y20-Y22). The frontend prompt says "No other pages or features"; the lecturer allows functionality we see fit and need, within reason, so these are a recorded, small deviation.
-- **Where:** `services/frontend/src/app/{farms,plots,crops,soils,emitters}/page.tsx`, `src/components/app-nav.tsx`, `list-page.tsx`, `simple-table.tsx`, `plot-switcher.tsx`; the home summary in `src/app/page.tsx`.
+- **Where:** `services/frontend/src/app/{farms,plots,crops,soils,emitters}/page.tsx`, `src/components/app-nav.tsx`, `list-page.tsx`, `simple-table.tsx`, `plot-switcher.tsx`; the home summary in `src/app/page.tsx`; the chart in `src/components/plan-chart.tsx` and `src/components/ui/chart.tsx`.
 - **Run:** start the stack, open http://localhost:3000 and use the sidebar, or the plot name on a plot page.

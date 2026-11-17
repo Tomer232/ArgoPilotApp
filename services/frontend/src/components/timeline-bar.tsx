@@ -16,10 +16,15 @@ import {
   windowLabels,
   type Window,
 } from "@/lib/timeline";
+import { useNowOnPlan } from "@/lib/use-now";
 
-/** The bar from 00:00 today to `end` minutes, the runs in blue, a mark every hour, and the hover time. */
+/**
+ * The bar from 00:00 today to `end` minutes, the runs in blue, a mark every hour, the hover time,
+ * and on the plan's first day a red "now" line at the grower's clock (Y18).
+ */
 export function TimelineBar({ windows, end, firstDate }: { windows: Window[]; end: number; firstDate: string }) {
   const [hover, setHover] = useState<number | null>(null);
+  const nowMin = useNowOnPlan(firstDate);
 
   /** Turns the pointer's place on the bar into minutes from 00:00 today. */
   const follow = (event: PointerEvent<HTMLDivElement>) => {
@@ -67,6 +72,13 @@ export function TimelineBar({ windows, end, firstDate }: { windows: Window[]; en
             style={{ left: `${(tick.minutes / end) * 100}%` }}
           />
         ))}
+        {nowMin !== null && (
+          <span
+            title={`Now ${clockTime(nowMin)}`}
+            className="absolute inset-y-0 w-0.5 -translate-x-1/2 bg-alarm"
+            style={{ left: `${(nowMin / end) * 100}%` }}
+          />
+        )}
         {hover !== null && (
           <span className="absolute inset-y-0 w-px bg-foreground" style={{ left: `${(hover / end) * 100}%` }} />
         )}

@@ -10,7 +10,10 @@ export type Column = {
   wide?: boolean;
 };
 
-/** A table inside a card, in the plan table's style: muted small headers, quiet row lines. */
+/**
+ * A table inside a card, in the plan table's style: muted small headers, quiet row lines.
+ * Rows are `relative` so a link inside one can stretch over the whole row (the plots page does).
+ */
 export function SimpleTable({ columns, rows, empty }: { columns: Column[]; rows: { key: string; cells: ReactNode[] }[]; empty: string }) {
   if (rows.length === 0) {
     return <p className="rounded-xl border bg-card px-4 py-8 text-center text-muted-foreground">{empty}</p>;
@@ -29,7 +32,7 @@ export function SimpleTable({ columns, rows, empty }: { columns: Column[]; rows:
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.key} className="hover:bg-muted/40">
+            <TableRow key={row.key} className="relative hover:bg-muted/40">
               {row.cells.map((cell, index) => (
                 <TableCell key={columns[index].header} className={cellClass(columns[index], "py-2.5")}>
                   {cell}

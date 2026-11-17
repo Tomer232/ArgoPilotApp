@@ -13,9 +13,13 @@ import {
   hourTicks,
   isWatering,
   labelPosition,
+  midnightNote,
   MINUTES_PER_DAY,
   momentText,
+  nowOnPlan,
   parseStart,
+  runDay,
+  startPassedNote,
   timelineEnd,
   windowLabels,
   windowText,
@@ -384,5 +388,79 @@ describe("isWatering", () => {
     expect(isWatering(60, runs)).toBe(false);
     expect(isWatering(360, runs)).toBe(false);
     expect(isWatering(1800, runs)).toBe(false);
+  });
+});
+
+describe("runDay", () => {
+  it("is the day the run starts on", () => {
+    expect(runDay({ startMin: 360, endMin: 400, stale: false })).toBe(0);
+    expect(runDay({ startMin: 1440, endMin: 1500, stale: false })).toBe(1);
+    expect(runDay({ startMin: 4319, endMin: 4400, stale: false })).toBe(2);
+  });
+});
+
+describe("midnightNote (Y19)", () => {
+  const first = "2026-11-17"; // a Tuesday
+
+  it("is null for a run that ends before midnight", () => {
+    expect(midnightNote({ startMin: 360, endMin: 405, stale: false }, first)).toBeNull();
+  });
+
+  it("is null for a run that ends exactly at midnight", () => {
+    expect(midnightNote({ startMin: 1380, endMin: 1440, stale: false }, first)).toBeNull();
+  });
+
+  it("says tomorrow for today's run that passes midnight", () => {
+    expect(midnightNote({ startMin: 1320, endMin: 1500, stale: false }, first)).toBe(
+      "Ends tomorrow; the plan counts it as today's water.",
+    );
+  });
+
+  it("names the day for a later run that passes midnight", () => {
+    // Wednesday 23:00 to Thursday 03:00.
+    expect(midnightNote({ startMin: 1440 + 1380, endMin: 2880 + 180, stale: false }, first)).toBe(
+      "Ends the next day; the plan counts it as Wed's water.",
+    );
+  });
+
+  it("is null for a pushed run that starts on its day and ends by the next midnight", () => {
+    // A 24 h run Tue 06:00 - Wed 06:00 is today's water passing midnight; Wednesday's run follows it.
+    expect(midnightNote({ startMin: 360, endMin: 1800, stale: false }, first)).not.toBeNull();
+    expect(midnightNote({ startMin: 1800, endMin: 1860, stale: false }, first)).toBeNull();
+  });
+});
+
+describe("nowOnPlan (Y18)", () => {
+  it("is minutes from 00:00 on the plan's first day, in the phone's own time zone", () => {
+    expect(nowOnPlan(new Date(2026, 10, 17, 11, 55), "2026-11-17")).toBe(715);
+    expect(nowOnPlan(new Date(2026, 10, 17, 0, 0), "2026-11-17")).toBe(0);
+    expect(nowOnPlan(new Date(2026, 10, 17, 23, 59), "2026-11-17")).toBe(1439);
+  });
+
+  it("is null on any other date", () => {
+    expect(nowOnPlan(new Date(2026, 10, 16, 23, 59), "2026-11-17")).toBeNull();
+    expect(nowOnPlan(new Date(2026, 10, 18, 0, 0), "2026-11-17")).toBeNull();
+  });
+});
+
+describe("startPassedNote (Y18)", () => {
+  const today = { startMin: 360, endMin: 405, stale: false };
+
+  it("is null before and at the start time", () => {
+    expect(startPassedNote(today, 300)).toBeNull();
+    expect(startPassedNote(today, 360)).toBeNull();
+  });
+
+  it("shows once the start has passed, also after the planned end", () => {
+    expect(startPassedNote(today, 361)).toBe("Start time passed: run the full time from now");
+    expect(startPassedNote(today, 715)).toBe("Start time passed: run the full time from now");
+  });
+
+  it("is null when the clock is unknown or not today", () => {
+    expect(startPassedNote(today, null)).toBeNull();
+  });
+
+  it("is null for a run on a later day", () => {
+    expect(startPassedNote({ startMin: 1800, endMin: 1860, stale: false }, 1439)).toBeNull();
   });
 });

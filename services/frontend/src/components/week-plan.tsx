@@ -1,13 +1,15 @@
 import { LevelBar } from "@/components/level-bar";
-import { PendingArea, StartSelect } from "@/components/plan-controls";
+import { PendingArea, PendingSpinner, StartSelect, ViewToggle } from "@/components/plan-controls";
 import { Pill } from "@/components/pill";
+import { PlanChart } from "@/components/plan-chart";
+import { RunList } from "@/components/run-list";
 import { StaleLabel } from "@/components/stale-label";
 import { TimelineBar } from "@/components/timeline-bar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDay, formatDuration, formatLitres } from "@/lib/format";
 import type { Plan } from "@/lib/planner";
 import type { PlanQuery } from "@/lib/plan-query";
-import { buildWindows, dayMarks, labelPosition, momentText, parseStart, timelineEnd, windowText } from "@/lib/timeline";
+import { buildWindows, dayMarks, labelPosition, momentText, parseStart, timelineEnd } from "@/lib/timeline";
 
 // Columns that only fit on wider screens. On a phone the table keeps Day, Water and Soil water.
 const WIDE = "hidden md:table-cell";
@@ -15,7 +17,7 @@ const WIDE = "hidden md:table-cell";
 const HEAD = "h-9 text-xs font-medium text-muted-foreground";
 
 /**
- * The second card: the next days as a watering timeline (Y16) and as a table (FR-2.16).
+ * The second card: the next days as a watering timeline (Y16), then as a table (FR-2.16) or a chart (Y26).
  * Stale days carry the label next to their numbers (FR-2.17).
  */
 export function WeekPlan({ plan, query }: { plan: Plan; query: PlanQuery }) {
@@ -26,7 +28,10 @@ export function WeekPlan({ plan, query }: { plan: Plan; query: PlanQuery }) {
         <h2 id="week" className="font-semibold">
           Next {plan.days.length} days
         </h2>
-        <StartSelect start={start.text} />
+        <span className="flex items-center gap-3">
+          <PendingSpinner />
+          <StartSelect start={start.text} />
+        </span>
       </div>
       <PendingArea>
         <div className="px-4 pt-4 pb-5 sm:px-5">
@@ -37,7 +42,11 @@ export function WeekPlan({ plan, query }: { plan: Plan; query: PlanQuery }) {
           )}
           <Timeline plan={plan} startMinutes={start.minutes} />
         </div>
-        <DayTable plan={plan} />
+        <div className="flex items-center justify-between gap-2 border-t px-4 py-2 sm:px-5">
+          <span className="text-xs text-muted-foreground">Day by day</span>
+          <ViewToggle chart={query.view === "chart"} />
+        </div>
+        {query.view === "chart" ? <PlanChart days={plan.days} /> : <DayTable plan={plan} />}
       </PendingArea>
     </section>
   );
@@ -49,6 +58,8 @@ export function WeekPlan({ plan, query }: { plan: Plan; query: PlanQuery }) {
  * one at midnight; the marks lie on top of the blue so they show through. Each run's start and end
  * time is written above the bar, the bar's two ends and the day names under it, and every run in
  * full in the list below. Hovering the bar shows the time under the pointer (TimelineBar). A run from a stale day has the stale label beside its text (FR-2.17, QA-2).
+ * On the plan's first day a "now" line marks the grower's clock (Y18); the list notes a start time
+ * that has passed (Y18) and a run that goes past midnight (Y19).
  */
 function Timeline({ plan, startMinutes }: { plan: Plan; startMinutes: number }) {
   const windows = buildWindows(plan.days, startMinutes);
@@ -69,15 +80,7 @@ function Timeline({ plan, startMinutes }: { plan: Plan; startMinutes: number }) 
       {windows.length === 0 ? (
         <p className="mt-3 text-muted-foreground">No watering in these days.</p>
       ) : (
-        <ul className="mt-3 flex flex-wrap justify-between gap-x-5 gap-y-1">
-          {windows.map((window) => (
-            <li key={window.startMin} className="flex items-center gap-2">
-              <span aria-hidden className="size-2 shrink-0 rounded-full bg-water" />
-              {windowText(window, firstDate)}
-              {window.stale && <StaleLabel />}
-            </li>
-          ))}
-        </ul>
+        <RunList windows={windows} firstDate={firstDate} />
       )}
     </div>
   );

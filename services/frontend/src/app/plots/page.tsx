@@ -53,7 +53,8 @@ async function Plots() {
       rows={plots.data.map((plot) => ({
         key: plot.id,
         cells: [
-          <Link key="plot" href={`/plots/${plot.id}`} className="font-medium hover:text-water">
+          // The link's ::after covers the whole row, so a tap anywhere on it opens the plot.
+          <Link key="plot" href={`/plots/${plot.id}`} className="font-medium after:absolute after:inset-0">
             {plot.name}
           </Link>,
           name(farms, plot.farm_id),
@@ -62,9 +63,7 @@ async function Plots() {
           emitter(plot.emitter_id),
           formatArea(plot.area_m2),
           formatDate(plot.planting_date),
-          <Link key="open" href={`/plots/${plot.id}`} aria-label={`Open ${plot.name}`} className="text-muted-foreground hover:text-foreground">
-            <ChevronRight className="size-4" />
-          </Link>,
+          <ChevronRight key="open" aria-hidden className="size-4 text-muted-foreground" />,
         ],
       }))}
     />

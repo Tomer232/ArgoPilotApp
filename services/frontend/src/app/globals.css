@@ -35,6 +35,8 @@
   --color-water-soft: var(--water-soft);
   --color-leaf-soft: var(--leaf-soft);
   --color-soil-soft: var(--soil-soft);
+  --color-beige: var(--beige);
+  --color-beige-wet: var(--beige-wet);
   --color-low: var(--low);
   --color-stale-soft: var(--stale-soft);
   --color-alarm-soft: var(--alarm-soft);
@@ -63,6 +65,8 @@
   --leaf-soft: #e3f4ec;
   --soil: #a9c8f5; /* water held in the soil (the bucket bars): a pale water blue */
   --soil-soft: #edf3fd;
+  --beige: #f4eee3; /* the soil column on the Today card: dry soil above the water line */
+  --beige-wet: #e2d4bb; /* the same column below the water line: wet soil */
   --low: #f3bd5b; /* soil water below the trigger: a clear light amber, never brown */
   --stale: #b3601f; /* stale forecast */
   --stale-soft: #fcefe3;
@@ -126,14 +130,6 @@
     @starting-style {
       clip-path: inset(0 100% 0 0 round 999px);
     }
-  }
-
-  /* While a new plan loads after a change, the old numbers fade back. */
-  .pending-area {
-    transition: opacity 150ms var(--ease-out);
-  }
-  .pending-area[data-pending="true"] {
-    opacity: 0.55;
   }
 
   h1,
