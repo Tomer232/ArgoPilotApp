@@ -52,3 +52,35 @@ P2's frontend prompt tells the agent to read the registry and planner APIs at `/
 - **Agent suggested:** keep `/docs` off and point the frontend agent at the service READMEs and code instead.
 - **I decided:** turn `/docs` (and `/openapi.json`) back on for `registry-service` and `planner-service` (Y13).
 - **Why:** so the agent reads the real API, not a description of it.
+
+## 7. The grower sets today's soil water (P2)
+
+The planner only looks forward from today, so it must know how full the soil bucket is this morning. It assumed full every time (O76), so in November most plots showed "No irrigation" for 7 days, even on dry soil.
+
+- **Agent suggested:** start full, FAO's default without a measurement; storing each plot's bucket was kept for later.
+- **I decided:** the lecturer said it is ours to decide, so the grower chooses the level on the plot page each visit (Y14, O87). Then I asked that the question be about what the grower sees: "full, half, empty" talks about our bucket, and a grower looks at soil. So the page asks the grower to squeeze a handful of soil and pick the description that matches, per soil type (O88, from the USDA NRCS feel-and-appearance guide), and we convert it to a bucket level.
+- **Why:** the plan should start from the real field, and the words should be ones a grower can check by hand.
+
+## 8. No Israeli long-season sources (P2)
+
+All demo plots are past the FAO season, so the planner keeps the end-of-season Kc (O80).
+
+- **Agent suggested:** adopt measured Israeli tables (Harel 2014 for tomato, Besor 2022 for pepper), assuming every plot is a net-house.
+- **I decided:** don't use the Israeli sources; stay on FAO (O89).
+- **Why:** it is a big steer off from the FRs. The tables cover only protected crops and one planting month each, and they still end before the demo plots' age.
+
+## 9. A hard 24-hour cap on a day's watering (P2)
+
+Refilling a dry bucket could ask for 2024 minutes (34 h) of dripping in one day.
+
+- **Agent suggested:** a practical cap per day, set in `.env` (for example 12 h).
+- **I decided:** cap it hard at 24 h, so it prevents overflow and waste but never stops a grower who needs to water for a long time: the rest happens on the next days, and the water level, not the date, decides when (O90).
+- **Why:** 24 h is the system's real limit. Any smaller number would be a guess.
+
+## 10. The grower chooses the irrigation trigger, 1-99% (P2)
+
+p2.md says to irrigate below half. FAO gives each crop its own level (tomato 60%, pepper 70%).
+
+- **Agent suggested:** let the grower choose half, the crop value or a custom value, but only from 30% to 70%, FAO's range.
+- **I decided:** any value from 1% to 99%. Outside 30-70% the page shows a warning and the recommended crop value (Y15).
+- **Why:** the grower knows the field; the page should advise, not refuse.
