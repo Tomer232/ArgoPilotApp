@@ -20,6 +20,8 @@ The task says to build only what the spec lists (AGENTS.md, "Project constraints
 
 ## 2. Check each requirement
 
+Check the working tree, not only commits. If `git status` shows uncommitted work, especially work this session didn't write (another session may be mid-change), say so at the top of the page and mark which findings rest on it: they can change before the PR.
+
 Read the code and the tests; don't start the stack (that's the `qa` skill's job). Run the test suites once, so "a test covers it" means it passes today:
 
 ```bash
@@ -28,6 +30,8 @@ Read the code and the tests; don't start the stack (that's the `qa` skill's job)
 (cd services/planner-service && uv run pytest -q)
 (cd services/frontend && npm test)
 ```
+
+Don't run `npm run build` yourself: it rewrites `services/frontend/.next`, which can break a dev server that is running. When a requirement needs a build, mark it Partly and leave "run `npm run build` before the PR" to the owner (or to `submit-task`). `npm run lint` and `npm test` are safe.
 
 Never read `.env` files. A setting that only lives there can't be checked: say so.
 

@@ -69,3 +69,10 @@ Each entry: what it is, why we made it, where it lives, and how to run it.
 - **Why:** the task says to build only what the spec lists; this shows both gaps and extras on one page before a PR (DECISIONS O101).
 - **Where:** `.claude/skills/requirements/` (the page template is in `references/`); its reports go to `docs/requirements/<date>-<task>.html`.
 - **Run:** ask Claude Code "/requirements" or "are we in spec?".
+
+## `submit-task` skill (P2)
+
+- **What:** a project skill for the end of a course task: clean-tree check, build, lint, tests, the `requirements` page, NFR numbers (re-measured when stale), judgment-log candidates, and the PR body; it pushes and opens the PR only after the owner's go.
+- **Why:** the PR is what gets graded; this makes every number and claim in it checked (DECISIONS O102).
+- **Where:** `.claude/skills/submit-task/` (PR body template in `references/`); the body goes to `docs/pr/<task>.md`.
+- **Run:** ask Claude Code "/submit-task" or "prepare the PR".
