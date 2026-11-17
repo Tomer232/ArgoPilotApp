@@ -53,6 +53,8 @@ Top findings: the planner returns a negative soil-water level (bucket below empt
 
 ### QA-3 Today's run is shown at a time that has already passed, with no "now" (medium, UX)
 
+**Status: decided, code waiting** (DECISIONS Y18): a "now" line on the bar and a note when today's start time has passed. Built after the frontend redesign is committed.
+
 - **Steps:**
   ```bash
   # at 11:55 local time (Asia/Jerusalem, the plot's zone)
@@ -63,6 +65,8 @@ Top findings: the planner returns a negative soil-water level (bucket below empt
 - **Notes:** the page knows the plot's today (day 1's date) but not the current time; whether to show "now" or start today's run from the current time is the owner's call.
 
 ### QA-4 A run that passes midnight moves most of a day's water into the next day, unlike the plan (medium, UX)
+
+**Status: decided, code waiting** (DECISIONS Y19): the run keeps going past midnight, with a note that the plan counts it as the first day's water. Built after the frontend redesign is committed.
 
 - **Steps:**
   ```bash
