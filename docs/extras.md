@@ -41,3 +41,10 @@ Each entry: what it is, why we made it, where it lives, and how to run it.
 - **Why:** lesson 13 exercise, written with `/skill-creator`, so every agent that touches an endpoint follows the same conventions without being told.
 - **Where:** `.claude/skills/registry-api/SKILL.md`. Eval runs go in `.claude/skills/registry-api-workspace/` (not committed).
 - **Run:** loads on its own when an agent works on a registry endpoint, or type `/registry-api`.
+
+## `run-stack` skill (P2)
+
+- **What:** a project skill with one script that starts the whole system (registry 8000 on PostgreSQL, weather 8001, planner 8002, frontend 3000), waits for each, checks the registry really reaches PostgreSQL, and prints the links; also `status` and `stop`.
+- **Why:** every run, demo and QA pass starts the four services the same way, instead of four terminals typed by hand (DECISIONS O92, O93, A64).
+- **Where:** `.claude/skills/run-stack/`. Logs and process ids in `/tmp/agropilot-stack/`.
+- **Run:** from the repo root, `bash .claude/skills/run-stack/scripts/stack.sh start` (or `status`, `stop`), or ask Claude to "run the app".
