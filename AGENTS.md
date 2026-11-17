@@ -22,6 +22,7 @@ The owner decides; the agent builds and supplies the information needed to decid
 
 - `services/weather-service/`: daily ET0 and rain from Open-Meteo, cached in memory per 0.1° cell (port 8001). FastAPI + httpx, no database; settings in `.env`; `uv run pytest` never calls the real provider. See its README.
 - `services/planner-service/`: the daily irrigation plan per plot (port 8002), from registry-service and weather-service. FastAPI + httpx, no database, no cache. `engine.py` is the FAO-56 calculation, written from the `irrigation-calc-reference` skill; `upstream.py` is the only code that calls the other services; `uv run pytest` never calls them. See its README.
+- `services/frontend/`: the grower's web page (port 3000): plot list and plot page with today's answer, the 7-day plan and a timeline. Next.js 16 + Tailwind 4 + shadcn/ui, styled like the P1 dashboard. Only the Next.js server calls the services (`src/lib/http.ts`, `no-store`); the grower's choices live in the address. `src/proxy.ts` turns an unknown plot into a real 404. Settings in `.env.local`. Its `AGENTS.md` says to read the Next docs in `node_modules/next/dist/docs/` before writing code. See its README.
 - `services/registry-service/`: FastAPI + SQLAlchemy Core (no ORM classes), PostgreSQL in production and SQLite for local work and tests, Python 3.12, managed with `uv`.
 - `experiments/ollama-agent/agent.py`: a standalone uv script (inline dependencies), unrelated to the service.
 - `DECISIONS.md`: every design decision, grouped as **Yours** (Y#), **Ours** (O#) and **Agent's** (A#). New decisions get the next number in the right group; superseded ones are marked, not deleted.
@@ -46,7 +47,20 @@ TEST_DATABASE_URL='postgresql+psycopg://registry:<password>@localhost:5432/regis
                                           # the same suite on PostgreSQL; wipes that database, name must end in _test
 ```
 
-There is no linter or formatter configured. `DATABASE_URL` (environment or `.env`) picks the database: `sqlite:///registry.db` or `postgresql+psycopg://...`. Production is the PostgreSQL database `registry`; tests on PostgreSQL use `registry_test`. Never point `TEST_DATABASE_URL` at `registry`.
+Run from `services/frontend` (needs Node.js; the three services running for real pages):
+
+```bash
+npm install                               # once
+cp .env.example .env.local                # once; the service URLs and timeouts (the agent never reads it)
+npm run dev                               # http://localhost:3000
+npm run build                             # production build, also type-checks
+npm run lint                              # ESLint, the frontend's only linter
+npm test                                  # Vitest, for src/lib
+```
+
+`bash .claude/skills/run-stack/scripts/stack.sh start` (from the repo root) starts all four services in order.
+
+The Python services have no linter or formatter configured. `DATABASE_URL` (environment or `.env`) picks the database: `sqlite:///registry.db` or `postgresql+psycopg://...`. Production is the PostgreSQL database `registry`; tests on PostgreSQL use `registry_test`. Never point `TEST_DATABASE_URL` at `registry`.
 
 ## Registry service architecture
 

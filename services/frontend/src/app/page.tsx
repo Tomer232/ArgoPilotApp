@@ -1,6 +1,9 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
+import { PageHeader } from "@/components/page-header";
+import { Panel } from "@/components/panel";
+import { Pill } from "@/components/pill";
 import { ProblemNotice } from "@/components/problem-notice";
 import { formatArea } from "@/lib/format";
 import type { Problem } from "@/lib/http";
@@ -9,9 +12,9 @@ import { listCrops, listFarms, listPlots, type Plot } from "@/lib/registry";
 /** The main page: every farm with its plots (FR-2.15). */
 export default function Home() {
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 pt-4 pb-12">
-      <h1 className="text-2xl font-semibold">Choose a plot</h1>
-      <Suspense fallback={<p className="mt-6 text-muted-foreground">Loading farms</p>}>
+    <main className="mx-auto w-full max-w-5xl px-4 py-6 lg:px-8 lg:py-8">
+      <PageHeader title="Plots" subtitle="Pick a plot to see today's irrigation and the 7-day plan." />
+      <Suspense fallback={<p className="text-muted-foreground">Loading farms</p>}>
         <FarmList />
       </Suspense>
     </main>
@@ -26,56 +29,52 @@ async function FarmList() {
   if (!crops.ok) return <LoadFailed problem={crops.problem} />;
 
   if (farms.data.length === 0) {
-    return <p className="mt-6">No farms yet. Farms and plots are added in the registry.</p>;
+    return <p>No farms yet. Farms and plots are added in the registry.</p>;
   }
 
   const cropNames = new Map(crops.data.map((crop) => [crop.id, crop.name]));
   return (
-    <div className="mt-6 space-y-8">
-      {farms.data.map((farm) => (
-        <section key={farm.id} aria-labelledby={`farm-${farm.id}`}>
-          <h2 id={`farm-${farm.id}`} className="text-sm font-semibold text-muted-foreground">
-            {farm.name}
-          </h2>
-          <PlotLinks
-            plots={plots.data.filter((plot) => plot.farm_id === farm.id)}
-            cropNames={cropNames}
-          />
-        </section>
-      ))}
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-3.5">
+      {farms.data.map((farm) => {
+        const farmPlots = plots.data.filter((plot) => plot.farm_id === farm.id);
+        return (
+          <Panel
+            key={farm.id}
+            id={`farm-${farm.id}`}
+            title={farm.name}
+            hint={farmPlots.length === 1 ? "1 plot" : `${farmPlots.length} plots`}
+            flush
+          >
+            <PlotLinks plots={farmPlots} cropNames={cropNames} />
+          </Panel>
+        );
+      })}
     </div>
   );
 }
 
 /** Shown instead of the list when a registry call fails. */
 function LoadFailed({ problem }: { problem: Problem }) {
-  return (
-    <div className="mt-6">
-      <ProblemNotice title="The farms can't be loaded right now" problem={problem} />
-    </div>
-  );
+  return <ProblemNotice title="The farms can't be loaded right now" problem={problem} />;
 }
 
 /** One farm's plots, each a full-width row that links to the plot's page. */
 function PlotLinks({ plots, cropNames }: { plots: Plot[]; cropNames: Map<string, string> }) {
   if (plots.length === 0) {
-    return <p className="mt-2 text-sm">No plots on this farm yet.</p>;
+    return <p className="px-4 py-6 text-center text-muted-foreground">No plots on this farm yet.</p>;
   }
   return (
-    <ul className="mt-2 divide-y border-y">
+    <ul className="divide-y">
       {plots.map((plot) => (
         <li key={plot.id}>
           <Link
             href={`/plots/${plot.id}`}
-            className="flex min-h-14 items-center justify-between gap-3 py-2 hover:bg-accent focus-visible:outline-2"
+            className="flex min-h-14 items-center gap-3 px-4 py-2.5 hover:bg-muted/60 focus-visible:outline-2"
           >
-            <span>
-              <span className="block text-lg font-medium">{plot.name}</span>
-              <span className="block text-sm text-muted-foreground">
-                {cropNames.get(plot.crop_id) ?? plot.crop_id}, {formatArea(plot.area_m2)}
-              </span>
-            </span>
-            <ChevronRight aria-hidden className="size-5 shrink-0 text-muted-foreground" />
+            <span className="min-w-0 flex-1 font-medium">{plot.name}</span>
+            <Pill>{cropNames.get(plot.crop_id) ?? plot.crop_id}</Pill>
+            <span className="w-20 text-right text-muted-foreground tabular-nums">{formatArea(plot.area_m2)}</span>
+            <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
           </Link>
         </li>
       ))}

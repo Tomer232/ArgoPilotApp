@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { HiddenInputs } from "@/components/hidden-inputs";
+import { NumberForm } from "@/components/number-form";
+import { Panel } from "@/components/panel";
 import { hrefWith, type PlanQuery } from "@/lib/plan-query";
 import { getSoilFeelRows } from "@/lib/soil-feel";
+import { cn } from "@/lib/utils";
 
 /**
  * "How wet is the soil today?": the grower squeezes some soil and picks the row that fits,
@@ -22,51 +24,45 @@ export function SoilLevelPicker({
   const rows = getSoilFeelRows(soilId);
   const picked = rows?.find((row) => chosen !== undefined && Number(chosen) === row.startPct);
   return (
-    <section aria-labelledby="soil-level" className="mt-4 rounded-md border bg-card p-5">
-      <h2 id="soil-level" className="text-lg font-semibold">
-        How wet is the soil today?
-      </h2>
+    <Panel id="soil-level" title="How wet is the soil today?" flush>
       {rows && (
         <>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Squeeze a handful of soil from the middle of the root zone.
-          </p>
-          <ul className="mt-3 space-y-2">
+          <p className="px-4 pt-3 text-muted-foreground">Squeeze a handful of soil from the middle of the root zone.</p>
+          <ul className="grid gap-1.5 p-3">
             {rows.map((row) => (
               <li key={row.key}>
                 <Link
                   href={hrefWith(query, { start_pct: String(row.startPct) })}
                   aria-current={row === picked ? "true" : undefined}
-                  className={`block rounded-md border p-3 ${row === picked ? "border-water bg-water/10" : "hover:bg-muted"}`}
+                  className={cn(
+                    "flex gap-3 rounded-lg border px-3 py-2.5",
+                    row === picked ? "border-foreground/70 bg-card shadow-sm" : "border-transparent hover:bg-muted",
+                  )}
                 >
-                  <span className="font-semibold">{row.label}</span>
-                  <span className="mt-0.5 block text-sm">{row.description}</span>
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border",
+                      row === picked ? "border-foreground" : "border-input bg-card",
+                    )}
+                  >
+                    {row === picked && <span className="size-2 rounded-full bg-foreground" />}
+                  </span>
+                  <span>
+                    <span className="block font-medium">{row.label}</span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">{row.description}</span>
+                  </span>
                 </Link>
               </li>
             ))}
           </ul>
         </>
       )}
-      <form method="get" className="mt-4 flex flex-wrap items-end gap-2">
-        <HiddenInputs query={query} except="start_pct" />
-        <label className="text-sm">
-          I know the exact %
-          <input
-            type="number"
-            name="start_pct"
-            min={0}
-            max={100}
-            step="any"
-            required
-            className="mt-1 block w-28 rounded-md border bg-background px-2 py-1.5"
-          />
-        </label>
-        <button type="submit" className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground">
-          Update plan
-        </button>
-      </form>
-      <p className="mt-4 text-sm text-muted-foreground">{summary(chosen, picked?.label, startPct)}</p>
-    </section>
+      <div className="border-t px-4 py-3">
+        <NumberForm label="I know the exact %" name="start_pct" min={0} max={100} query={query} />
+        <p className="mt-3 text-xs text-muted-foreground">{summary(chosen, picked?.label, startPct)}</p>
+      </div>
+    </Panel>
   );
 }
 

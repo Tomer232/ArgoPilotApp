@@ -1,11 +1,12 @@
 import { CloudOff } from "lucide-react";
+import { Pill } from "@/components/pill";
 
 /** Marks numbers that come from an old forecast (FR-2.17). */
 export function StaleLabel() {
   return (
-    <span className="inline-flex items-center gap-1 text-xs font-semibold text-stale">
-      <CloudOff aria-hidden className="size-3.5" />
+    <Pill tone="stale">
+      <CloudOff aria-hidden />
       Stale forecast
-    </span>
+    </Pill>
   );
 }

@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Tailwind names for the colors below: bg-water, text-stale, border-soil, ... */
+/* Tailwind names for the colors below: bg-water, bg-leaf-soft, text-stale, ... */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -29,6 +29,14 @@
   --color-leaf: var(--leaf);
   --color-stale: var(--stale);
   --color-alarm: var(--alarm);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-page: var(--page);
+  --color-water-soft: var(--water-soft);
+  --color-leaf-soft: var(--leaf-soft);
+  --color-soil-soft: var(--soil-soft);
+  --color-stale-soft: var(--stale-soft);
+  --color-alarm-soft: var(--alarm-soft);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -36,38 +44,48 @@
 }
 
 /*
- * One light theme only: the app is read outdoors on a phone, in sunlight.
- * Each color has one meaning, so it is never used for decoration.
+ * One light theme, in the P1 registry dashboard style: a grey canvas, a light panel,
+ * white cards with thin borders. Each signal color has one meaning, with a soft tint for
+ * pills and selected rows. Green is the app's own color (brand mark, main buttons) and
+ * also means "no irrigation needed".
  */
 :root {
-  --field-white: #f6f8f7;
-  --ink: #1b2427;
+  --page: #ececee; /* the canvas around the panels */
+  --surface: #f7f7f8; /* the main panel and sidebar */
+  --ink: #18181b;
 
-  --water: #0b5a87; /* irrigate: "Water for N minutes", run minutes, litres */
-  --soil: #7a5a3c; /* the soil bucket */
-  --leaf: #4e7a3f; /* no irrigation needed */
-  --stale: #9a5f10; /* stale forecast (darker than #B7791F so text passes contrast) */
-  --alarm: #a23b2a; /* a service is down, an error */
+  --brand: #1f7a4d; /* AgroPilot itself: the logo mark and the main buttons */
+  --brand-foreground: #ffffff;
+  --water: #3f66cc; /* irrigate: run time, litres, the watering timeline */
+  --water-soft: #e8eefb;
+  --leaf: #23784f; /* no irrigation needed, a service is up */
+  --leaf-soft: #e3f4ec;
+  --soil: #a07650; /* the soil bucket */
+  --soil-soft: #f1e9e1;
+  --stale: #b3601f; /* stale forecast */
+  --stale-soft: #fcefe3;
+  --alarm: #c0353a; /* a service is down, an error */
+  --alarm-soft: #fde8e8;
 
-  --background: var(--field-white);
+  --background: var(--surface);
   --foreground: var(--ink);
   --card: #ffffff;
   --card-foreground: var(--ink);
   --popover: #ffffff;
   --popover-foreground: var(--ink);
-  --primary: var(--water);
-  --primary-foreground: #ffffff;
-  --secondary: #e7ecea;
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --secondary: #f1f1f3;
   --secondary-foreground: var(--ink);
-  --muted: #e7ecea;
-  --muted-foreground: #4f5d61;
-  --accent: #e7ecea;
+  --muted: #f1f1f3;
+  --muted-foreground: #71717a;
+  --accent: #f1f1f3;
   --accent-foreground: var(--ink);
   --destructive: var(--alarm);
-  --border: #d3dbd8;
-  --input: #d3dbd8;
-  --ring: var(--water);
-  --radius: 0.375rem;
+  --border: #e6e6e9;
+  --input: #e0e0e4;
+  --ring: var(--brand);
+  --radius: 0.75rem;
 }
 
 @layer base {
@@ -75,7 +93,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-page text-foreground;
   }
   html {
     @apply font-sans;

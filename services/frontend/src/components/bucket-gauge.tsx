@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * The soil bucket at the end of one day: how full it is, with a mark at the
- * half-full trigger. Below the mark, the plan irrigates.
+ * trigger. Below the mark, the plan irrigates.
  */
 export function BucketGauge({ day, className }: { day: PlanDay; className?: string }) {
   const fillPercent = toPercent(day.bucket_end_mm, day.bucket_capacity_mm);
@@ -12,10 +12,10 @@ export function BucketGauge({ day, className }: { day: PlanDay; className?: stri
     `Soil water ${day.bucket_end_mm} of ${day.bucket_capacity_mm} mm. ` +
     `Irrigation starts below ${day.trigger_mm} mm.`;
   return (
-    <div role="img" aria-label={label} className={cn("relative h-3 rounded-sm bg-soil/15", className)}>
-      <div className="h-full rounded-sm bg-soil" style={{ width: `${fillPercent}%` }} />
+    <div role="img" aria-label={label} className={cn("relative h-2 rounded-full bg-soil-soft", className)}>
+      <div className="h-full rounded-full bg-soil" style={{ width: `${fillPercent}%` }} />
       <div
-        className="absolute -top-1 -bottom-1 w-0.5 bg-foreground"
+        className="absolute -top-1 -bottom-1 w-0.5 rounded-full bg-foreground"
         style={{ left: `${triggerPercent}%` }}
       />
     </div>

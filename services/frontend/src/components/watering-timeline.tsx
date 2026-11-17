@@ -1,4 +1,7 @@
 import { HiddenInputs } from "@/components/hidden-inputs";
+import { Panel } from "@/components/panel";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { formatWeekday } from "@/lib/format";
 import type { Plan } from "@/lib/planner";
 import type { PlanQuery } from "@/lib/plan-query";
@@ -14,35 +17,36 @@ export function WateringTimeline({ plan, query }: { plan: Plan; query: PlanQuery
   const totalMinutes = plan.days.length * MINUTES_PER_DAY;
   const firstDate = plan.days[0].date;
   return (
-    <section aria-labelledby="timeline" className="mt-8">
-      <h2 id="timeline" className="text-lg font-semibold">
-        When to water
-      </h2>
-      <form method="get" className="mt-2 flex flex-wrap items-end gap-2">
-        <HiddenInputs query={query} except="start" />
-        <label className="text-sm">
-          Start watering at
-          <input
-            type="time"
-            name="start"
-            defaultValue={start.text}
-            required
-            className="mt-1 block w-32 rounded-md border bg-background px-2 py-1.5"
-          />
-        </label>
-        <button type="submit" className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground">
-          Update plan
-        </button>
-      </form>
+    <Panel
+      id="timeline"
+      title="When to water"
+      hint="00:00 to 24:00 each day"
+      action={
+        <form method="get" className="flex flex-wrap items-center gap-2">
+          <HiddenInputs query={query} except="start" />
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            Start at
+            <Input
+              type="time"
+              name="start"
+              defaultValue={start.text}
+              required
+              className="h-8 w-28 bg-card! text-sm! text-foreground"
+            />
+          </label>
+          <Button type="submit">Update plan</Button>
+        </form>
+      }
+    >
       {start.invalid && (
-        <p className="mt-2 text-sm text-stale">
+        <p className="mb-3 rounded-lg bg-stale-soft px-3 py-2 text-stale">
           The start time in the address is not a time (HH:MM), so {start.text} is used.
         </p>
       )}
       <div
         role="img"
         aria-label="Watering timeline, listed below"
-        className="relative mt-4 h-5 overflow-hidden rounded-sm bg-muted"
+        className="relative h-6 overflow-hidden rounded-md bg-muted"
       >
         {windows.map((window) => (
           <div
@@ -52,22 +56,25 @@ export function WateringTimeline({ plan, query }: { plan: Plan; query: PlanQuery
           />
         ))}
       </div>
-      <ol className="mt-1 flex text-xs text-muted-foreground">
+      <ol className="mt-1.5 flex text-xs text-muted-foreground">
         {plan.days.map((day, index) => (
-          <li key={day.date} className="flex-1 border-l pl-0.5">
+          <li key={day.date} className="flex-1 border-l pl-1">
             {index === 0 ? "Today" : formatWeekday(day.date)}
           </li>
         ))}
       </ol>
       {windows.length === 0 ? (
-        <p className="mt-3 text-sm">No watering in these days.</p>
+        <p className="mt-4 text-muted-foreground">No watering in these days.</p>
       ) : (
-        <ul className="mt-3 space-y-1 text-sm tabular-nums">
+        <ul className="mt-4 grid gap-1.5 tabular-nums">
           {windows.map((window) => (
-            <li key={window.startMin}>{windowText(window, firstDate)}</li>
+            <li key={window.startMin} className="flex items-center gap-2">
+              <span aria-hidden className="size-2 shrink-0 rounded-full bg-water" />
+              {windowText(window, firstDate)}
+            </li>
           ))}
         </ul>
       )}
-    </section>
+    </Panel>
   );
 }

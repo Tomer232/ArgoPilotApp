@@ -1,8 +1,10 @@
 import { CircleAlert } from "lucide-react";
 import Link from "next/link";
-import { HiddenInputs } from "@/components/hidden-inputs";
+import { NumberForm } from "@/components/number-form";
+import { Panel } from "@/components/panel";
 import type { Plan } from "@/lib/planner";
 import { hrefWith, type PlanQuery } from "@/lib/plan-query";
+import { cn } from "@/lib/utils";
 
 // FAO-56 (Ch. 8) gives p, the share of the bucket a crop can use up, from 0.30 to 0.70.
 const USUAL_MIN_PCT = 30;
@@ -29,48 +31,35 @@ export function TriggerPicker({
   ];
   const outsideUsualRange = plan.trigger_pct < USUAL_MIN_PCT || plan.trigger_pct > USUAL_MAX_PCT;
   return (
-    <section aria-labelledby="trigger" className="mt-4 rounded-md border bg-card p-5">
-      <h2 id="trigger" className="text-lg font-semibold">
-        Irrigate when the bucket falls below
-      </h2>
-      <ul className="mt-3 flex flex-wrap gap-2">
-        {options.map((option) => (
-          <li key={option.label}>
-            <Link
-              href={hrefWith(query, { trigger_pct: String(option.pct) })}
-              aria-current={option.pct === plan.trigger_pct ? "true" : undefined}
-              className={`block rounded-md border px-3 py-2 ${option.pct === plan.trigger_pct ? "border-water bg-water/10" : "hover:bg-muted"}`}
-            >
-              <span className="font-semibold">{option.label}</span>
-              <span className="ml-1.5 text-sm tabular-nums">{option.pct}%</span>
-            </Link>
-          </li>
-        ))}
+    <Panel id="trigger" title="Irrigate when the bucket falls below">
+      <ul className="inline-flex rounded-lg bg-muted p-0.5">
+        {options.map((option) => {
+          const active = option.pct === plan.trigger_pct;
+          return (
+            <li key={option.label}>
+              <Link
+                href={hrefWith(query, { trigger_pct: String(option.pct) })}
+                aria-current={active ? "true" : undefined}
+                className={cn(
+                  "block rounded-md px-3 py-1.5",
+                  active ? "bg-card font-medium shadow-sm" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {option.label}
+                <span className="ml-1.5 tabular-nums">{option.pct}%</span>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
-      <form method="get" className="mt-3 flex flex-wrap items-end gap-2">
-        <HiddenInputs query={query} except="trigger_pct" />
-        <label className="text-sm">
-          Custom %
-          <input
-            type="number"
-            name="trigger_pct"
-            min={1}
-            max={99}
-            step="any"
-            required
-            className="mt-1 block w-28 rounded-md border bg-background px-2 py-1.5"
-          />
-        </label>
-        <button type="submit" className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground">
-          Update plan
-        </button>
-      </form>
-      <p className="mt-4 text-sm text-muted-foreground">
-        The plan irrigates when the soil water would end the day below {plan.trigger_pct}% of the
-        bucket.
+      <div className="mt-4">
+        <NumberForm label="Custom %" name="trigger_pct" min={1} max={99} query={query} />
+      </div>
+      <p className="mt-4 text-xs text-muted-foreground">
+        The plan irrigates when the soil water would end the day below {plan.trigger_pct}% of the bucket.
       </p>
       {outsideUsualRange && (
-        <p role="alert" className="mt-3 flex gap-2 text-sm text-stale">
+        <p role="alert" className="mt-3 flex gap-2 rounded-lg bg-stale-soft px-3 py-2 text-stale">
           <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
           <span>
             Outside the usual range ({USUAL_MIN_PCT}-{USUAL_MAX_PCT}%). Recommended for {cropName}:{" "}
@@ -78,6 +67,6 @@ export function TriggerPicker({
           </span>
         </p>
       )}
-    </section>
+    </Panel>
   );
 }

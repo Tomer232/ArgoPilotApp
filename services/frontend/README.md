@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend
 
-## Getting Started
+The grower's web page for AgroPilot (port 3000). It lists every farm with its plots, and for one plot shows today's answer first ("Water for 38 min" or "No irrigation today"), then the 7-day plan as a table and a timeline. A status card says whether each of the three services is up. Next.js 16 (App Router), React 19, Tailwind 4 and shadcn/ui components, styled like the P1 registry dashboard.
 
-First, run the development server:
+The browser never calls the services. Every call to `registry-service`, `weather-service` and `planner-service` is made by the Next.js server while it renders the page, fresh on every load (`cache: "no-store"`). The grower's choices (soil level, trigger, start time) live in the page address, so a plain link or GET form changes them and there is no client-side state.
+
+## Run it
+
+Run these from this folder. You need Node.js (v26 is what this was built with) and the three services running: registry on 8000, weather on 8001, planner on 8002. From the repo root, `bash .claude/skills/run-stack/scripts/stack.sh start` starts all four.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install                     # once
+cp .env.example .env.local      # the settings file; .env.local is never committed
+npm run dev                     # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Other commands:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build                   # production build (also type-checks)
+npm run start                   # serve the production build on port 3000
+npm run lint                    # ESLint
+npm test                        # Vitest, for the logic in src/lib
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Settings.** All of them are required and live in `.env.local` (the environment wins). If one is missing, the server stops at startup with a line naming it (`src/instrumentation.ts`).
 
-## Learn More
+| Variable | Example | Meaning |
+| --- | --- | --- |
+| `REGISTRY_URL` | `http://127.0.0.1:8000` | Where `registry-service` answers |
+| `WEATHER_URL` | `http://127.0.0.1:8001` | Where `weather-service` answers (only its `/health` is called) |
+| `PLANNER_URL` | `http://127.0.0.1:8002` | Where `planner-service` answers |
+| `REGISTRY_TIMEOUT_SECONDS` | `2` | Wait this long for each registry answer |
+| `PLANNER_TIMEOUT_SECONDS` | `20` | Wait this long for a plan. Longer than the planner's own worst case, so its 503 still arrives |
+| `HEALTH_TIMEOUT_SECONDS` | `2` | Wait this long for each `/health` |
 
-To learn more about Next.js, take a look at the following resources:
+## Pages
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Address | What it shows |
+| --- | --- |
+| `/` | Every farm as a card, with its plots: name, crop, area (FR-2.15) |
+| `/plots/{id}` | Today's recommendation, the drip system's numbers, the soil-level and trigger pickers, the 7-day table and the watering timeline (FR-2.16) |
+| `/plots/{id}?start_pct=37.5&trigger_pct=60&start=05:30` | The same, with the grower's choices: soil level today (0-100), trigger (1-99), watering start time (HH:MM, default 06:00) |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+What the pages do when something goes wrong:
 
-## Deploy on Vercel
+- **Unknown plot:** `src/proxy.ts` asks the registry before the page renders. A 404 from the registry gives our "Plot not found" page with HTTP 404. Any other answer lets the page render and handle it.
+- **A service down or slow:** the page says what could not be done, in the service's own words, for example "planner-service is not reachable." (FR-2.18). With choices in the address, a "Plan with the default choices" link is offered. The status card marks that service down (FR-2.19).
+- **Old forecast:** each day calculated from a stale forecast carries an amber "Stale forecast" label, and today's card says when the weather is from (FR-2.17).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Files
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Path | What it is |
+| --- | --- |
+| `src/app/layout.tsx` | The shell: sidebar (phone: top bar) with the name and the status card, and the page panel |
+| `src/app/page.tsx` | The plot list |
+| `src/app/plots/[id]/page.tsx` | The plot page |
+| `src/app/plot-not-found/page.tsx` | Where `proxy.ts` sends an unknown plot, with status 404 |
+| `src/proxy.ts` | The unknown-plot check before `/plots/{id}` renders |
+| `src/components/` | One file per part of the page (`today-recommendation`, `plan-table`, `watering-timeline`, the pickers, ...) and the shared `panel`, `pill`, `page-header` |
+| `src/components/ui/` | shadcn/ui components (`button`, `card`, `alert`, `badge`, `input`, `table`), added with `npx shadcn add` |
+| `src/lib/http.ts` | The only code that sends requests: `getJson` never throws, it returns the data or a Problem that names the service |
+| `src/lib/registry.ts`, `planner.ts`, `health.ts` | One function per service call, with the answer's types |
+| `src/lib/config.ts` | Reads and checks the settings |
+| `src/lib/format.ts`, `timeline.ts`, `plan-query.ts`, `soil-feel.ts` | Display helpers, the timeline's windows, the address with the grower's choices, the soil-feel rows per soil |
+| `src/app/globals.css` | The colors: one meaning each (water blue, leaf green, soil brown, stale amber, alarm red) plus the brand green |

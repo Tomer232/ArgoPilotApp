@@ -1,4 +1,6 @@
 import { BucketGauge } from "@/components/bucket-gauge";
+import { Panel } from "@/components/panel";
+import { Pill } from "@/components/pill";
 import { StaleLabel } from "@/components/stale-label";
 import {
   Table,
@@ -13,31 +15,30 @@ import type { Plan } from "@/lib/planner";
 
 // Columns that only fit on wider screens. On a phone the table keeps Day, Water and Soil water.
 const WIDE = "hidden md:table-cell";
+// Header cells in the P1 style: small and muted.
+const HEAD = "h-9 text-xs font-medium text-muted-foreground";
 
 /** The 7-day plan, one row per day. Stale days carry the label next to their numbers (FR-2.17). */
 export function PlanTable({ plan }: { plan: Plan }) {
   return (
-    <section aria-labelledby="plan" className="mt-8">
-      <h2 id="plan" className="text-lg font-semibold">
-        Next {plan.days.length} days
-      </h2>
-      <Table className="mt-2 tabular-nums">
+    <Panel id="plan" title={`Next ${plan.days.length} days`} hint="weather, crop need and water" flush>
+      <Table className="tabular-nums">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="pl-0">Day</TableHead>
-            <TableHead className={`${WIDE} text-right`}>ET0 mm</TableHead>
-            <TableHead className={`${WIDE} text-right`}>Rain mm</TableHead>
-            <TableHead className={`${WIDE} text-right`}>Kc</TableHead>
-            <TableHead className={`${WIDE} text-right`}>Need mm</TableHead>
-            <TableHead>Water</TableHead>
-            <TableHead className={`${WIDE} text-right`}>Litres</TableHead>
-            <TableHead className="pr-0">Soil water mm</TableHead>
+            <TableHead className={`${HEAD} pl-4`}>Day</TableHead>
+            <TableHead className={`${HEAD} ${WIDE} text-right`}>ET0 mm</TableHead>
+            <TableHead className={`${HEAD} ${WIDE} text-right`}>Rain mm</TableHead>
+            <TableHead className={`${HEAD} ${WIDE} text-right`}>Kc</TableHead>
+            <TableHead className={`${HEAD} ${WIDE} text-right`}>Need mm</TableHead>
+            <TableHead className={HEAD}>Water</TableHead>
+            <TableHead className={`${HEAD} ${WIDE} text-right`}>Litres</TableHead>
+            <TableHead className={`${HEAD} pr-4`}>Soil water mm</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {plan.days.map((day, index) => (
-            <TableRow key={day.date} className="hover:bg-transparent">
-              <TableCell className="pl-0">
+            <TableRow key={day.date}>
+              <TableCell className="py-2.5 pl-4">
                 <span className="block font-medium">
                   {index === 0 ? "Today" : formatDay(day.date)}
                 </span>
@@ -50,17 +51,17 @@ export function PlanTable({ plan }: { plan: Plan }) {
               <TableCell>
                 {day.run_minutes > 0 ? (
                   <>
-                    <span className="font-semibold text-water">{formatDuration(day.run_minutes)}</span>
-                    {day.capped && <span className="block text-xs text-muted-foreground">Most in 24 h</span>}
+                    <Pill tone="water">{formatDuration(day.run_minutes)}</Pill>
+                    {day.capped && <span className="mt-0.5 block text-xs text-muted-foreground">Most in 24 h</span>}
                   </>
                 ) : (
-                  <span className="text-muted-foreground">No need</span>
+                  <Pill tone="leaf">No need</Pill>
                 )}
               </TableCell>
               <TableCell className={`${WIDE} text-right`}>
                 {formatLitres(day.litres)}
               </TableCell>
-              <TableCell className="pr-0">
+              <TableCell className="pr-4">
                 <span className="flex items-center gap-2">
                   <BucketGauge day={day} className="w-20 sm:w-28" />
                   <span>{day.bucket_end_mm}</span>
@@ -70,10 +71,10 @@ export function PlanTable({ plan }: { plan: Plan }) {
           ))}
         </TableBody>
       </Table>
-      <p className="mt-3 text-xs text-muted-foreground">
+      <p className="border-t px-4 py-3 text-xs text-muted-foreground">
         Soil water is what the root zone holds at the end of the day. The mark on each bar is the
         trigger ({plan.trigger_pct}% of the bucket): the plan irrigates before the soil falls below it.
       </p>
-    </section>
+    </Panel>
   );
 }
