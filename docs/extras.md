@@ -48,3 +48,10 @@ Each entry: what it is, why we made it, where it lives, and how to run it.
 - **Why:** every run, demo and QA pass starts the four services the same way, instead of four terminals typed by hand (DECISIONS O92, O93, A64).
 - **Where:** `.claude/skills/run-stack/`. Logs and process ids in `/tmp/agropilot-stack/`.
 - **Run:** from the repo root, `bash .claude/skills/run-stack/scripts/stack.sh start` (or `status`, `stop`), or ask Claude to "run the app".
+
+## Frontend unit tests (P2)
+
+- **What:** Vitest for the pure logic in `services/frontend/src/lib` (first suites: `timeline.test.ts`, `format.test.ts`), set up by the `test` skill.
+- **Why:** the watering timeline's windows and dates (Y16, A63) are easy to break silently; the pages show the result, not the rule.
+- **Where:** `services/frontend/vitest.config.mts`, the `test` script and the `vitest` dev dependency in `package.json` (Vitest 4: Vitest 5 needs `@types/node` 22+, and the frontend pins ^20).
+- **Run:** from `services/frontend`, `npm test`.
