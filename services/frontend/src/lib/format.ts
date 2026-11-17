@@ -10,6 +10,20 @@ export function formatLitres(litres: number): string {
   return `${litres.toLocaleString("en-US", { maximumFractionDigits: 0 })} L`;
 }
 
+/** 612 minutes becomes { hours: 10, minutes: 12 }. */
+export function splitDuration(totalMinutes: number): { hours: number; minutes: number } {
+  return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60 };
+}
+
+/** 45 becomes "45 min", 612 becomes "10 h 12 min", 1440 becomes "24 h". */
+export function formatDuration(totalMinutes: number): string {
+  const { hours, minutes } = splitDuration(Math.round(totalMinutes));
+  if (hours === 0) {
+    return `${minutes} min`;
+  }
+  return minutes === 0 ? `${hours} h` : `${hours} h ${minutes} min`;
+}
+
 /** "2026-11-17" becomes "Tue 17 Nov". The date is a calendar day, so it is read in UTC and never shifts. */
 export function formatDay(isoDate: string): string {
   return new Date(`${isoDate}T00:00:00Z`).toLocaleDateString("en-GB", {
@@ -30,4 +44,9 @@ export function formatFetchedAt(isoTimestamp: string): string {
     timeZone: "UTC",
   });
   return `${time} UTC`;
+}
+
+/** "2026-11-17" becomes "Tue". Read in UTC, like formatDay. */
+export function formatWeekday(isoDate: string): string {
+  return new Date(`${isoDate}T00:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", timeZone: "UTC" });
 }

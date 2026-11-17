@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatDay, formatLitres } from "@/lib/format";
+import { formatDay, formatDuration, formatLitres } from "@/lib/format";
 import type { Plan } from "@/lib/planner";
 
 // Columns that only fit on wider screens. On a phone the table keeps Day, Water and Soil water.
@@ -49,7 +49,10 @@ export function PlanTable({ plan }: { plan: Plan }) {
               <TableCell className={`${WIDE} text-right`}>{day.need_mm}</TableCell>
               <TableCell>
                 {day.run_minutes > 0 ? (
-                  <span className="font-semibold text-water">{day.run_minutes} min</span>
+                  <>
+                    <span className="font-semibold text-water">{formatDuration(day.run_minutes)}</span>
+                    {day.capped && <span className="block text-xs text-muted-foreground">Most in 24 h</span>}
+                  </>
                 ) : (
                   <span className="text-muted-foreground">No need</span>
                 )}
@@ -68,8 +71,8 @@ export function PlanTable({ plan }: { plan: Plan }) {
         </TableBody>
       </Table>
       <p className="mt-3 text-xs text-muted-foreground">
-        Soil water is what the root zone holds at the end of the day. The mark on each bar is half
-        full: the plan irrigates before the soil falls below it.
+        Soil water is what the root zone holds at the end of the day. The mark on each bar is the
+        trigger ({plan.trigger_pct}% of the bucket): the plan irrigates before the soil falls below it.
       </p>
     </section>
   );
