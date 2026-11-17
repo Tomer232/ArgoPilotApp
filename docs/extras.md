@@ -59,6 +59,13 @@ Each entry: what it is, why we made it, where it lives, and how to run it.
 ## `test` and `qa` skills, QA mode (P2)
 
 - **What:** `test` writes the tests for a section and keeps `docs/test-plan.md`; `qa` tries to break a finished section through the running system and writes a report to `docs/qa/`. `run-stack start qa` runs the registry on the throwaway database `registry_qa`.
-- **Why:** to find gaps before the reviewer does, without risking the real `registry` data (DECISIONS O94, O96, A65). The first QA run found the bucket going below empty (QA-1).
+- **Why:** to find gaps before the reviewer does, without risking the real `registry` data (DECISIONS O94, O100, A67). The first QA run found the bucket going below empty (QA-1).
 - **Where:** `.claude/skills/test/`, `.claude/skills/qa/`, `.claude/skills/run-stack/scripts/reset_qa_db.py`; reports in `docs/qa/`.
 - **Run:** ask Claude to "test this" or "QA this", or `/test`, `/qa`. QA mode needs `registry_qa` created once and its password in `~/.pgpass` (see the run-stack skill).
+
+## `requirements` skill (P2)
+
+- **What:** a project skill that checks the build against the task's FR/NFR (status and evidence for each) and lists what we built outside the spec, with its form and where it is recorded.
+- **Why:** the task says to build only what the spec lists; this shows both gaps and extras on one page before a PR (DECISIONS O101).
+- **Where:** `.claude/skills/requirements/` (the page template is in `references/`); its reports go to `docs/requirements/<date>-<task>.html`.
+- **Run:** ask Claude Code "/requirements" or "are we in spec?".

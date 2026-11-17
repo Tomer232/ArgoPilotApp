@@ -86,34 +86,34 @@ describe("buildWindows", () => {
 
   it("starts a watering day's run at the start time", () => {
     // Day 1, start 06:00 (360), 45 minutes: 360 to 405.
-    expect(buildWindows([day(45)], 360)).toEqual([{ startMin: 360, endMin: 405 }]);
+    expect(buildWindows([day(45)], 360)).toEqual([{ startMin: 360, endMin: 405, stale: false }]);
   });
 
   it("places each day's run on its own day and skips days without watering", () => {
     // Y16: day index 2 starts at 2 x 1440 + 360 = 3240; day index 4 at 4 x 1440 + 360 = 6120.
     const days = [day(0), day(0), day(30), day(0), day(90)];
     expect(buildWindows(days, 360)).toEqual([
-      { startMin: 3240, endMin: 3270 },
-      { startMin: 6120, endMin: 6210 },
+      { startMin: 3240, endMin: 3270, stale: false },
+      { startMin: 6120, endMin: 6210, stale: false },
     ]);
   });
 
   it("lets a run pass midnight into the next day", () => {
     // Y16: start 22:00 (1320) plus 180 minutes ends at 1500, which is 01:00 on day 2.
-    expect(buildWindows([day(180)], 1320)).toEqual([{ startMin: 1320, endMin: 1500 }]);
+    expect(buildWindows([day(180)], 1320)).toEqual([{ startMin: 1320, endMin: 1500, stale: false }]);
   });
 
   it("lets a run that starts at the last minute of the day pass midnight", () => {
     // Boundary: 23:59 (1439) plus 2 minutes ends at 1441, 00:01 on day 2.
-    expect(buildWindows([day(2)], 1439)).toEqual([{ startMin: 1439, endMin: 1441 }]);
+    expect(buildWindows([day(2)], 1439)).toEqual([{ startMin: 1439, endMin: 1441, stale: false }]);
   });
 
   it("keeps back-to-back capped days as separate windows that touch", () => {
     // O90: a capped day runs exactly 1440 min. Day 1 runs 360 to 1800; day 2 starts at
     // 1440 + 360 = 1800, exactly when day 1 ends, so it is not pushed and not merged.
     expect(buildWindows([day(1440), day(1440)], 360)).toEqual([
-      { startMin: 360, endMin: 1800 },
-      { startMin: 1800, endMin: 3240 },
+      { startMin: 360, endMin: 1800, stale: false },
+      { startMin: 1800, endMin: 3240, stale: false },
     ]);
   });
 
@@ -122,22 +122,32 @@ describe("buildWindows", () => {
     // With a 1500-minute day 1 (more than the planner sends, see O90) it ends at 2820,
     // so day 2's 60 minutes start at 2820, not 2760, and end at 2880.
     expect(buildWindows([day(1500), day(60)], 1320)).toEqual([
-      { startMin: 1320, endMin: 2820 },
-      { startMin: 2820, endMin: 2880 },
+      { startMin: 1320, endMin: 2820, stale: false },
+      { startMin: 2820, endMin: 2880, stale: false },
     ]);
   });
 
   it("does not push a run when the previous one ended earlier", () => {
     // Day 1 runs 360 to 420; day 2 still starts at its own time, 1440 + 360 = 1800.
     expect(buildWindows([day(60), day(60)], 360)).toEqual([
-      { startMin: 360, endMin: 420 },
-      { startMin: 1800, endMin: 1860 },
+      { startMin: 360, endMin: 420, stale: false },
+      { startMin: 1800, endMin: 1860, stale: false },
     ]);
   });
 
   it("starts at midnight when the start time is 00:00", () => {
     // Boundary: start 0, day index 1 starts at exactly 1440.
-    expect(buildWindows([day(0), day(10)], 0)).toEqual([{ startMin: 1440, endMin: 1450 }]);
+    expect(buildWindows([day(0), day(10)], 0)).toEqual([{ startMin: 1440, endMin: 1450, stale: false }]);
+  });
+
+  it("marks a run stale when its day comes from a stale forecast", () => {
+    // FR-2.17 (QA-2): the run times are numbers the stale forecast affects, so each window
+    // carries its own day's flag. Day 1 is fresh, day 2 stale.
+    const staleDay = { ...day(30), stale: true };
+    expect(buildWindows([day(30), staleDay], 360)).toEqual([
+      { startMin: 360, endMin: 390, stale: false },
+      { startMin: 1800, endMin: 1830, stale: true },
+    ]);
   });
 });
 
@@ -202,16 +212,16 @@ describe("clockTime", () => {
 describe("barPosition", () => {
   // A 2-day bar is 2880 minutes, so 360 minutes is 12.5% and 720 minutes is 25%.
   it("places a window by its start and length", () => {
-    expect(barPosition({ startMin: 360, endMin: 1080 }, 2880)).toEqual({ left: "12.5%", width: "25%" });
+    expect(barPosition({ startMin: 360, endMin: 1080, stale: false }, 2880)).toEqual({ left: "12.5%", width: "25%" });
   });
 
   it("cuts a run that passes the plan's last day at the bar's end (A63)", () => {
     // Day 2 at 18:00 for 12 h would end at 3240; the bar ends at 2880, so 360 minutes show.
-    expect(barPosition({ startMin: 2520, endMin: 3240 }, 2880)).toEqual({ left: "87.5%", width: "12.5%" });
+    expect(barPosition({ startMin: 2520, endMin: 3240, stale: false }, 2880)).toEqual({ left: "87.5%", width: "12.5%" });
   });
 
   it("keeps a run that ends exactly at the bar's end whole", () => {
-    expect(barPosition({ startMin: 1440, endMin: 2880 }, 2880)).toEqual({ left: "50%", width: "50%" });
+    expect(barPosition({ startMin: 1440, endMin: 2880, stale: false }, 2880)).toEqual({ left: "50%", width: "50%" });
   });
 });
 
@@ -239,18 +249,18 @@ describe("momentText", () => {
 describe("windowText", () => {
   it("writes a run inside one day with its length (O91)", () => {
     // 06:00 + 612 min (10 h 12 min) ends at 16:12.
-    expect(windowText({ startMin: 360, endMin: 972 }, "2026-11-17")).toBe("Tue 06:00 - Tue 16:12, 10 h 12 min");
+    expect(windowText({ startMin: 360, endMin: 972, stale: false }, "2026-11-17")).toBe("Tue 06:00 - Tue 16:12, 10 h 12 min");
   });
 
   it("writes a run that passes midnight with both weekdays", () => {
-    expect(windowText({ startMin: 1380, endMin: 1500 }, "2026-11-17")).toBe("Tue 23:00 - Wed 01:00, 2 h");
+    expect(windowText({ startMin: 1380, endMin: 1500, stale: false }, "2026-11-17")).toBe("Tue 23:00 - Wed 01:00, 2 h");
   });
 
   it("writes a capped 24-hour run (O90)", () => {
-    expect(windowText({ startMin: 360, endMin: 1800 }, "2026-11-17")).toBe("Tue 06:00 - Wed 06:00, 24 h");
+    expect(windowText({ startMin: 360, endMin: 1800, stale: false }, "2026-11-17")).toBe("Tue 06:00 - Wed 06:00, 24 h");
   });
 
   it("writes a run under an hour in minutes only", () => {
-    expect(windowText({ startMin: 360, endMin: 405 }, "2026-11-17")).toBe("Tue 06:00 - Tue 06:45, 45 min");
+    expect(windowText({ startMin: 360, endMin: 405, stale: false }, "2026-11-17")).toBe("Tue 06:00 - Tue 06:45, 45 min");
   });
 });

@@ -8,7 +8,7 @@ export const DEFAULT_START = "06:00";
 export const MINUTES_PER_DAY = 1440;
 
 /** One watering run, in minutes from 00:00 of the first day. */
-export type Window = { startMin: number; endMin: number };
+export type Window = { startMin: number; endMin: number; stale: boolean };
 
 /** The start time the page uses, as "HH:MM" and in minutes. `invalid` is true when `raw` was given but unusable. */
 export function parseStart(raw?: string): { text: string; minutes: number; invalid: boolean } {
@@ -22,6 +22,7 @@ export function parseStart(raw?: string): { text: string; minutes: number; inval
 /**
  * The watering runs. Each watering day starts at the start time; a run may pass midnight.
  * If the previous run is still going, the next one starts when it ends.
+ * Each run keeps its day's `stale` flag, so the page can mark it (FR-2.17).
  */
 export function buildWindows(days: PlanDay[], startMinutes: number): Window[] {
   const windows: Window[] = [];
@@ -32,7 +33,7 @@ export function buildWindows(days: PlanDay[], startMinutes: number): Window[] {
     }
     const startMin = Math.max(index * MINUTES_PER_DAY + startMinutes, previousEnd);
     previousEnd = startMin + day.run_minutes;
-    windows.push({ startMin, endMin: previousEnd });
+    windows.push({ startMin, endMin: previousEnd, stale: day.stale });
   });
   return windows;
 }

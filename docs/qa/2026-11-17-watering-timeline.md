@@ -20,7 +20,7 @@ Top findings: the planner returns a negative soil-water level (bucket below empt
 
 ### QA-1 Soil water goes below empty: negative bucket level in the plan and on the page (high, services)
 
-**Status: fixed** (DECISIONS O97): depletion now stops at TAW; test `test_bucket_never_goes_below_empty`.
+**Status: fixed** (DECISIONS O99; the commit message says O97, a numbering slip): depletion now stops at TAW; test `test_bucket_never_goes_below_empty`.
 
 - **Steps:**
   ```bash
@@ -34,6 +34,8 @@ Top findings: the planner returns a negative soil-water level (bucket below empt
 - **Notes:** any plot whose drip rate is below the crop's daily need, starting dry, reaches this; registry accepts the spacings (no upper limit, which is per spec). The irrigation advice itself (24 h every day) is still right, which is why this is high and not critical, but a negative level is a number that cannot exist and the grower sees it.
 
 ### QA-2 The timeline does not show that its windows come from a stale forecast (medium, UI)
+
+**Status: fixed** (FR-2.17): each timeline window carries its day's `stale` flag (`buildWindows` in `src/lib/timeline.ts`, test "marks a run stale when its day comes from a stale forecast"), and the timeline shows the stale label next to that run's text.
 
 - **Steps:** make the weather provider fail after one good fetch, then open the plot page.
   ```bash
