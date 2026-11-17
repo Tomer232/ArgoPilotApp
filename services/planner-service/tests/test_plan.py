@@ -207,10 +207,13 @@ def test_stale_forecast_still_plans_with_every_day_stale(client, services):
 def test_response_has_exactly_the_agreed_fields(client, services):
     """O83/O86: nothing more, nothing less."""
     body = client.get(PLAN_URL).json()
-    assert set(body) == {"plot_id", "crop_id", "soil_id", "forecast_fetched_at", "days"}
+    assert set(body) == {
+        "plot_id", "crop_id", "soil_id", "start_pct", "trigger_pct", "crop_trigger_pct",
+        "drip_mm_per_hour", "forecast_fetched_at", "days",
+    }
     assert set(body["days"][0]) == {
-        "date", "et0_mm", "rain_mm", "kc", "stage", "need_mm", "irrigation_mm", "litres",
-        "run_minutes", "bucket_capacity_mm", "trigger_mm", "bucket_end_mm", "stale",
+        "date", "et0_mm", "rain_mm", "kc", "stage", "need_mm", "irrigation_mm", "capped",
+        "litres", "run_minutes", "bucket_capacity_mm", "trigger_mm", "bucket_end_mm", "stale",
     }
 
 
@@ -222,6 +225,67 @@ def test_bad_days_is_422_and_calls_nobody(client, services, days):
     """FR-2.12."""
     assert_problem(client.get(PLAN_URL, params={"days": days}), 422, "VALIDATION")
     assert services.requests == []
+
+
+def test_start_pct_defaults_to_100(client, services):
+    assert client.get(PLAN_URL).json()["start_pct"] == 100
+
+
+def test_start_pct_reaches_the_engine(client, services):
+    """North block (loam, after season, TAW 122.5, the drip gives 40 mm a day at most): starting at
+    37.5 % is Dr 76.56, so day 1 (need 2.22) would end at 43.72, below half. It wants 78.78 mm,
+    gets the 40.00 the system can give, and ends at 122.5 - 38.78 = 83.72."""
+    body = client.get(PLAN_URL, params={"start_pct": 37.5}).json()
+    assert body["start_pct"] == 37.5
+    first = body["days"][0]
+    assert first["irrigation_mm"] == 40.0
+    assert first["capped"] is True
+    assert first["run_minutes"] == 1440
+    assert first["bucket_end_mm"] == 83.72
+
+
+@pytest.mark.parametrize("start_pct", ["-0.1", "100.1", "abc", "nan", "inf", "-inf", ""])
+def test_bad_start_pct_is_422_and_calls_nobody(client, services, start_pct):
+    assert_problem(client.get(PLAN_URL, params={"start_pct": start_pct}), 422, "VALIDATION")
+    assert services.requests == []
+
+
+@pytest.mark.parametrize("start_pct", ["0", "100", "12.5"])
+def test_start_pct_edges_are_accepted(client, services, start_pct):
+    assert client.get(PLAN_URL, params={"start_pct": start_pct}).status_code == 200
+
+
+def test_trigger_pct_defaults_to_50_and_the_crops_value_is_returned(client, services):
+    """North block grows tomato (crop trigger 60) on a drip of 1.0 / (1.5 x 0.4) = 1.67 mm/h."""
+    body = client.get(PLAN_URL).json()
+    assert body["trigger_pct"] == 50
+    assert body["crop_trigger_pct"] == 60
+    assert body["drip_mm_per_hour"] == 1.67
+    assert body["days"][0]["trigger_mm"] == 61.25
+    assert body["days"][0]["capped"] is False
+
+
+def test_trigger_pct_reaches_the_engine(client, services):
+    """TAW 122.5, start 70 % is Dr 36.75, day 1 (need 2.22) would end at 83.53. With trigger 80
+    (98 mm) that is below it: irrigate 38.97 mm, under the 40 mm cap, so not capped."""
+    body = client.get(PLAN_URL, params={"start_pct": 70, "trigger_pct": 80}).json()
+    assert body["trigger_pct"] == 80
+    first = body["days"][0]
+    assert first["trigger_mm"] == 98.0
+    assert first["irrigation_mm"] == 38.97
+    assert first["capped"] is False
+    assert first["bucket_end_mm"] == 122.5
+
+
+@pytest.mark.parametrize("trigger_pct", ["0", "0.9", "99.1", "100", "-5", "abc", "nan", "inf", "-inf", ""])
+def test_bad_trigger_pct_is_422_and_calls_nobody(client, services, trigger_pct):
+    assert_problem(client.get(PLAN_URL, params={"trigger_pct": trigger_pct}), 422, "VALIDATION")
+    assert services.requests == []
+
+
+@pytest.mark.parametrize("trigger_pct", ["1", "99", "20.5"])
+def test_trigger_pct_edges_are_accepted(client, services, trigger_pct):
+    assert client.get(PLAN_URL, params={"trigger_pct": trigger_pct}).status_code == 200
 
 
 def test_unknown_query_parameter_is_422(client, services):

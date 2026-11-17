@@ -7,7 +7,7 @@ from errors import ValidationFailedError, register_error_handlers
 
 # Query parameters each route accepts, by the route's path template. Anything else
 # is a 422, so a typo like ?day= fails loudly instead of quietly giving 7 days.
-ALLOWED_QUERY_PARAMS = {"/v1/plots/{plot_id}/plan": {"days"}}
+ALLOWED_QUERY_PARAMS = {"/v1/plots/{plot_id}/plan": {"days", "start_pct", "trigger_pct"}}
 
 
 def reject_unknown_query_params(request: Request) -> None:

@@ -1,6 +1,7 @@
-"""engine.py: the irrigation calculation, checked against the owner's three hand-calculated
+"""engine.py: the irrigation calculation, checked against the owner's five hand-calculated
 cases (.claude/skills/irrigation-calc-reference/references/cases.md) and the rules' edges."""
 
+import dataclasses
 import datetime
 
 import pytest
@@ -10,6 +11,7 @@ from engine import (
     PlotInputs,
     WeatherDay,
     counted_rain,
+    drip_mm_per_hour,
     plan_days,
     root_depth_m,
     round_half_up,
@@ -52,7 +54,7 @@ def as_table_row(day) -> tuple:
     )
 
 
-# --- The three hand-calculated cases (rows copied from cases.md) -------------------
+# --- The five hand-calculated cases (rows copied from cases.md) -------------------
 
 
 def test_case_1_young_tomato_on_sand():
@@ -117,6 +119,65 @@ def test_case_3_north_block_after_its_season():
         ("2026-11-21", 266, *after, 2.50, 0, 0, 0, 0, 13.76, 108.74),
         ("2026-11-22", 267, *after, 1.85, 0, 0, 0, 0, 15.61, 106.89),
     ]
+
+
+def test_case_4_east_block_starting_at_37_5_percent():
+    plot = PlotInputs(
+        crop=PEPPER,
+        planting_date=datetime.date(2026, 4, 12),
+        available_water_mm_per_m=200,
+        area_m2=800,
+        row_spacing_m=1.5,
+        emitter_spacing_m=0.4,
+        flow_lph=1.6,
+    )
+    days = plan_days(plot, weather("2026-11-16", [3.0, 2.5, 3.5, 4.0], [0, 0, 6.0, 0]), start_pct=37.5)
+    after = ("after-season", 0.900, 0.500, 100.00, 50.00)
+    assert [as_table_row(d) for d in days] == [
+        ("2026-11-16", 219, *after, 2.70, 0, 64.00, 51200.0, 1440, 1.20, 98.80),
+        ("2026-11-17", 220, *after, 2.25, 0, 0, 0, 0, 3.45, 96.55),
+        ("2026-11-18", 221, *after, 3.15, 6.00, 0, 0, 0, 0.60, 99.40),
+        ("2026-11-19", 222, *after, 3.60, 0, 0, 0, 0, 4.20, 95.80),
+    ]
+    assert [d.capped for d in days] == [True, False, False, False]
+    assert drip_mm_per_hour(plot) == pytest.approx(1.6 / 0.6)
+
+
+def test_case_5_tomato_on_sand_with_trigger_60():
+    plot = PlotInputs(
+        crop=TOMATO,
+        planting_date=datetime.date(2026, 2, 15),
+        available_water_mm_per_m=83,
+        area_m2=1000,
+        row_spacing_m=1.5,
+        emitter_spacing_m=0.4,
+        flow_lph=0.6,
+    )
+    days = plan_days(plot, weather("2026-05-05", [6.4, 7.0, 7.2, 6.0], [0, 0, 0, 0]), trigger_pct=60)
+    mid = ("mid", 1.150, 0.700, 58.10, 34.86)
+    assert [as_table_row(d) for d in days] == [
+        ("2026-05-05", 80, *mid, 7.36, 0, 0, 0, 0, 7.36, 50.74),
+        ("2026-05-06", 81, *mid, 8.05, 0, 0, 0, 0, 15.41, 42.69),
+        ("2026-05-07", 82, *mid, 8.28, 0, 23.69, 23690.0, 1422, 0, 58.10),
+        ("2026-05-08", 83, *mid, 6.90, 0, 0, 0, 0, 6.90, 51.20),
+    ]
+    assert [d.capped for d in days] == [False, False, False, False]
+
+
+def test_case_5_with_the_default_trigger_does_not_irrigate_on_day_three():
+    """The same plan with trigger 50 (29.05 mm): day 3 ends at 34.41, above it, so no irrigation."""
+    plot = PlotInputs(
+        crop=TOMATO,
+        planting_date=datetime.date(2026, 2, 15),
+        available_water_mm_per_m=83,
+        area_m2=1000,
+        row_spacing_m=1.5,
+        emitter_spacing_m=0.4,
+        flow_lph=0.6,
+    )
+    days = plan_days(plot, weather("2026-05-05", [6.4, 7.0, 7.2, 6.0], [0, 0, 0, 0]))
+    assert round_half_up(days[2].bucket_end_mm, 2) == 34.41
+    assert days[2].irrigation_mm == 0
 
 
 # --- Edges of each rule ---------------------------------------------------------------
@@ -196,6 +257,72 @@ def test_irrigation_never_drains():
     [day] = plan_days(plot_on(100), weather("2026-11-16", [50], [0]))
     assert day.irrigation_mm == pytest.approx(40)
     assert day.drained_mm == 0
+
+
+def test_start_100_is_the_same_plan_as_no_start():
+    """The default start is full: passing 100 changes nothing, to the last decimal."""
+    days = weather("2026-11-16", [3, 4, 5, 6, 7, 8, 9], [0, 0, 1, 0, 0, 0, 0])
+    assert plan_days(plot_on(100), days, start_pct=100) == plan_days(plot_on(100), days)
+
+
+def test_start_below_half_irrigates_on_day_one_and_refills_to_full():
+    """TAW 70, start 40 % is Dr 42. Need 2.4 ends day 1 at 70 - 44.4 = 25.6, below half 35."""
+    [day] = plan_days(plot_on(100), weather("2026-11-16", [3.0], [0]), start_pct=40)
+    assert day.irrigation_mm == pytest.approx(44.4)
+    assert day.bucket_end_mm == pytest.approx(70)
+    assert day.depletion_mm == 0
+
+
+def test_start_0_begins_with_depletion_equal_to_taw():
+    """Empty bucket, no rain: Dr = TAW 70 plus the day's need 2.4; irrigation refills 72.4."""
+    [day] = plan_days(plot_on(100), weather("2026-11-16", [3.0], [0]), start_pct=0)
+    assert day.irrigation_mm == pytest.approx(72.4)
+    assert day.bucket_end_mm == pytest.approx(70)
+
+
+def test_start_above_half_can_stay_dry():
+    """Start 90 % is Dr 7, need 2.4 ends at 60.6, above half: no irrigation, bucket 60.6."""
+    [day] = plan_days(plot_on(100), weather("2026-11-16", [3.0], [0]), start_pct=90)
+    assert day.irrigation_mm == 0
+    assert day.bucket_end_mm == pytest.approx(60.6)
+
+
+def test_capped_day_is_exactly_1440_minutes_and_ends_below_full():
+    """plot_on: 2 L/h over 1.0 x 0.5 m is 4 mm/h, so 96 mm a day at most. TAW 70 here, so use a
+    bigger soil: 200 mm/m gives TAW 140 and an empty start (Dr 140 + need 2.4) wants 142.4 > 96."""
+    [day] = plan_days(plot_on(200), weather("2026-11-16", [3.0], [0]), start_pct=0)
+    assert day.capped is True
+    assert day.irrigation_mm == pytest.approx(96)
+    assert day.run_minutes == 1440
+    assert day.depletion_mm == pytest.approx(140 + 2.4 - 96)
+    assert day.bucket_end_mm == pytest.approx(140 - 46.4)
+
+
+def test_the_day_after_a_capped_day_irrigates_only_below_the_trigger():
+    """Day 1 is capped and ends at 93.6 of 140 (above the 70 trigger): day 2 waters nothing."""
+    days = plan_days(plot_on(200), weather("2026-11-16", [3.0, 3.0], [0, 0]), start_pct=0)
+    assert [d.capped for d in days] == [True, False]
+    assert days[1].irrigation_mm == 0
+    assert days[1].run_minutes == 0
+
+
+def test_exactly_the_cap_is_not_capped():
+    """Flow 1.0 L/h over 1.0 x 0.5 m is 2 mm/h, 48 mm a day. A full bucket and a need of exactly
+    48 mm (ET0 60 x Kc 0.8) wants 48: not above the cap, so not capped, and 1440 minutes by the formula."""
+    plot = dataclasses.replace(plot_on(100), flow_lph=1.0)
+    [day] = plan_days(plot, weather("2026-11-16", [60.0], [0]))
+    assert day.irrigation_mm == pytest.approx(48)
+    assert day.capped is False
+    assert day.run_minutes == 1440
+
+
+def test_a_higher_trigger_irrigates_where_half_would_not():
+    """TAW 70: need 2.4 on a full bucket ends at 67.6. Trigger 98 (68.6 mm) is above that: irrigate 2.4."""
+    [day] = plan_days(plot_on(100), weather("2026-11-16", [3.0], [0]), trigger_pct=98)
+    assert day.irrigation_mm == pytest.approx(2.4)
+    assert day.capped is False
+    [half] = plan_days(plot_on(100), weather("2026-11-16", [3.0], [0]))
+    assert half.irrigation_mm == 0
 
 
 def test_stale_flag_is_carried_per_day():
