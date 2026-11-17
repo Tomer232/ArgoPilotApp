@@ -55,3 +55,10 @@ Each entry: what it is, why we made it, where it lives, and how to run it.
 - **Why:** the watering timeline's windows and dates (Y16, A63) are easy to break silently; the pages show the result, not the rule.
 - **Where:** `services/frontend/vitest.config.mts`, the `test` script and the `vitest` dev dependency in `package.json` (Vitest 4: Vitest 5 needs `@types/node` 22+, and the frontend pins ^20).
 - **Run:** from `services/frontend`, `npm test`.
+
+## `test` and `qa` skills, QA mode (P2)
+
+- **What:** `test` writes the tests for a section and keeps `docs/test-plan.md`; `qa` tries to break a finished section through the running system and writes a report to `docs/qa/`. `run-stack start qa` runs the registry on the throwaway database `registry_qa`.
+- **Why:** to find gaps before the reviewer does, without risking the real `registry` data (DECISIONS O94, O96, A65). The first QA run found the bucket going below empty (QA-1).
+- **Where:** `.claude/skills/test/`, `.claude/skills/qa/`, `.claude/skills/run-stack/scripts/reset_qa_db.py`; reports in `docs/qa/`.
+- **Run:** ask Claude to "test this" or "QA this", or `/test`, `/qa`. QA mode needs `registry_qa` created once and its password in `~/.pgpass` (see the run-stack skill).

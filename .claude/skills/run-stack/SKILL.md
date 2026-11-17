@@ -12,10 +12,24 @@ One script starts the four services in the right order, checks that each one rea
 Run from the repo root:
 
 ```bash
-bash .claude/skills/run-stack/scripts/stack.sh start    # start all four, wait for each, print links
-bash .claude/skills/run-stack/scripts/stack.sh status   # which ones answer now
-bash .claude/skills/run-stack/scripts/stack.sh stop     # stop what start started
+bash .claude/skills/run-stack/scripts/stack.sh start              # start all four, wait for each, print links
+bash .claude/skills/run-stack/scripts/stack.sh start qa           # the same on the throwaway 'registry_qa' database
+bash .claude/skills/run-stack/scripts/stack.sh status             # which ones answer now, and the mode
+bash .claude/skills/run-stack/scripts/stack.sh stop               # stop what start started
+bash .claude/skills/run-stack/scripts/stack.sh stop weather       # stop one service (to see how the rest copes)
+bash .claude/skills/run-stack/scripts/stack.sh restart weather    # start it again, in the same mode
 ```
+
+**Normal mode** is the real `registry` database: for demos and looking around. **QA mode** (`start qa`) is for anything that writes junk or tries to break things, which is what the `qa` skill does. It wipes and re-seeds `registry_qa` first, then starts the registry on it; the other services are the same. The QA URL holds no password: PostgreSQL takes it from `~/.pgpass`, so neither the script nor the agent ever sees it. The owner sets that up once:
+
+```bash
+sudo -u postgres createdb -O registry registry_qa
+echo 'localhost:5432:registry_qa:registry:<the registry password>' >> ~/.pgpass && chmod 600 ~/.pgpass
+```
+
+`stop` waits until each port is free, so `start` can follow at once. `restart` passes the shell's environment on, so a variable set in front of it (e.g. `FRESH_HOURS=0.005 ... restart weather`) overrides that service's `.env` for one run. The script refuses to switch modes while services run (`stop` first), and the reset refuses any database whose name doesn't end in `_qa`.
+
+If services are already running and this session didn't start them, someone else may be using them: ask before `stop`.
 
 Logs are in `/tmp/agropilot-stack/<service>.log` (set `STACK_DIR` to change the folder). When something misbehaves, read the log before guessing.
 
