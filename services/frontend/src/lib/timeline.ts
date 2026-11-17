@@ -1,6 +1,7 @@
 // Turns the plan's run times into clock times. Frontend only: the planner knows days, not hours.
 // Times are minutes counted from 00:00 of the plan's first day, so day 2 starts at 1440.
 
+import { formatDuration, formatWeekday } from "./format";
 import type { PlanDay } from "./planner";
 
 export const DEFAULT_START = "06:00";
@@ -48,4 +49,24 @@ export function clockTime(minutesInDay: number): string {
   const hours = String(Math.floor(minutesInDay / 60)).padStart(2, "0");
   const minutes = String(minutesInDay % 60).padStart(2, "0");
   return `${hours}:${minutes}`;
+}
+
+/** Where a window sits on the bar, in percent. A run past the last day is cut at the bar's end. */
+export function barPosition(window: Window, totalMinutes: number): { left: string; width: string } {
+  const end = Math.min(window.endMin, totalMinutes);
+  return {
+    left: `${(window.startMin / totalMinutes) * 100}%`,
+    width: `${((end - window.startMin) / totalMinutes) * 100}%`,
+  };
+}
+
+/** "Sun 06:00 - Mon 06:00, 24 h". */
+export function windowText(window: Window, firstDate: string): string {
+  return `${momentText(window.startMin, firstDate)} - ${momentText(window.endMin, firstDate)}, ${formatDuration(window.endMin - window.startMin)}`;
+}
+
+/** Minutes from 00:00 of the first day as "Mon 06:00". */
+export function momentText(minutes: number, firstDate: string): string {
+  const day = addDays(firstDate, Math.floor(minutes / MINUTES_PER_DAY));
+  return `${formatWeekday(day)} ${clockTime(minutes % MINUTES_PER_DAY)}`;
 }

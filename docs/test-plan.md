@@ -29,9 +29,8 @@ Last updated: 2026-11-17, after the watering timeline (frontend `src/lib/timelin
 - **Known gaps:** not reviewed by this skill yet.
 
 ### frontend (src/lib)
-- **Covered:** watering timeline (Y16, A63): start time parsing and fallback, watering windows (per day, past midnight, back-to-back capped days, a run still going pushes the next), date arithmetic across month/year/leap day and machine time zones, clock times (`timeline.test.ts`); run durations and weekday labels the timeline shows (`format.test.ts`).
+- **Covered:** watering timeline (Y16, A63): start time parsing and fallback, watering windows (per day, past midnight, back-to-back capped days, a run still going pushes the next), date arithmetic across month/year/leap day and machine time zones, clock times, the bar position cut at the plan's last day and the window text ("Tue 06:00 - Wed 06:00, 24 h") (`timeline.test.ts`); run durations and weekday labels the timeline shows (`format.test.ts`).
 - **Known gaps:**
-  - `watering-timeline.tsx` private helpers (`barPosition`: the bar cut at the plan's last day; `windowText`/`momentText`: "Sun 06:00 - Mon 06:00, 24 h") are not in `src/lib`, so they have no unit test; the `qa` skill checks them on the page.
   - Other `src/lib` modules (`plan-query.ts`, `soil-feel.ts`, `http.ts`, `config.ts`, `health.ts`, `formatArea`/`formatLitres`/`formatDay`/`formatFetchedAt`) have no tests yet.
   - No contract test that the frontend's `PlanDay` type matches the planner's response model.
 

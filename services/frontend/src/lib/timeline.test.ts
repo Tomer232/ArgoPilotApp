@@ -3,7 +3,17 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import type { PlanDay } from "./planner";
-import { addDays, buildWindows, clockTime, DEFAULT_START, MINUTES_PER_DAY, parseStart } from "./timeline";
+import {
+  addDays,
+  barPosition,
+  buildWindows,
+  clockTime,
+  DEFAULT_START,
+  MINUTES_PER_DAY,
+  momentText,
+  parseStart,
+  windowText,
+} from "./timeline";
 
 /** A plan day where only `run_minutes` matters; the other fields are plausible fillers. */
 function day(runMinutes: number): PlanDay {
@@ -186,5 +196,61 @@ describe("clockTime", () => {
 
   it("writes the last minute of the day as 23:59", () => {
     expect(clockTime(1439)).toBe("23:59");
+  });
+});
+
+describe("barPosition", () => {
+  // A 2-day bar is 2880 minutes, so 360 minutes is 12.5% and 720 minutes is 25%.
+  it("places a window by its start and length", () => {
+    expect(barPosition({ startMin: 360, endMin: 1080 }, 2880)).toEqual({ left: "12.5%", width: "25%" });
+  });
+
+  it("cuts a run that passes the plan's last day at the bar's end (A63)", () => {
+    // Day 2 at 18:00 for 12 h would end at 3240; the bar ends at 2880, so 360 minutes show.
+    expect(barPosition({ startMin: 2520, endMin: 3240 }, 2880)).toEqual({ left: "87.5%", width: "12.5%" });
+  });
+
+  it("keeps a run that ends exactly at the bar's end whole", () => {
+    expect(barPosition({ startMin: 1440, endMin: 2880 }, 2880)).toEqual({ left: "50%", width: "50%" });
+  });
+});
+
+describe("momentText", () => {
+  // 2026-11-17 is a Tuesday.
+  it("writes minutes on the first day as weekday and clock time", () => {
+    expect(momentText(360, "2026-11-17")).toBe("Tue 06:00");
+  });
+
+  it("puts exactly midnight on the next day", () => {
+    expect(momentText(MINUTES_PER_DAY, "2026-11-17")).toBe("Wed 00:00");
+  });
+
+  it("reaches the last minute of a 7-day plan", () => {
+    // Day 7 is 2026-11-23, a Monday.
+    expect(momentText(6 * MINUTES_PER_DAY + 1439, "2026-11-17")).toBe("Mon 23:59");
+  });
+
+  it("crosses into the next month", () => {
+    // 2026-11-30 is a Monday; one day and one hour later is Tuesday 1 December, 01:00.
+    expect(momentText(MINUTES_PER_DAY + 60, "2026-11-30")).toBe("Tue 01:00");
+  });
+});
+
+describe("windowText", () => {
+  it("writes a run inside one day with its length (O91)", () => {
+    // 06:00 + 612 min (10 h 12 min) ends at 16:12.
+    expect(windowText({ startMin: 360, endMin: 972 }, "2026-11-17")).toBe("Tue 06:00 - Tue 16:12, 10 h 12 min");
+  });
+
+  it("writes a run that passes midnight with both weekdays", () => {
+    expect(windowText({ startMin: 1380, endMin: 1500 }, "2026-11-17")).toBe("Tue 23:00 - Wed 01:00, 2 h");
+  });
+
+  it("writes a capped 24-hour run (O90)", () => {
+    expect(windowText({ startMin: 360, endMin: 1800 }, "2026-11-17")).toBe("Tue 06:00 - Wed 06:00, 24 h");
+  });
+
+  it("writes a run under an hour in minutes only", () => {
+    expect(windowText({ startMin: 360, endMin: 405 }, "2026-11-17")).toBe("Tue 06:00 - Tue 06:45, 45 min");
   });
 });
