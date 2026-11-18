@@ -237,8 +237,8 @@ describe("barPosition", () => {
 
 describe("momentText", () => {
   // 2026-11-17 is a Tuesday.
-  it("writes minutes on the first day as weekday and clock time", () => {
-    expect(momentText(360, "2026-11-17")).toBe("Tue 06:00");
+  it("writes minutes on the first day as Today and clock time (QA-6)", () => {
+    expect(momentText(360, "2026-11-17")).toBe("Today 06:00");
   });
 
   it("puts exactly midnight on the next day", () => {
@@ -259,19 +259,19 @@ describe("momentText", () => {
 describe("windowText", () => {
   it("writes a run inside one day with its length (O91)", () => {
     // 06:00 + 612 min (10 h 12 min) ends at 16:12.
-    expect(windowText({ startMin: 360, endMin: 972, stale: false }, "2026-11-17")).toBe("Tue 06:00 - Tue 16:12, 10 h 12 min");
+    expect(windowText({ startMin: 360, endMin: 972, stale: false }, "2026-11-17")).toBe("Today 06:00 - Today 16:12, 10 h 12 min");
   });
 
   it("writes a run that passes midnight with both weekdays", () => {
-    expect(windowText({ startMin: 1380, endMin: 1500, stale: false }, "2026-11-17")).toBe("Tue 23:00 - Wed 01:00, 2 h");
+    expect(windowText({ startMin: 1380, endMin: 1500, stale: false }, "2026-11-17")).toBe("Today 23:00 - Wed 01:00, 2 h");
   });
 
   it("writes a capped 24-hour run (O90)", () => {
-    expect(windowText({ startMin: 360, endMin: 1800, stale: false }, "2026-11-17")).toBe("Tue 06:00 - Wed 06:00, 24 h");
+    expect(windowText({ startMin: 360, endMin: 1800, stale: false }, "2026-11-17")).toBe("Today 06:00 - Wed 06:00, 24 h");
   });
 
   it("writes a run under an hour in minutes only", () => {
-    expect(windowText({ startMin: 360, endMin: 405, stale: false }, "2026-11-17")).toBe("Tue 06:00 - Tue 06:45, 45 min");
+    expect(windowText({ startMin: 360, endMin: 405, stale: false }, "2026-11-17")).toBe("Today 06:00 - Today 06:45, 45 min");
   });
 });
 

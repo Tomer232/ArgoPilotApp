@@ -11,7 +11,6 @@ import {
   hourTicks,
   isWatering,
   labelPosition,
-  MINUTES_PER_DAY,
   momentText,
   windowLabels,
   type Window,
@@ -50,7 +49,7 @@ export function TimelineBar({ windows, end, firstDate }: { windows: Window[]; en
             className="absolute bottom-1 z-10 rounded-md bg-foreground px-1.5 py-0.5 whitespace-nowrap text-background shadow-sm"
             style={labelPosition(hover, end)}
           >
-            {hoverText(hover, firstDate)}
+            {momentText(hover, firstDate)}
           </span>
         )}
       </div>
@@ -63,7 +62,7 @@ export function TimelineBar({ windows, end, firstDate }: { windows: Window[]; en
         onPointerLeave={() => setHover(null)}
       >
         {windows.map((window) => (
-          <span key={window.startMin} className="absolute inset-y-0 bg-water" style={barPosition(window, end)} />
+          <span key={window.startMin} className="absolute inset-y-0 bg-water" style={{ ...barPosition(window, end), minWidth: "3px" }} />
         ))}
         {hourTicks(end).map((tick) => (
           <span
@@ -85,9 +84,4 @@ export function TimelineBar({ windows, end, firstDate }: { windows: Window[]; en
       </div>
     </div>
   );
-}
-
-/** "Today 14:37" on the first day, "Wed 14:37" after it. */
-function hoverText(minutes: number, firstDate: string): string {
-  return minutes < MINUTES_PER_DAY ? `Today ${clockTime(minutes)}` : momentText(minutes, firstDate);
 }

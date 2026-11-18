@@ -15,7 +15,7 @@ Noted 2026-11-17 and built the same day, one at a time with an owner review betw
 - [x] Runs the real system on the throwaway `registry_qa` database (`run-stack start qa`), as a hostile tester, a grower and a flaky network.
 - [x] Reports to `docs/qa/<date>-<section>.md` with steps to reproduce and a severity; fixes nothing.
 - Answered: real stack, browser if one can reach localhost, else server HTML via curl (O100, A67).
-- Tested: first run on the watering timeline found QA-1 to QA-8. QA-1 and QA-2 are fixed (O99, FR-2.17); QA-3 and QA-4 are decided (Y18, Y19) with code waiting for the frontend redesign; QA-5 to QA-8 are open.
+- Tested: first run on the watering timeline found QA-1 to QA-8. QA-1 and QA-2 are fixed (O99, FR-2.17); QA-3 and QA-4 are built (Y18, Y19); QA-5, QA-6 and QA-8 are fixed (O103) and QA-7 was fixed by the redesign.
 
 ## 3. `requirements` skill: are we inside the FR and NFR?
 

@@ -53,7 +53,7 @@ Top findings: the planner returns a negative soil-water level (bucket below empt
 
 ### QA-3 Today's run is shown at a time that has already passed, with no "now" (medium, UX)
 
-**Status: decided, code waiting** (DECISIONS Y18): a "now" line on the bar and a note when today's start time has passed. Built after the frontend redesign is committed.
+**Status: fixed** (DECISIONS Y18, commit 19c0d47): a "now" line on the bar and a note when today's start time has passed.
 
 - **Steps:**
   ```bash
@@ -66,7 +66,7 @@ Top findings: the planner returns a negative soil-water level (bucket below empt
 
 ### QA-4 A run that passes midnight moves most of a day's water into the next day, unlike the plan (medium, UX)
 
-**Status: decided, code waiting** (DECISIONS Y19): the run keeps going past midnight, with a note that the plan counts it as the first day's water. Built after the frontend redesign is committed.
+**Status: fixed** (DECISIONS Y19, commit 19c0d47): the run keeps going past midnight, with a note that the plan counts it as the first day's water.
 
 - **Steps:**
   ```bash
@@ -80,6 +80,8 @@ Top findings: the planner returns a negative soil-water level (bucket below empt
 
 ### QA-5 Very short runs are invisible on the bar (low, UI)
 
+**Status: fixed** (DECISIONS O103): every blue run on the bar is at least 3 px wide (`timeline-bar.tsx`); the exact times stay in the label above the bar and the list under it.
+
 - **Steps:**
   ```bash
   curl -s -X POST localhost:8000/v1/plots -H 'Content-Type: application/json' -d '{"farm_id":"b7e2c0a0-3c1d-4f0a-9a11-0c5d2e6f1001","name":"QA fast drip","area_m2":0.5,"crop_id":"tomato","planting_date":"2026-11-10","soil_id":"loam","row_spacing_m":0.05,"emitter_spacing_m":0.05,"emitter_id":"dripnet-pc-2.0","lat":31.25,"lon":34.79}'
@@ -91,17 +93,23 @@ Top findings: the planner returns a negative soil-water level (bucket below empt
 
 ### QA-6 "Today" on the bar, "Tue" in the window text (low, UX)
 
+**Status: fixed** (DECISIONS O103): `momentText` writes the first day as "Today", so the run text reads "Today 06:00 - Wed 06:00, 24 h" like the bar and the table; the bar's own hover helper is gone.
+
 - **Steps:** `curl -s "localhost:3000/plots/c8f3d1b0-4d2e-5a1b-8b22-1d6e3f702002?start_pct=30"`
 - **Expected:** one name for one day on one card.
 - **Actual:** day labels "Today | Wed | Thu ...", window text "Tue 06:00 - Wed 06:00, 24 h". The grower has to know that today is Tuesday.
 
 ### QA-7 The timeline's button says "Update plan" but only moves the clock times (low, UX)
 
+**Status: fixed by the redesign** (DECISIONS Y23, Y25): the button is gone; the start time is a half-hour picker with "Now", and a change keeps the scroll position.
+
 - **Steps:** open `http://localhost:3000/plots/c8f3d1b0-4d2e-5a1b-8b22-1d6e3f702002?start_pct=30`, change "Start at", press "Update plan".
 - **Expected:** a label that says what happens; the plan itself does not change with the start time (Y16: the start time lives only in the frontend).
 - **Actual:** the same "Update plan" label as the two pickers above, which do change the plan. Also, the form has no `#timeline` anchor, so after submitting the page reloads at the top and the grower scrolls down again to the last card to see the result (not checked in a browser).
 
 ### QA-8 An invalid `start` sticks through the other pickers (low, UX)
+
+**Status: fixed** (DECISIONS O103): `withValidStart` in `src/lib/plan-query.ts` leaves an unusable `start` out of the next address, so the A63 note shows once; test in `plan-query.test.ts`.
 
 - **Steps:** `curl -s "localhost:3000/plots/c8f3d1b0-4d2e-5a1b-8b22-1d6e3f702002?start_pct=30&start=abc" | grep -o 'href="?[^"]*"'`
 - **Expected:** A63: an invalid `start` falls back to 06:00 with a note.

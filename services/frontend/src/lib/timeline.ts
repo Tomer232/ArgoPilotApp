@@ -61,15 +61,16 @@ export function barPosition(window: Window, totalMinutes: number): { left: strin
   };
 }
 
-/** "Sun 06:00 - Mon 06:00, 24 h". */
+/** "Today 06:00 - Wed 06:00, 24 h". */
 export function windowText(window: Window, firstDate: string): string {
   return `${momentText(window.startMin, firstDate)} - ${momentText(window.endMin, firstDate)}, ${formatDuration(window.endMin - window.startMin)}`;
 }
 
-/** Minutes from 00:00 of the first day as "Mon 06:00". */
+/** Minutes from 00:00 of the first day as "Today 06:00" on the first day, "Wed 06:00" after it. */
 export function momentText(minutes: number, firstDate: string): string {
-  const day = addDays(firstDate, Math.floor(minutes / MINUTES_PER_DAY));
-  return `${formatWeekday(day)} ${clockTime(minutes % MINUTES_PER_DAY)}`;
+  const dayIndex = Math.floor(minutes / MINUTES_PER_DAY);
+  const dayName = dayIndex === 0 ? "Today" : formatWeekday(addDays(firstDate, dayIndex));
+  return `${dayName} ${clockTime(minutes % MINUTES_PER_DAY)}`;
 }
 
 /** Labels closer than this share of the bar would overlap, so the later one is dropped. */

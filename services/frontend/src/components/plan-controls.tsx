@@ -11,7 +11,7 @@ import { createContext, useContext, useState, useTransition, type ReactNode } fr
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { hrefWith, type PlanQuery } from "@/lib/plan-query";
+import { hrefWith, withValidStart, type PlanQuery } from "@/lib/plan-query";
 import type { SoilFeelRow } from "@/lib/soil-feel";
 import { clockTime } from "@/lib/timeline";
 
@@ -24,7 +24,7 @@ export function PlanNavigationProvider({ query, children }: { query: PlanQuery; 
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const change = (changes: PlanQuery) => {
-    startTransition(() => router.push(hrefWith(query, changes), { scroll: false }));
+    startTransition(() => router.push(hrefWith(withValidStart(query), changes), { scroll: false }));
   };
   return <PlanNavigationContext.Provider value={{ change, pending }}>{children}</PlanNavigationContext.Provider>;
 }
