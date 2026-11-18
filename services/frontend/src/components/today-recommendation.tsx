@@ -1,9 +1,10 @@
 import { Droplets, Leaf } from "lucide-react";
+import { ForecastTime } from "@/components/forecast-time";
 import { PendingArea, PendingSpinner, SoilSelect, TriggerSelect } from "@/components/plan-controls";
 import { Pill } from "@/components/pill";
 import { SoilColumn } from "@/components/soil-column";
 import { StaleLabel } from "@/components/stale-label";
-import { formatDay, formatDuration, formatFetchedAt, formatLitres } from "@/lib/format";
+import { formatDay, formatDuration, formatLitres } from "@/lib/format";
 import type { Plan, PlanDay } from "@/lib/planner";
 import type { PlanQuery } from "@/lib/plan-query";
 import { getSoilFeelRows } from "@/lib/soil-feel";
@@ -28,7 +29,7 @@ export function TodayRecommendation({ plan, query, cropName }: { plan: Plan; que
           <h2 id="today" className="font-semibold">
             Today <span className="ml-1 font-normal text-muted-foreground">{formatDay(today.date)}</span>
           </h2>
-          <span className="text-xs text-muted-foreground">Forecast from {formatFetchedAt(plan.forecast_fetched_at)}</span>
+          <span className="text-xs text-muted-foreground">Forecast from <ForecastTime fetchedAt={plan.forecast_fetched_at} /></span>
         </div>
         <span className="flex items-center gap-3">
           <PendingSpinner />

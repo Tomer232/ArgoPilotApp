@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { formatDuration, formatWeekday } from "./format";
+import { formatDuration, formatFetchedAt, formatLitres, formatWeekday } from "./format";
 
 describe("formatDuration", () => {
   it.each([
@@ -52,5 +52,35 @@ describe("formatWeekday", () => {
     // The timeline labels each slice of the bar with this; UTC+14 or UTC-12 must not move it a day.
     process.env.TZ = timeZone;
     expect(formatWeekday("2026-11-17")).toBe("Tue");
+  });
+});
+
+describe("formatFetchedAt", () => {
+  it("shows UTC, named, when no zone is given (the server's first render)", () => {
+    expect(formatFetchedAt("2026-11-18T11:03:46Z")).toBe("18 Nov, 11:03 UTC");
+  });
+
+  it("shows the phone's local time without a zone name", () => {
+    expect(formatFetchedAt("2026-11-18T11:03:46Z", "Asia/Jerusalem")).toBe("18 Nov, 13:03");
+  });
+
+  it("moves to the next day when the local time passes midnight", () => {
+    expect(formatFetchedAt("2026-11-18T23:30:00Z", "Asia/Jerusalem")).toBe("19 Nov, 01:30");
+  });
+});
+
+describe("formatLitres", () => {
+  it("keeps one decimal under 10 L", () => {
+    expect(formatLitres(0.6)).toBe("0.6 L");
+    expect(formatLitres(7.54)).toBe("7.5 L");
+  });
+
+  it("shows whole litres from 10 L, with thousands separators", () => {
+    expect(formatLitres(412.37)).toBe("412 L");
+    expect(formatLitres(40000)).toBe("40,000 L");
+  });
+
+  it("shows no decimal for a day without water", () => {
+    expect(formatLitres(0)).toBe("0 L");
   });
 });

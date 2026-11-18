@@ -5,9 +5,13 @@ export function formatArea(areaM2: number): string {
   return `${areaM2.toLocaleString("en-US")} m²`;
 }
 
-/** 412.37 becomes "412 L": a grower reads whole litres. */
+/**
+ * 412.37 becomes "412 L": a grower reads whole litres. Under 10 L one decimal is kept,
+ * so 0.6 L shows as "0.6 L", not "1 L" (QA-11).
+ */
 export function formatLitres(litres: number): string {
-  return `${litres.toLocaleString("en-US", { maximumFractionDigits: 0 })} L`;
+  const decimals = litres < 10 ? 1 : 0;
+  return `${litres.toLocaleString("en-US", { maximumFractionDigits: decimals })} L`;
 }
 
 /** 612 minutes becomes { hours: 10, minutes: 12 }. */
@@ -34,16 +38,19 @@ export function formatDay(isoDate: string): string {
   });
 }
 
-/** "2026-11-16T17:47:17Z" becomes "16 Nov, 17:47 UTC". */
-export function formatFetchedAt(isoTimestamp: string): string {
+/**
+ * "2026-11-16T17:47:17Z" becomes "16 Nov, 17:47 UTC", or in a given zone, without the zone's name:
+ * "16 Nov, 19:47" in "Asia/Jerusalem" (QA-10: the grower reads the phone's own time).
+ */
+export function formatFetchedAt(isoTimestamp: string, timeZone?: string): string {
   const time = new Date(isoTimestamp).toLocaleString("en-GB", {
     day: "numeric",
     month: "short",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "UTC",
+    timeZone: timeZone ?? "UTC",
   });
-  return `${time} UTC`;
+  return timeZone === undefined ? `${time} UTC` : time;
 }
 
 /** "2026-11-17" becomes "Tue". Read in UTC, like formatDay. */
