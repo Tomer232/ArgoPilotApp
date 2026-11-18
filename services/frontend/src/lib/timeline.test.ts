@@ -323,20 +323,20 @@ describe("windowLabels", () => {
 
   it("writes the start and end time of a long run", () => {
     // 06:00 to 30 h (06:00 next day) on a 31 h bar.
-    expect(windowLabels([run(360, 1800)], 1860)).toEqual([
+    expect(windowLabels([run(360, 1800)], 1860, 600)).toEqual([
       { minutes: 360, text: "06:00" },
       { minutes: 1800, text: "06:00" },
     ]);
   });
 
   it("writes one label at the middle of a run too short for two", () => {
-    // 45 minutes on a 24 h bar is 3%, so one label at (360 + 405) / 2.
-    expect(windowLabels([run(360, 405)], MINUTES_PER_DAY)).toEqual([{ minutes: 382.5, text: "06:00-06:45" }]);
+    // 45 minutes on a 600 px, 24 h bar is 19 px, too short for "06:00", so one label at (360 + 405) / 2.
+    expect(windowLabels([run(360, 405)], MINUTES_PER_DAY, 600)).toEqual([{ minutes: 382.5, text: "06:00-06:45" }]);
   });
 
   it("drops a label too close to the one before it", () => {
     // Two capped days that touch: day 1 ends at 1800 where day 2 starts, so "06:00" appears once there.
-    expect(windowLabels([run(360, 1800), run(1800, 3240)], 3300)).toEqual([
+    expect(windowLabels([run(360, 1800), run(1800, 3240)], 3300, 600)).toEqual([
       { minutes: 360, text: "06:00" },
       { minutes: 1800, text: "06:00" },
       { minutes: 3240, text: "06:00" },
@@ -344,24 +344,40 @@ describe("windowLabels", () => {
   });
 
   it("puts the end label of a run cut by the bar at the bar's end, with the run's real end time", () => {
-    expect(windowLabels([run(2760, 2940)], 2880)).toEqual([{ minutes: 2820, text: "22:00-01:00" }]);
+    expect(windowLabels([run(2760, 2940)], 2880, 600)).toEqual([{ minutes: 2820, text: "22:00-01:00" }]);
+  });
+
+  it("drops the end label of a 24 h run on a week-long bar on a phone, but keeps it on a wide screen", () => {
+    // Seen at 375 px as "06:0006:00": 24 h on a 7 day 6 h bar is 41 px on a 300 px bar, the labels touch.
+    expect(windowLabels([run(360, 1800)], 10440, 300)).toEqual([{ minutes: 360, text: "06:00" }]);
+    expect(windowLabels([run(360, 1800)], 10440, 1000)).toEqual([
+      { minutes: 360, text: "06:00" },
+      { minutes: 1800, text: "06:00" },
+    ]);
   });
 });
 
 describe("dayMarks", () => {
   it("names each midnight inside the bar", () => {
     // 17 Nov 2026 is a Tuesday; a 3-day bar has Wed and Thu at 1440 and 2880.
-    expect(dayMarks("2026-11-17", 3 * MINUTES_PER_DAY).map((mark) => mark.text)).toEqual(["Wed", "Thu"]);
+    expect(dayMarks("2026-11-17", 3 * MINUTES_PER_DAY, 600, "Fri 00:00").map((mark) => mark.text)).toEqual(["Wed", "Thu"]);
   });
 
   it("leaves out a midnight that would touch the end label", () => {
-    // Bar ends at 3360 (Thu 08:00): Thu midnight is at 2880 / 3360 = 86%, closer than 18% to the end.
-    expect(dayMarks("2026-11-17", 3360).map((mark) => mark.text)).toEqual(["Wed"]);
+    // Bar ends at 3360 (Thu 08:00): on a 300 px bar "Thu" would sit at 257 px, inside the end label's 63 px.
+    expect(dayMarks("2026-11-17", 3360, 300, "Thu 08:00").map((mark) => mark.text)).toEqual(["Wed"]);
   });
 
   it("leaves out a midnight too close to the bar's end", () => {
     // A 25 h bar: midnight is at 96%, next to the end label, so no day name.
-    expect(dayMarks("2026-11-17", 1500)).toEqual([]);
+    expect(dayMarks("2026-11-17", 1500, 300, "Wed 01:00")).toEqual([]);
+  });
+
+  it("leaves out a midnight that would touch \"Today 00:00\" on a phone, but keeps it on a wide screen", () => {
+    // Seen at 375 px as "Today 00:Thu": on a 4-day, 300 px bar "Wed" would sit at 75 px, under "Today 00:00",
+    // and "Fri" at 225 px, against "Sat 00:00" on the right; only "Thu" has room.
+    expect(dayMarks("2026-11-17", 4 * MINUTES_PER_DAY, 300, "Sat 00:00").map((mark) => mark.text)).toEqual(["Thu"]);
+    expect(dayMarks("2026-11-17", 4 * MINUTES_PER_DAY, 1000, "Sat 00:00").map((mark) => mark.text)).toEqual(["Wed", "Thu", "Fri"]);
   });
 });
 

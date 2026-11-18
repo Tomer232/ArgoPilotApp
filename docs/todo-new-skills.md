@@ -42,6 +42,6 @@ Noted 2026-11-17 and built the same day, one at a time with an owner review betw
 - [x] The other session's frontend redesign is committed, and its extra pages are recorded or removed.
 - [x] The registry `.env` points at the `registry` PostgreSQL database; NFR-2.2 re-measured 2026-11-18 (worst p95 5.8 ms).
 - [x] Y18 and Y19 built (timeline "now" line and notes).
-- [ ] NFR-2.8 checked at 375 px in the browser.
+- [x] NFR-2.8 checked at 375 px in the browser (2026-11-18: no sideways scroll, today's answer above the fold; overlapping timeline labels fixed, O104).
 - [ ] One more frontend redesign round.
 - [ ] Then `/submit-task`.

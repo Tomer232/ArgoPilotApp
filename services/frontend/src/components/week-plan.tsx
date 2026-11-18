@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatDay, formatDuration, formatLitres } from "@/lib/format";
 import type { Plan } from "@/lib/planner";
 import type { PlanQuery } from "@/lib/plan-query";
-import { buildWindows, dayMarks, labelPosition, momentText, parseStart, timelineEnd } from "@/lib/timeline";
+import { buildWindows, parseStart, timelineEnd } from "@/lib/timeline";
 
 // Columns that only fit on wider screens. On a phone the table keeps Day, Water and Soil water.
 const WIDE = "hidden md:table-cell";
@@ -68,15 +68,6 @@ function Timeline({ plan, startMinutes }: { plan: Plan; startMinutes: number }) 
   return (
     <div>
       <TimelineBar windows={windows} end={end} firstDate={firstDate} />
-      <div aria-hidden className="relative mt-1.5 h-4 text-xs text-muted-foreground">
-        <span className="absolute left-0">Today 00:00</span>
-        {dayMarks(firstDate, end).map((mark) => (
-          <span key={mark.minutes} className="absolute" style={labelPosition(mark.minutes, end)}>
-            {mark.text}
-          </span>
-        ))}
-        <span className="absolute right-0">{momentText(end, firstDate)}</span>
-      </div>
       {windows.length === 0 ? (
         <p className="mt-3 text-muted-foreground">No watering in these days.</p>
       ) : (

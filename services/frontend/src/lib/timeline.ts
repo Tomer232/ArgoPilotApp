@@ -73,8 +73,33 @@ export function momentText(minutes: number, firstDate: string): string {
   return `${dayName} ${clockTime(minutes % MINUTES_PER_DAY)}`;
 }
 
-/** Labels closer than this share of the bar would overlap, so the later one is dropped. */
-const MIN_LABEL_GAP = 0.1;
+/** About how wide a small (text-xs) label is: 7 px per character, a little more than the real width. */
+export function labelWidthPx(text: string): number {
+  return text.length * 7;
+}
+
+/** The space kept free between two labels, in px. */
+const LABEL_SPACE_PX = 6;
+
+/** A label this close to either end of the bar lines up with the edge instead of centring. */
+const LABEL_EDGE_SHARE = 0.04;
+
+/**
+ * Where a label sits on a bar `barPx` wide, as [from, to] in px. Same rule as `labelPosition`: centred
+ * on its time, but lined up with the bar's edge near either end.
+ */
+export function labelSpanPx(minutes: number, text: string, end: number, barPx: number): [number, number] {
+  const x = (minutes / end) * barPx;
+  const width = labelWidthPx(text);
+  const share = minutes / end;
+  if (share < LABEL_EDGE_SHARE) {
+    return [x, x + width];
+  }
+  if (share > 1 - LABEL_EDGE_SHARE) {
+    return [x - width, x];
+  }
+  return [x - width / 2, x + width / 2];
+}
 
 /**
  * Where the bar ends, in minutes from 00:00 today. It always starts at 00:00 today, and ends one hour
@@ -101,46 +126,53 @@ export function hourTicks(end: number): { minutes: number; midnight: boolean }[]
 }
 
 /**
- * The clock times written above the bar: where each run starts and ends. A run too short to hold two
- * labels gets one, "06:00-06:45", at its middle. A label too close to the one before it is dropped
- * (the list under the bar still has every run in full).
+ * The clock times written above the bar: where each run starts and ends. A run too short on a bar
+ * `barPx` wide to hold two labels gets one, "06:00-06:45", at its middle. A label that would touch the
+ * one before it is dropped (the list under the bar still has every run in full).
  */
-export function windowLabels(windows: Window[], end: number): { minutes: number; text: string }[] {
+export function windowLabels(windows: Window[], end: number, barPx: number): { minutes: number; text: string }[] {
   const wanted: { minutes: number; text: string }[] = [];
   for (const window of windows) {
     const stop = Math.min(window.endMin, end);
     const startText = clockTime(window.startMin % MINUTES_PER_DAY);
     const endText = clockTime(window.endMin % MINUTES_PER_DAY);
-    if ((stop - window.startMin) / end < MIN_LABEL_GAP) {
+    const runPx = ((stop - window.startMin) / end) * barPx;
+    if (runPx < labelWidthPx(startText) + LABEL_SPACE_PX) {
       wanted.push({ minutes: (window.startMin + stop) / 2, text: `${startText}-${endText}` });
     } else {
       wanted.push({ minutes: window.startMin, text: startText }, { minutes: stop, text: endText });
     }
   }
-  return dropCrowded(wanted, end);
+  return dropCrowded(wanted, end, barPx);
 }
 
-/** The end labels under the bar ("Today 00:00", "Thu 08:00") are wide, so day names keep this share away from them. */
-const END_LABEL_GAP = 0.18;
-
-/** The day names under the bar, at each midnight, except those too close to the bar's two end labels. */
-export function dayMarks(firstDate: string, end: number): { minutes: number; text: string }[] {
+/**
+ * The day names under the bar, at each midnight, except those that would touch the bar's two end
+ * labels: "Today 00:00" on the left and `endText` (for example "Thu 08:00") on the right.
+ */
+export function dayMarks(firstDate: string, end: number, barPx: number, endText: string): { minutes: number; text: string }[] {
+  const leftEnd = labelWidthPx("Today 00:00") + LABEL_SPACE_PX;
+  const rightStart = barPx - labelWidthPx(endText) - LABEL_SPACE_PX;
   const marks = [];
   for (let minutes = MINUTES_PER_DAY; minutes < end; minutes += MINUTES_PER_DAY) {
-    const share = minutes / end;
-    if (share >= END_LABEL_GAP && share <= 1 - END_LABEL_GAP) {
-      marks.push({ minutes, text: formatWeekday(addDays(firstDate, minutes / MINUTES_PER_DAY)) });
+    const text = formatWeekday(addDays(firstDate, minutes / MINUTES_PER_DAY));
+    const [from, to] = labelSpanPx(minutes, text, end, barPx);
+    if (from >= leftEnd && to <= rightStart) {
+      marks.push({ minutes, text });
     }
   }
   return marks;
 }
 
-/** Keeps labels in order, dropping each one that sits too close to the last one kept. */
-function dropCrowded<T extends { minutes: number }>(labels: T[], end: number): T[] {
+/** Keeps labels in order, dropping each one that would touch the last one kept. */
+function dropCrowded<T extends { minutes: number; text: string }>(labels: T[], end: number, barPx: number): T[] {
   const kept: T[] = [];
   for (const label of labels) {
     const last = kept[kept.length - 1];
-    if (last === undefined || (label.minutes - last.minutes) / end >= MIN_LABEL_GAP) {
+    const fits =
+      last === undefined ||
+      labelSpanPx(label.minutes, label.text, end, barPx)[0] >= labelSpanPx(last.minutes, last.text, end, barPx)[1] + LABEL_SPACE_PX;
+    if (fits) {
       kept.push(label);
     }
   }
@@ -153,7 +185,7 @@ function dropCrowded<T extends { minutes: number }>(labels: T[], end: number): T
  */
 export function labelPosition(minutes: number, end: number): { left: string; transform: string } {
   const share = minutes / end;
-  const shift = share < 0.04 ? "0" : share > 0.96 ? "-100%" : "-50%";
+  const shift = share < LABEL_EDGE_SHARE ? "0" : share > 1 - LABEL_EDGE_SHARE ? "-100%" : "-50%";
   return { left: `${share * 100}%`, transform: `translateX(${shift})` };
 }
 
