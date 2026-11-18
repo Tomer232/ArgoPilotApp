@@ -78,7 +78,11 @@ function DripFacts({ plan, today }: { plan: Plan; today: PlanDay }) {
         </p>
       )}
       {plan.days.some((day) => day.capped) && (
-        <p>Some days need more than 24 h of watering, so the plan spreads it over the following days.</p>
+        // A capped day is not carried over: the next day waters only if the soil falls below the trigger (QA-7).
+        <p>
+          Days marked &ldquo;Most in 24 h&rdquo; need more than the drip gives in a day: it runs all 24 hours and the soil
+          ends that day below full.
+        </p>
       )}
     </div>
   );

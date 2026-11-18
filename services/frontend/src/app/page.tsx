@@ -89,7 +89,10 @@ function todaySummary(plans: Result<Plan>[]): string {
   return `${summary} ${plural(problems.length, "plot")} ${verb} no plan right now: ${problems[0].detail}.`;
 }
 
-/** One plot: name, crop and area, today's answer, and a link to its page. */
+/**
+ * One plot: name, crop and area, today's answer, and a link to its page. When today's answer
+ * comes from an old forecast, the line under the name says so, next to the answer (FR-2.17, QA-5).
+ */
 function PlotRow({ plot, cropName, plan }: { plot: Plot; cropName?: string; plan?: Result<Plan> }) {
   return (
     <li>
@@ -99,6 +102,9 @@ function PlotRow({ plot, cropName, plan }: { plot: Plot; cropName?: string; plan
           <span className="block text-xs text-muted-foreground">
             {cropName ?? plot.crop_id}, {formatArea(plot.area_m2)}
           </span>
+          {plan?.ok && plan.data.days[0].stale && (
+            <span className="block text-xs font-medium text-stale">Stale forecast</span>
+          )}
         </span>
         <TodayAnswer plan={plan} />
         <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />

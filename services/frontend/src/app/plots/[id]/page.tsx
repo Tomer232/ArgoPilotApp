@@ -8,7 +8,7 @@ import { ProblemNotice } from "@/components/problem-notice";
 import { TodayRecommendation } from "@/components/today-recommendation";
 import { WeekPlan } from "@/components/week-plan";
 import { formatArea } from "@/lib/format";
-import type { Result } from "@/lib/http";
+import type { Problem, Result } from "@/lib/http";
 import { getPlan } from "@/lib/planner";
 import type { PlanQuery } from "@/lib/plan-query";
 import { getPlot, listCrops, listFarms, listPlots, listSoils, type Farm, type Plot } from "@/lib/registry";
@@ -91,7 +91,7 @@ async function PlotPlan({ plotId, query }: { plotId: string; query: PlanQuery })
         </div>
       ) : (
         <>
-          <ProblemNotice title="The plan can't be calculated right now" problem={plan.problem} />
+          <ProblemNotice title="The plan can't be calculated right now" problem={inGrowerWords(plan.problem)} />
           {(query.start_pct !== undefined || query.trigger_pct !== undefined) && (
             <p className="mt-3">
               <Link href="?" className="font-medium text-water underline underline-offset-4">
@@ -112,6 +112,19 @@ function switcherFarms(farms: Farm[], plots: Plot[]): SwitcherFarm[] {
     name: farm.name,
     plots: plots.filter((plot) => plot.farm_id === farm.id).map((plot) => ({ id: plot.id, name: plot.name })),
   }));
+}
+
+/**
+ * The planner's 422 names a query field in its own words ("start_pct: Input should be ...").
+ * The only values this page sends it are the grower's two choices, so say that plainly (QA-6).
+ * The planner still does the checking; its text is not parsed.
+ */
+function inGrowerWords(problem: Problem): Problem {
+  if (problem.status !== 422 || problem.code !== "VALIDATION") {
+    return problem;
+  }
+  const detail = "A choice in the address is not valid: soil level must be 0-100 and the trigger 1-99";
+  return { ...problem, detail };
 }
 
 /** True when the service answered 404: the plot does not exist. */
