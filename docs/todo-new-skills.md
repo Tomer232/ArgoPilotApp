@@ -39,8 +39,9 @@ Noted 2026-11-17 and built the same day, one at a time with an owner review betw
 
 ## Before the P2 PR
 
-- [ ] The other session's frontend redesign is committed, and its extra pages are recorded or removed.
+- [x] The other session's frontend redesign is committed, and its extra pages are recorded or removed.
 - [ ] The registry `.env` points at the `registry` PostgreSQL database, so NFR-2.2 can be re-measured (its number is older than 3 registry code commits).
-- [ ] Y18 and Y19 built (timeline "now" line and notes).
+- [x] Y18 and Y19 built (timeline "now" line and notes).
 - [ ] NFR-2.8 checked at 375 px in the browser.
+- [ ] One more frontend redesign round.
 - [ ] Then `/submit-task`.
