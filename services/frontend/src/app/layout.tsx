@@ -27,7 +27,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geist.variable} h-full antialiased`}>
-      <body className="min-h-full text-sm tabular-nums">
+      {/* wrap-break-word: a word longer than its line (a long farm or plot name) breaks instead of overflowing (QA-3). */}
+      <body className="min-h-full text-sm tabular-nums wrap-break-word">
         <div className="flex min-h-screen flex-col lg:flex-row lg:gap-3 lg:p-3">
           <aside className="sticky top-0 z-30 flex items-center gap-2 border-b bg-background px-4 py-2.5 lg:top-3 lg:h-[calc(100vh-1.5rem)] lg:w-56 lg:shrink-0 lg:flex-col lg:items-stretch lg:gap-0 lg:rounded-2xl lg:border lg:p-3">
             <div className="lg:hidden">

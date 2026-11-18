@@ -13,9 +13,10 @@ export function PlotSwitcher({ farms, plotId }: { farms: SwitcherFarm[]; plotId:
     <Select items={items} value={plotId} onValueChange={(id) => id && id !== plotId && router.push(`/plots/${id}`)}>
       <SelectTrigger
         aria-label="Plot"
-        className="tight -ml-2.5 h-auto border-transparent bg-transparent py-1 text-[28px] leading-tight font-semibold hover:bg-muted [&_svg]:size-5!"
+        className="tight relative -left-2.5 h-auto max-w-full data-[size=default]:h-auto border-transparent bg-transparent py-1 text-[28px] leading-tight font-semibold whitespace-normal hover:bg-muted [&_svg]:size-5!"
       >
-        <SelectValue />
+        {/* A long name wraps onto more lines instead of widening the page at 375 px (QA-3). */}
+        <SelectValue className="block! line-clamp-none! min-w-0 wrap-anywhere" />
       </SelectTrigger>
       <SelectContent alignItemWithTrigger={false} align="start" className="min-w-56">
         {farms.map((farm) => (

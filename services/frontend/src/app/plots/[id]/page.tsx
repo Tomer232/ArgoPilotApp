@@ -68,7 +68,7 @@ async function PlotPlan({ plotId, query }: { plotId: string; query: PlanQuery })
         </p>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           {plot.ok && farms.ok && plots.ok ? (
-            <h1>
+            <h1 className="max-w-full min-w-0">
               <PlotSwitcher farms={switcherFarms(farms.data, plots.data)} plotId={plot.data.id} />
             </h1>
           ) : (

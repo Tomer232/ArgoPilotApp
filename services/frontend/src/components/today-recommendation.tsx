@@ -65,11 +65,18 @@ function refillMinutes(plan: Plan, today: PlanDay): number {
 function DripFacts({ plan, today }: { plan: Plan; today: PlanDay }) {
   return (
     <div className="mt-4 grid gap-1 text-xs text-muted-foreground">
-      <p>
-        Drip rate <span className="font-medium text-foreground">{plan.drip_mm_per_hour} mm/h</span>
-        {" · "}refill from {plan.trigger_pct}% to full{" "}
-        <span className="font-medium text-foreground">{formatDuration(refillMinutes(plan, today))}</span>
-      </p>
+      {plan.drip_mm_per_hour > 0 ? (
+        <p>
+          Drip rate <span className="font-medium text-foreground">{plan.drip_mm_per_hour} mm/h</span>
+          {" · "}refill from {plan.trigger_pct}% to full{" "}
+          <span className="font-medium text-foreground">{formatDuration(refillMinutes(plan, today))}</span>
+        </p>
+      ) : (
+        // The planner rounds the rate to 2 decimals, so a very slow drip arrives as 0 (QA-2).
+        <p>
+          Drip rate <span className="font-medium text-foreground">under 0.01 mm/h</span>
+        </p>
+      )}
       {plan.days.some((day) => day.capped) && (
         <p>Some days need more than 24 h of watering, so the plan spreads it over the following days.</p>
       )}

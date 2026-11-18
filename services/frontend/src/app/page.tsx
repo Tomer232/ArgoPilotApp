@@ -44,22 +44,11 @@ async function Overview() {
   const plans = new Map(
     await Promise.all(plots.data.map(async (plot) => [plot.id, await getPlan(plot.id)] as const)),
   );
-  const needWater = plots.data.filter((plot) => {
-    const plan = plans.get(plot.id);
-    return plan?.ok && plan.data.days[0].run_minutes > 0;
-  }).length;
   const cropNames = new Map(crops.data.map((crop) => [crop.id, crop.name]));
 
   return (
     <>
-      <PageHeader
-        title="Overview"
-        subtitle={
-          plots.data.length === 0
-            ? "No plots yet. Farms and plots are added in the registry."
-            : `${needWater} of ${plural(plots.data.length, "plot")} need water today, with the default choices.`
-        }
-      />
+      <PageHeader title="Overview" subtitle={todaySummary([...plans.values()])} />
       <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
         {farms.data.map((farm) => {
           const farmPlots = plots.data.filter((plot) => plot.farm_id === farm.id);
@@ -80,6 +69,24 @@ async function Overview() {
       </div>
     </>
   );
+}
+
+/**
+ * The line under the title: how many plots need water today. Plots without a plan are not
+ * counted as "no water"; they are named apart, with the first reason (QA-1).
+ */
+function todaySummary(plans: Result<Plan>[]): string {
+  if (plans.length === 0) {
+    return "No plots yet. Farms and plots are added in the registry.";
+  }
+  const needWater = plans.filter((plan) => plan.ok && plan.data.days[0].run_minutes > 0).length;
+  const summary = `${needWater} of ${plural(plans.length, "plot")} need water today, with the default choices.`;
+  const problems = plans.flatMap((plan) => (plan.ok ? [] : [plan.problem]));
+  if (problems.length === 0) {
+    return summary;
+  }
+  const verb = problems.length === 1 ? "has" : "have";
+  return `${summary} ${plural(problems.length, "plot")} ${verb} no plan right now: ${problems[0].detail}.`;
 }
 
 /** One plot: name, crop and area, today's answer, and a link to its page. */
