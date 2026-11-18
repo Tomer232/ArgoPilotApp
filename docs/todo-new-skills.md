@@ -40,7 +40,7 @@ Noted 2026-11-17 and built the same day, one at a time with an owner review betw
 ## Before the P2 PR
 
 - [x] The other session's frontend redesign is committed, and its extra pages are recorded or removed.
-- [ ] The registry `.env` points at the `registry` PostgreSQL database, so NFR-2.2 can be re-measured (its number is older than 3 registry code commits).
+- [x] The registry `.env` points at the `registry` PostgreSQL database; NFR-2.2 re-measured 2026-11-18 (worst p95 5.8 ms).
 - [x] Y18 and Y19 built (timeline "now" line and notes).
 - [ ] NFR-2.8 checked at 375 px in the browser.
 - [ ] One more frontend redesign round.

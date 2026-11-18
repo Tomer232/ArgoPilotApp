@@ -74,24 +74,24 @@ Method: each of the 10 GET endpoints was called at 10 req/s for 30 s, which is 3
 
 | Database | Data | Worst p95 | Slowest endpoint | Errors |
 | --- | --- | --- | --- | --- |
-| **PostgreSQL 18 (P2)** | Seed data (4 plots) | **8.7 ms** | `GET /v1/plots/{id}` | 0 of 3,000 |
+| **PostgreSQL 18 (P2)** | Seed data (4 plots) | **5.8 ms** | `GET /v1/farms/{id}`, `GET /v1/emitters/{id}` | 0 of 3,000 |
 | SQLite (P1) | Seed data (4 plots) | **6.8 ms** | `GET /v1/plots` | 0 |
 | SQLite (P1) | 1,000 plots | **14.9 ms** (p99 22.1 ms) | `GET /v1/plots` | 0 |
 
-PostgreSQL run, every endpoint (ms):
+PostgreSQL run of 2026-11-18 (after the last registry code change, nothing else running), every endpoint (ms):
 
 | Endpoint | p50 | p95 | p99 | max |
 | --- | --- | --- | --- | --- |
-| `GET /v1/farms` | 5.1 | 8.3 | 8.8 | 9.1 |
-| `GET /v1/farms/{id}` | 6.1 | 8.2 | 8.9 | 9.7 |
-| `GET /v1/plots` | 5.6 | 8.3 | 9.4 | 17.3 |
-| `GET /v1/plots/{id}` | 5.1 | 8.7 | 9.2 | 10.2 |
-| `GET /v1/crops` | 5.0 | 8.0 | 8.9 | 9.5 |
-| `GET /v1/crops/{id}` | 5.6 | 8.2 | 8.9 | 9.5 |
-| `GET /v1/soils` | 5.4 | 8.3 | 9.3 | 9.8 |
-| `GET /v1/soils/{id}` | 5.5 | 8.4 | 9.2 | 9.6 |
-| `GET /v1/emitters` | 5.2 | 8.3 | 9.1 | 9.9 |
-| `GET /v1/emitters/{id}` | 5.0 | 8.5 | 9.6 | 10.2 |
+| `GET /v1/farms` | 3.5 | 4.8 | 5.3 | 5.7 |
+| `GET /v1/farms/{id}` | 3.9 | 5.8 | 6.3 | 6.7 |
+| `GET /v1/plots` | 3.9 | 5.3 | 5.6 | 10.0 |
+| `GET /v1/plots/{id}` | 3.6 | 5.6 | 6.1 | 6.2 |
+| `GET /v1/crops` | 3.5 | 5.0 | 5.4 | 6.1 |
+| `GET /v1/crops/{id}` | 3.8 | 5.2 | 5.5 | 5.8 |
+| `GET /v1/soils` | 3.5 | 4.5 | 5.1 | 5.4 |
+| `GET /v1/soils/{id}` | 3.7 | 5.0 | 5.5 | 5.9 |
+| `GET /v1/emitters` | 4.1 | 5.3 | 5.5 | 5.8 |
+| `GET /v1/emitters/{id}` | 3.8 | 5.8 | 6.1 | 6.6 |
 
 With PostgreSQL stopped, every `/v1` request answered 503 with `Retry-After: 5` in under 10 ms. After restarting PostgreSQL, the next request was 200 again, without restarting the service.
 
