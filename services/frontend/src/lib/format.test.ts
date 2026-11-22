@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { formatDuration, formatFetchedAt, formatLitres, formatWeekday } from "./format";
+import { formatCoords, formatDuration, formatFetchedAt, formatLitres, formatWeekday } from "./format";
 
 describe("formatDuration", () => {
   it.each([
@@ -82,5 +82,16 @@ describe("formatLitres", () => {
 
   it("shows no decimal for a day without water", () => {
     expect(formatLitres(0)).toBe("0 L");
+  });
+});
+
+describe("formatCoords", () => {
+  it.each([
+    [31.25, 34.79, "31.25° N, 34.79° E"],
+    [31.331, 34.571, "31.33° N, 34.57° E"],
+    [-33.9, -70.65, "33.90° S, 70.65° W"],
+    [0, 0, "0.00° N, 0.00° E"],
+  ])("%s, %s -> %s", (lat, lon, expected) => {
+    expect(formatCoords(lat, lon)).toBe(expected);
   });
 });

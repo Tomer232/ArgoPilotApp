@@ -5,6 +5,13 @@ export function formatArea(areaM2: number): string {
   return `${areaM2.toLocaleString("en-US")} m²`;
 }
 
+/** 31.25, 34.79 becomes "31.25° N, 34.79° E"; south and west are written with S and W, not a minus. */
+export function formatCoords(lat: number, lon: number): string {
+  const latText = `${Math.abs(lat).toFixed(2)}° ${lat < 0 ? "S" : "N"}`;
+  const lonText = `${Math.abs(lon).toFixed(2)}° ${lon < 0 ? "W" : "E"}`;
+  return `${latText}, ${lonText}`;
+}
+
 /**
  * 412.37 becomes "412 L": a grower reads whole litres. Under 10 L one decimal is kept,
  * so 0.6 L shows as "0.6 L", not "1 L" (QA-11).
