@@ -17,9 +17,23 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import delete
+from sqlalchemy.exc import OperationalError
 
-from helpers import DEMO_FARM, EAST_FARM, NORTH_BLOCK, assert_problem, plot_body
+import db
+import plots as plots_routes
+from helpers import (
+    DEMO_FARM,
+    EAST_FARM,
+    NORTH_BLOCK,
+    assert_problem,
+    plot_body,
+    postgres_only,
+    sqlite_only,
+)
 from main import app
+from plots import check_references
+from tables import farms
 
 CODES = {404: "NOT_FOUND", 405: None, 409: "CONFLICT", 422: "VALIDATION", 503: "UNAVAILABLE"}
 
@@ -93,11 +107,15 @@ FIELD_CASES = (
         ("crop_id=TOMATO", {"crop_id": "TOMATO"}, 422),
         ("crop_id='tomato '", {"crop_id": "tomato "}, 422),
         ("emitter_id=SQL injection", {"emitter_id": "x' OR '1'='1"}, 422),
-        # Names: no max length, any text
-        ("name=10,000 chars", {"name": "a" * 10_000}, 201),
+        ("crop_id=NUL", {"crop_id": "a\u0000b"}, 422),
+        # Names: 1-200 characters after trimming, no NUL (decision 5)
+        ("name=10,000 chars", {"name": "a" * 10_000}, 422),
+        ("name=200 chars", {"name": "a" * 200}, 201),
+        ("name=201 chars", {"name": "a" * 201}, 422),
+        ("name=200 chars + spaces", {"name": "  " + "a" * 200 + " "}, 201),
         ("name=emoji", {"name": "🍅 Tomato row"}, 201),
         ("name=SQL injection", {"name": "x'); DROP TABLE plots;--"}, 201),
-        ("name=NUL character", {"name": "a\u0000b"}, 201),
+        ("name=NUL character", {"name": "a\u0000b"}, 422),
         ("name=right-to-left text", {"name": "חלקה צפונית"}, 201),
         ("farm_id=UPPERCASE", {"farm_id": DEMO_FARM.upper()}, 201),
         ("unknown field", {"color": "red"}, 422),
@@ -121,10 +139,10 @@ def test_patch_plot_field(client, case, changes, expected):
 
 def test_text_fields_round_trip(client):
     """Unusual but valid names come back exactly as sent, and SQL in a name is just text."""
-    for name in ["🍅 Tomato row", "x'); DROP TABLE plots;--", "a\u0000b", "חלקה צפונית"]:
+    for name in ["🍅 Tomato row", "x'); DROP TABLE plots;--", "חלקה צפונית"]:
         created = client.post("/v1/plots", json=plot_body(name=name)).json()
         assert client.get(f"/v1/plots/{created['id']}").json()["name"] == name
-    assert len(client.get("/v1/plots").json()) == 8  # the table is still there
+    assert len(client.get("/v1/plots").json()) == 7  # the table is still there
 
 
 # =========================================================================
@@ -255,6 +273,7 @@ DB_CASES = [
 ]
 
 
+@sqlite_only
 @pytest.mark.skipif(hasattr(os, "geteuid") and os.geteuid() == 0, reason="root ignores file permissions")
 @pytest.mark.parametrize("case, breaker, method, path, expected", DB_CASES, ids=[c[0] for c in DB_CASES])
 def test_broken_database(db_path, case, breaker, method, path, expected):
@@ -268,6 +287,7 @@ def test_broken_database(db_path, case, breaker, method, path, expected):
             os.chmod(db_path, 0o644)  # let pytest clean up the temp folder
 
 
+@sqlite_only
 def test_locked_database_is_503(db_path):
     """Another program holds an exclusive lock: after sqlite3's 5 s wait, a clean 503."""
     blocker = sqlite3.connect(db_path)
@@ -313,6 +333,32 @@ def test_many_updates_to_one_plot(client):
     assert client.get(f"/v1/plots/{NORTH_BLOCK}").json()["area_m2"] in {100 + i for i in range(30)}
 
 
+def test_two_patches_to_different_fields_both_stick(client, monkeypatch):
+    """Two PATCHes read the same plot, then each changes a different field: both changes are kept.
+
+    A barrier inside find_plot makes both requests finish reading before either writes.
+    """
+    both_have_read = threading.Barrier(2, timeout=5)
+    real_find_plot = plots_routes.find_plot
+    reads = []
+
+    def find_plot_then_wait(conn, plot_id):
+        plot = real_find_plot(conn, plot_id)
+        reads.append(plot_id)
+        if len(reads) <= 2:  # only the first read of each PATCH waits, not the read-back
+            both_have_read.wait()
+        return plot
+
+    bodies = [{"name": "Renamed"}, {"area_m2": 4242}]
+    with monkeypatch.context() as patch:
+        patch.setattr(plots_routes, "find_plot", find_plot_then_wait)
+        responses = in_parallel(2, lambda c, i: c.patch(f"/v1/plots/{NORTH_BLOCK}", json=bodies[i]))
+
+    assert [r.status_code for r in responses] == [200, 200]
+    stored = client.get(f"/v1/plots/{NORTH_BLOCK}").json()
+    assert (stored["name"], stored["area_m2"]) == ("Renamed", 4242)
+
+
 def test_delete_farm_while_plots_are_added(client):
     """Plots are added to a farm while it is being deleted: never a plot without a farm."""
     farm = client.post("/v1/farms", json={"name": "Racing farm"}).json()
@@ -327,6 +373,22 @@ def test_delete_farm_while_plots_are_added(client):
     farm_exists = client.get(f"/v1/farms/{farm['id']}").status_code == 200
     plots = client.get(f"/v1/plots?farm_id={farm['id']}").json()
     assert farm_exists or plots == [], "plots were left pointing at a deleted farm"
+
+
+@postgres_only
+def test_plot_write_locks_its_farm(client):
+    """Once a plot write has checked its farm, deleting that farm must wait (decision 6).
+
+    Without the lock the delete would go through, the plot's INSERT would then break
+    the foreign key, and the client would get a false 409 "name taken".
+    """
+    farm = client.post("/v1/farms", json={"name": "Locked farm"}).json()
+    with db.engine.connect() as writer, db.engine.connect() as deleter:
+        check_references(writer, plot_body(farm_id=farm["id"]))  # the write's transaction stays open
+        deleter.exec_driver_sql("SET lock_timeout = '200ms'")
+        with pytest.raises(OperationalError, match="lock"):
+            deleter.execute(delete(farms).where(farms.c.id == farm["id"]))
+        writer.rollback()
 
 
 def test_reads_during_writes(client):

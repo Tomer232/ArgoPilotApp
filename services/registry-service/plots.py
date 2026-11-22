@@ -7,11 +7,12 @@ must be unique inside its farm.
 """
 
 import datetime
-import sqlite3
 import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response
+from sqlalchemy import Connection, delete, insert, select, update
+from sqlalchemy.exc import IntegrityError
 
 from db import connect
 from errors import ConflictError, NotFoundError, ValidationFailedError
@@ -25,40 +26,66 @@ from models import (
     sent_fields,
     today_for_request,
 )
+from tables import crops, emitters, farms, plots, soils
 
 # "Today" where the client is, from its Time-Zone header (see models.py).
 ClientToday = Annotated[datetime.date, Depends(today_for_request)]
 
 router = APIRouter()
 
-COLUMNS = (
-    "id, farm_id, name, area_m2, crop_id, planting_date, soil_id, "
-    "row_spacing_m, emitter_spacing_m, emitter_id, lat, lon"
-)
+# Every column the API returns, in the spec's order (never the hidden `seq`).
+PLOT_COLUMNS = [
+    plots.c.id,
+    plots.c.farm_id,
+    plots.c.name,
+    plots.c.area_m2,
+    plots.c.crop_id,
+    plots.c.planting_date,
+    plots.c.soil_id,
+    plots.c.row_spacing_m,
+    plots.c.emitter_spacing_m,
+    plots.c.emitter_id,
+    plots.c.lat,
+    plots.c.lon,
+]
 
 # What a plot points to: (table, plot field, word used in the error message).
 REFERENCES = [
-    ("farms", "farm_id", "farm"),
-    ("crops", "crop_id", "crop"),
-    ("soils", "soil_id", "soil"),
-    ("emitters", "emitter_id", "emitter"),
+    (farms, "farm_id", "farm"),
+    (crops, "crop_id", "crop"),
+    (soils, "soil_id", "soil"),
+    (emitters, "emitter_id", "emitter"),
 ]
 
 NAME_TAKEN = "A plot with this name already exists on this farm"
 
 
-def find_plot(conn: sqlite3.Connection, plot_id: str) -> dict:
+def find_plot(conn: Connection, plot_id: str) -> dict:
     """One plot by id, or 404."""
-    row = conn.execute(f"SELECT {COLUMNS} FROM plots WHERE id = ?", (plot_id,)).fetchone()
+    query = select(*PLOT_COLUMNS).where(plots.c.id == plot_id)
+    row = conn.execute(query).mappings().first()
     if row is None:
         raise NotFoundError("Unknown plot")
     return dict(row)
 
 
-def check_references(conn: sqlite3.Connection, plot: dict) -> None:
-    """422 if the plot's farm, crop, soil or emitter does not exist."""
+def check_references(conn: Connection, plot: dict) -> None:
+    """422 if the plot's farm, crop, soil or emitter does not exist.
+
+    The farm row is also locked (FOR SHARE) until this request ends. Otherwise, on
+    PostgreSQL, a farm deleted between this check and the plot's INSERT would make
+    the foreign key fail, and that error would be misread as "name taken".
+    A concurrent farm delete now waits, then correctly gets "Farm still has plots".
+    SQLite ignores the lock, and there this check and the INSERT are not one
+    transaction, so the false 409 can still happen. Accepted: SQLite is only for
+    local work (decision O63).
+    Crops, soils and emitters can't be deleted through the API, so they need no lock.
+    """
     for table, field, label in REFERENCES:
-        found = conn.execute(f"SELECT 1 FROM {table} WHERE id = ?", (plot[field],)).fetchone()
+        query = select(table.c.id).where(table.c.id == plot[field])
+        if table is farms:
+            query = query.with_for_update(read=True)
+        found = conn.execute(query).first()
         if found is None:
             raise ValidationFailedError(f"Unknown {label}")
 
@@ -68,16 +95,12 @@ def create_plot(body: PlotCreate, today: ClientToday):
     """Create a plot. The server picks the id."""
     check_not_future(body.planting_date, today)
     plot = {"id": str(uuid.uuid4()), **body.model_dump()}
+    plot["planting_date"] = datetime.date.fromisoformat(plot["planting_date"])  # Date column
     with connect() as conn:
         check_references(conn, plot)
         try:
-            conn.execute(
-                f"INSERT INTO plots ({COLUMNS}) VALUES (:id, :farm_id, :name, :area_m2, :crop_id, "
-                ":planting_date, :soil_id, :row_spacing_m, :emitter_spacing_m, "
-                ":emitter_id, :lat, :lon)",
-                plot,
-            )
-        except sqlite3.IntegrityError:
+            conn.execute(insert(plots).values(plot))
+        except IntegrityError:
             # References were checked above, so this is the UNIQUE (farm_id, name) rule.
             raise ConflictError(NAME_TAKEN) from None
     return plot
@@ -86,17 +109,15 @@ def create_plot(body: PlotCreate, today: ClientToday):
 @router.get("/v1/plots", response_model=list[Plot])
 def list_plots(farm_id: str | None = None):
     """All plots, oldest first. With ?farm_id=, only that farm's plots."""
+    query = select(*PLOT_COLUMNS).order_by(plots.c.seq)
     with connect() as conn:
-        if farm_id is None:
-            rows = conn.execute(f"SELECT {COLUMNS} FROM plots ORDER BY rowid").fetchall()
-        else:
+        if farm_id is not None:
             try:
                 farm_id = normalize_uuid(farm_id)
             except ValueError:
                 raise ValidationFailedError("farm_id: not a valid UUID") from None
-            rows = conn.execute(
-                f"SELECT {COLUMNS} FROM plots WHERE farm_id = ? ORDER BY rowid", (farm_id,)
-            ).fetchall()
+            query = query.where(plots.c.farm_id == farm_id)
+        rows = conn.execute(query).mappings().all()
     return [dict(row) for row in rows]
 
 
@@ -111,26 +132,28 @@ def get_plot(plot_id: str):
 @router.patch("/v1/plots/{plot_id}", response_model=Plot)
 def update_plot(plot_id: str, body: PlotUpdate, today: ClientToday):
     """Change only the fields sent, then check the result as a whole.
-    Moving a plot to another farm is allowed if the name is free there."""
+    Moving a plot to another farm is allowed if the name is free there.
+
+    Only the sent fields are written, so two PATCHes that change different fields
+    at the same time both stick. The plot is read again after the write, so the
+    response shows what is stored, including a concurrent PATCH's change.
+    """
     plot_id = parse_id(plot_id, "plot")
     changes = sent_fields(body)
     if "planting_date" in changes:
         check_not_future(changes["planting_date"], today)
+        changes["planting_date"] = datetime.date.fromisoformat(changes["planting_date"])
     with connect() as conn:
         plot = find_plot(conn, plot_id)
+        if not changes:
+            return plot  # {} is 200, unchanged
         plot.update(changes)
         check_references(conn, plot)
         try:
-            conn.execute(
-                "UPDATE plots SET farm_id = :farm_id, name = :name, area_m2 = :area_m2, "
-                "crop_id = :crop_id, planting_date = :planting_date, soil_id = :soil_id, "
-                "row_spacing_m = :row_spacing_m, emitter_spacing_m = :emitter_spacing_m, "
-                "emitter_id = :emitter_id, lat = :lat, lon = :lon WHERE id = :id",
-                plot,
-            )
-        except sqlite3.IntegrityError:
+            conn.execute(update(plots).where(plots.c.id == plot_id).values(changes))
+        except IntegrityError:
             raise ConflictError(NAME_TAKEN) from None
-    return plot
+        return find_plot(conn, plot_id)
 
 
 @router.delete("/v1/plots/{plot_id}", status_code=204, response_class=Response)
@@ -139,4 +162,4 @@ def delete_plot(plot_id: str) -> None:
     plot_id = parse_id(plot_id, "plot")
     with connect() as conn:
         find_plot(conn, plot_id)
-        conn.execute("DELETE FROM plots WHERE id = ?", (plot_id,))
+        conn.execute(delete(plots).where(plots.c.id == plot_id))

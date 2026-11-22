@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Requirements P2</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1c1f23; --muted: #5f6670; --line: #e3e6ea; --card: #f7f8fa;
+    --met: #1f7a3a; --met-bg: #e5f4e9; --partly: #8a5a00; --partly-bg: #fdf1d8;
+    --notmet: #b42318; --notmet-bg: #fde8e6; --canttell: #44546a; --canttell-bg: #e9edf2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15171a; --fg: #e8eaed; --muted: #9aa1ab; --line: #2c3036; --card: #1d2024;
+      --met: #7fd69a; --met-bg: #1d3325; --partly: #f0c36a; --partly-bg: #3a2f17;
+      --notmet: #f2958c; --notmet-bg: #3d1f1c; --canttell: #b3c0d1; --canttell-bg: #262c35;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; }
+  main { max-width: 1000px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  h2 { font-size: 1.1rem; margin: 32px 0 8px; }
+  h3 { font-size: 0.95rem; margin: 20px 0 6px; color: var(--muted); }
+  .meta { color: var(--muted); font-size: 0.85rem; }
+  .counts { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+  .count { padding: 8px 12px; border-radius: 8px; background: var(--card); border: 1px solid var(--line); }
+  .count b { font-size: 1.2rem; margin-right: 4px; }
+  ul.owner { padding-left: 20px; }
+  ul.owner li { margin: 4px 0; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; vertical-align: top; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
+  td.id { white-space: nowrap; font-weight: 600; }
+  code { font-size: 0.85em; background: var(--card); padding: 1px 4px; border-radius: 4px; overflow-wrap: anywhere; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+  .met { color: var(--met); background: var(--met-bg); }
+  .partly { color: var(--partly); background: var(--partly-bg); }
+  .notmet { color: var(--notmet); background: var(--notmet-bg); }
+  .canttell { color: var(--canttell); background: var(--canttell-bg); }
+  .recorded { color: var(--met); background: var(--met-bg); }
+  .unrecorded { color: var(--notmet); background: var(--notmet-bg); }
+  svg { max-width: 100%; height: auto; }
+  svg text { fill: var(--fg); font: 12px system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Requirements check: P2</h1>
+  <p class="meta">Branch p2 at b7cf084 (pushed, origin/p2 is the same commit) &middot; 2026-11-22 &middot; task file alonitac/OzVeruach26/tasks/p2.md (NFR-1.1 from p1_registry_api.md)</p>
+  <p class="meta">Working tree: clean except the untracked <code>.claude/skills/interview-prep/</code> (not written by this check, not read; no finding rests on it).</p>
+  <p class="meta">Tests today: registry 448 passed, 2 skipped &middot; weather 75 passed &middot; planner 131 passed &middot; frontend 105 passed &middot; frontend lint clean. Static check only: the stack was not started and <code>npm run build</code> was not run here.</p>
+
+  <div class="counts">
+    <span class="count"><b>37</b><span class="pill met">Met</span></span>
+    <span class="count"><b>2</b><span class="pill partly">Partly</span></span>
+    <span class="count"><b>1</b><span class="pill notmet">Not met</span></span>
+    <span class="count"><b>1</b><span class="pill canttell">Can't tell</span></span>
+    <span class="count"><b>26</b> extras, <b>2</b><span class="pill unrecorded">unrecorded</span></span>
+  </div>
+
+  <h2>Needs the owner</h2>
+  <ul class="owner">
+    <li><span class="pill notmet">Not met</span> <b>Submit</b>: no PR into <code>main</code> yet (what was built, NFR numbers, skills used, changes to <code>irrigation-calc-reference</code>). Decides it: the <code>submit-task</code> skill.</li>
+    <li><span class="pill canttell">Can't tell</span> <b>Registry on the <code>registry</code> PostgreSQL database</b>: the URL lives only in <code>.env</code>, which is not read. Decides it: <code>stack.sh start</code>, which refuses unless the registry holds a PostgreSQL connection (A64).</li>
+    <li><span class="pill partly">Partly</span> <b>Frontend prompt "No other pages or features"</b>: list pages, plot switcher, home summary, chart and more are outside it, but every one is recorded (Y20-Y28, Y27 sets the line, <code>docs/extras.md</code>). Decides it: the owner keeps them and says so in the PR, or deletes them.</li>
+    <li><span class="pill partly">Partly</span> <b>Frontend prompt "All calls to the services live in <code>src/lib/</code>"</b>: <code>src/proxy.ts:21</code> fetches the registry itself (recorded O98, A66). Decides it: accept the deviation, or move the call into <code>src/lib/registry.ts</code>.</li>
+    <li><span class="pill unrecorded">Unrecorded</span> <code>.claude/skills/interview-prep/</code> (untracked, another session's work): add it to <code>docs/extras.md</code> and a decision when it is committed, or keep it off <code>p2</code>.</li>
+    <li><span class="pill unrecorded">Unrecorded</span> <code>.vscode/launch.json</code> (a debug launcher for the registry, tracked since the first commit and deliberately un-ignored in <code>.gitignore</code>): record it (A9 covers only <code>settings.json</code>) or untrack it.</li>
+  </ul>
+
+  <h2>Requirements</h2>
+  <h3>registry-service</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Id</th><th>What it asks</th><th>Status</th><th>Evidence</th></tr></thead>
+      <tbody>
+        <tr><td class="id">FR-2.1</td><td>PostgreSQL in production, SQLite locally</td><td><span class="pill met">Met</span></td><td><code>db.py</code> <code>make_engine</code>; whole suite also runs on PostgreSQL via <code>TEST_DATABASE_URL</code> (O65)</td></tr>
+        <tr><td class="id">FR-2.2</td><td>One documented command: tables + the 15 seed rows on an empty PostgreSQL</td><td><span class="pill met">Met</span></td><td><code>uv run python seed.py</code> (README "Run it", lines 34-38); <code>tests/test_seed.py</code>; O61, O66, O67</td></tr>
+        <tr><td class="id">NFR-2.1</td><td>Switch databases by configuration only</td><td><span class="pill met">Met</span></td><td><code>DATABASE_URL</code> in <code>config.py</code>; same tests on both databases (O65)</td></tr>
+        <tr><td class="id">NFR-2.2 / 1.1</td><td>GET list and by id, p95 &le; 100 ms at 10 req/s, on PostgreSQL</td><td><span class="pill met">Met</span></td><td>README "Latency": worst p95 5.8 ms on PostgreSQL 18, 0 errors of 3,000 (cabadc3; no registry code change since)</td></tr>
+        <tr><td class="id">Note</td><td>Superpowers design doc and plan committed</td><td><span class="pill met">Met</span></td><td><code>docs/superpowers/specs/2026-11-15-registry-sqlalchemy-design.md</code>, <code>docs/superpowers/plans/2026-11-15-registry-sqlalchemy.md</code></td></tr>
+        <tr><td class="id">Note</td><td>All data access through SQLAlchemy</td><td><span class="pill met">Met</span></td><td><code>tables.py</code>; Core queries in <code>farms.py</code>, <code>plots.py</code>, <code>catalogues.py</code></td></tr>
+        <tr><td class="id">Note</td><td><code>DATABASE_URL</code> in <code>.env</code> points at the <code>registry</code> PostgreSQL database</td><td><span class="pill canttell">Can't tell</span></td><td><code>.env</code> not read; <code>stack.sh start</code> settles it (A64)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>weather-service</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Id</th><th>What it asks</th><th>Status</th><th>Evidence</th></tr></thead>
+      <tbody>
+        <tr><td class="id">FR-2.3</td><td>Daily date, ET0 and rain for <code>days</code> days from today</td><td><span class="pill met">Met</span></td><td><code>test_forecast_answer</code>, <code>test_days_cuts_the_forecast</code>; README "Where the numbers come from"</td></tr>
+        <tr><td class="id">FR-2.4</td><td>lat/lon/days ranges, else 422 <code>VALIDATION</code></td><td><span class="pill met">Met</span></td><td><code>test_bad_query_is_422</code>, <code>test_edges_are_allowed</code></td></tr>
+        <tr><td class="id">FR-2.5</td><td>One forecast per 0.1&deg; cell, fresh 3 h, no provider call while fresh</td><td><span class="pill met">Met</span></td><td><code>test_same_cell_shares_one_forecast</code>, <code>test_fresh_forecast_does_not_call_the_provider</code>, <code>test_after_three_hours_the_provider_is_called_again</code>; O71</td></tr>
+        <tr><td class="id">FR-2.6</td><td>Provider fails: retry twice, then last forecast with <code>stale: true</code></td><td><span class="pill met">Met</span></td><td><code>test_bad_answer_is_tried_three_times_then_fails</code>, <code>test_provider_down_serves_last_forecast_as_stale</code>; O73</td></tr>
+        <tr><td class="id">FR-2.7</td><td>Fails with nothing cached: 503 <code>UNAVAILABLE</code> + <code>Retry-After</code></td><td><span class="pill met">Met</span></td><td><code>test_provider_down_and_nothing_cached_is_503</code></td></tr>
+        <tr><td class="id">FR-2.8</td><td>Never numbers the provider didn't give</td><td><span class="pill met">Met</span></td><td>null, NaN, missing and short lists refused (<code>tests/test_provider.py</code>), <code>test_a_failed_call_is_not_cached</code>; O74, A58</td></tr>
+        <tr><td class="id">NFR-2.3</td><td>Fresh forecast p95 &le; 100 ms at 10 req/s</td><td><span class="pill met">Met</span></td><td>README "Latency": p95 5.7 ms, 600 requests, 0 errors (no weather code change since)</td></tr>
+        <tr><td class="id">Notes</td><td>In-memory cache, httpx, settings and API key in <code>.env</code>, variables and max stale age in README</td><td><span class="pill met">Met</span></td><td><code>config.py</code>, <code>tests/test_config.py</code>; README "How old a stale forecast may be: 24 hours" (O72); Mermaid flow</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>planner-service</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Id</th><th>What it asks</th><th>Status</th><th>Evidence</th></tr></thead>
+      <tbody>
+        <tr><td class="id">FR-2.9</td><td>Plan for 1-7 days, default 7, first day is today</td><td><span class="pill met">Met</span></td><td><code>test_days_defaults_to_7</code>, <code>test_one_day_plan_is_today</code></td></tr>
+        <tr><td class="id">FR-2.10</td><td>Per day: date, et0_mm, kc, litres, run_minutes, stale, bucket level</td><td><span class="pill met">Met</span></td><td><code>test_response_has_exactly_the_agreed_fields</code>; <code>plan.py</code>; O86</td></tr>
+        <tr><td class="id">FR-2.11</td><td>Every number as written in the skill</td><td><span class="pill met">Met</span></td><td>hand-calculated cases in <code>tests/test_engine.py</code>, <code>test_case_3_through_the_api</code>; QA-1 (11-17) fixed by O99</td></tr>
+        <tr><td class="id">FR-2.12</td><td>Bad <code>days</code> 422, unknown plot 404</td><td><span class="pill met">Met</span></td><td><code>test_bad_days_is_422_and_calls_nobody</code>, <code>test_unknown_plot_is_404</code></td></tr>
+        <tr><td class="id">FR-2.13</td><td>Stale forecast still plans, those days <code>stale: true</code></td><td><span class="pill met">Met</span></td><td><code>test_stale_forecast_still_plans_with_every_day_stale</code></td></tr>
+        <tr><td class="id">FR-2.14</td><td>Upstream down or slow: 503 <code>UPSTREAM_UNAVAILABLE</code> naming the service</td><td><span class="pill met">Met</span></td><td><code>test_registry_failure_is_503_naming_registry</code>, <code>test_weather_failure_is_503_naming_weather</code>, <code>test_each_service_gets_its_own_timeout</code>; O84</td></tr>
+        <tr><td class="id">Notes</td><td>README JSON example, <code>fao56.md</code> research, <code>irrigation-calc-reference</code> with hand cases</td><td><span class="pill met">Met</span></td><td>README "Endpoint"; <code>docs/research/fao56.md</code>; skill <code>references/cases.md</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>frontend</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Id</th><th>What it asks</th><th>Status</th><th>Evidence</th></tr></thead>
+      <tbody>
+        <tr><td class="id">FR-2.15</td><td><code>/</code> lists every farm with its plots, linked to <code>/plots/{id}</code></td><td><span class="pill met">Met</span></td><td><code>src/app/page.tsx:99</code>; QA 11-18 "Tried and held" (no automated page test)</td></tr>
+        <tr><td class="id">FR-2.16</td><td>Today's answer first, big; then the 7-day plan</td><td><span class="pill met">Met</span></td><td><code>src/app/plots/[id]/page.tsx:89-90</code>; "Water for" / "No irrigation today" in <code>today-recommendation.tsx:100-122</code></td></tr>
+        <tr><td class="id">FR-2.17</td><td>Stale shown next to the numbers it affects</td><td><span class="pill met">Met</span></td><td><code>stale-label.tsx</code> used in today card, table, timeline, chart (Y26) and overview rows (O108); QA-5 fixed and checked live</td></tr>
+        <tr><td class="id">FR-2.18</td><td>Planner error: say what happened, no blank page</td><td><span class="pill met">Met</span></td><td><code>problem-notice.tsx</code>; QA 11-18: each service stopped in turn, the page names it; bad choices O109</td></tr>
+        <tr><td class="id">FR-2.19</td><td>Status line from the three <code>/health</code></td><td><span class="pill met">Met</span></td><td><code>src/lib/health.ts</code>, <code>status-card.tsx</code>; QA: marks the right one down</td></tr>
+        <tr><td class="id">NFR-2.8</td><td>375 px: no horizontal scroll, today's answer visible</td><td><span class="pill met">Met</span></td><td>Browser check 2026-11-18 (<code>docs/todo-new-skills.md:45</code>, 8f308bf); QA-3 re-checked at 375 px on every page (O107). Small text changes since (b7cf084): a quick look before the PR is cheap</td></tr>
+        <tr><td class="id">Prompt</td><td>Only the server calls services, all calls in <code>src/lib/</code></td><td><span class="pill partly">Partly</span></td><td>Server-only, <code>no-store</code> (<code>src/lib/http.ts</code>); but <code>src/proxy.ts:21</code> fetches too (O98, A66)</td></tr>
+        <tr><td class="id">Prompt</td><td><code>REGISTRY_URL</code>, <code>WEATHER_URL</code>, <code>PLANNER_URL</code> + <code>.env.example</code></td><td><span class="pill met">Met</span></td><td><code>services/frontend/.env.example</code>, <code>src/lib/config.ts</code>; startup check <code>src/instrumentation.ts</code></td></tr>
+        <tr><td class="id">Prompt</td><td>No other pages or features</td><td><span class="pill partly">Partly</span></td><td>Extras exist but all recorded: Y20-Y28, Y27, <code>docs/extras.md</code> "Frontend extras"</td></tr>
+        <tr><td class="id">Prompt</td><td><code>npm run build</code> and <code>npm run lint</code> pass</td><td><span class="pill met">Met</span></td><td>Lint clean today; <code>.next/BUILD_ID</code> written 2026-11-22 11:59 on a tree equal to b7cf084 (build not run by this check)</td></tr>
+        <tr><td class="id">Note</td><td>Commit the frontend without <code>node_modules</code>, <code>.next</code>, <code>.env.local</code></td><td><span class="pill met">Met</span></td><td><code>git ls-files services/frontend</code>: none tracked</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Global configuration</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Id</th><th>What it asks</th><th>Status</th><th>Evidence</th></tr></thead>
+      <tbody>
+        <tr><td class="id">Config</td><td>pydantic-settings in one <code>config.py</code> per Python service</td><td><span class="pill met">Met</span></td><td><code>services/{registry,weather,planner}-service/config.py</code></td></tr>
+        <tr><td class="id">Config</td><td><code>.env.example</code> per service, committed</td><td><span class="pill met">Met</span></td><td>four files tracked</td></tr>
+        <tr><td class="id">Config</td><td><code>.env</code> never committed</td><td><span class="pill met">Met</span></td><td><code>git ls-files</code> shows only the examples</td></tr>
+        <tr><td class="id">Config</td><td>Clear error at startup when a variable is missing</td><td><span class="pill met">Met</span></td><td><code>test_missing_setting_stops_with_clear_message</code> and each service's <code>tests/test_config.py</code>; frontend <code>instrumentation.ts</code></td></tr>
+        <tr><td class="id">Config</td><td><code>.claude/settings.json</code> denies <code>Read(**/.env)</code></td><td><span class="pill met">Met</span></td><td><code>.claude/settings.json</code>, exactly the task's JSON</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Git and pull request</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Id</th><th>What it asks</th><th>Status</th><th>Evidence</th></tr></thead>
+      <tbody>
+        <tr><td class="id">Git</td><td>Work on branch <code>p2</code> off a clean <code>main</code></td><td><span class="pill met">Met</span></td><td>53 commits on <code>p2</code> since <code>main</code></td></tr>
+        <tr><td class="id">Submit</td><td>Push <code>p2</code></td><td><span class="pill met">Met</span></td><td><code>origin/p2</code> = b7cf084, 0 commits ahead</td></tr>
+        <tr><td class="id">Submit</td><td>PR into <code>main</code>: what was built, NFR numbers, skills used, changes to <code>irrigation-calc-reference</code>; read own diff</td><td><span class="pill notmet">Not met</span></td><td>No PR for <code>p2</code> (<code>gh.exe pr list --head p2</code> empty); no <code>docs/pr/p2.md</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Out of spec</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>What</th><th>Form</th><th>Where</th><th>Recorded</th></tr></thead>
+      <tbody>
+        <tr><td><code>interview-prep</code> skill (untracked, uncommitted)</td><td>tooling</td><td><code>.claude/skills/interview-prep/</code></td><td><span class="pill unrecorded">unrecorded</span></td></tr>
+        <tr><td>VS Code debug launcher for the registry, un-ignored on purpose</td><td>tooling</td><td><code>.vscode/launch.json</code>, <code>.gitignore:30</code></td><td><span class="pill unrecorded">unrecorded</span></td></tr>
+        <tr><td>Five read-only list pages, sidebar with row counts, phone drawer</td><td>UI</td><td><code>src/app/{farms,plots,crops,soils,emitters}/</code>, <code>app-nav.tsx</code>, <code>mobile-nav.tsx</code></td><td><span class="pill recorded">Y20, extras.md</span></td></tr>
+        <tr><td>Plot switcher in the plot page title</td><td>UI</td><td><code>plot-switcher.tsx</code></td><td><span class="pill recorded">Y21, extras.md</span></td></tr>
+        <tr><td>Home plans every plot: "N of M need water", no-plan reason, stale line per row</td><td>UI, behaviour</td><td><code>src/app/page.tsx</code></td><td><span class="pill recorded">Y22, O105, O108</span></td></tr>
+        <tr><td>Table / Chart switch (<code>?view=chart</code>, adds <code>recharts</code>)</td><td>UI</td><td><code>plan-chart.tsx</code>, <code>ui/chart.tsx</code></td><td><span class="pill recorded">Y26, extras.md</span></td></tr>
+        <tr><td>"Now" button, now line, start-passed and past-midnight notes</td><td>UI</td><td><code>lib/timeline.ts</code>, <code>use-now.ts</code>, <code>run-list.tsx</code></td><td><span class="pill recorded">Y18, Y19, Y23</span></td></tr>
+        <tr><td>Soil-water column, "Updating" spinner</td><td>UI</td><td><code>soil-column.tsx</code>, <code>plan-controls.tsx</code></td><td><span class="pill recorded">Y24, Y25</span></td></tr>
+        <tr><td>Forecast time in the phone's zone</td><td>UI</td><td><code>forecast-time.tsx</code></td><td><span class="pill recorded">Y28</span></td></tr>
+        <tr><td>Pickers: soil level by feel, trigger, start time; the timeline</td><td>UI</td><td><code>plan-controls.tsx</code>, <code>week-plan.tsx</code>, <code>lib/soil-feel.ts</code></td><td><span class="pill recorded">Y14-Y16, O88, A63</span></td></tr>
+        <tr><td>Messages for edge cases: drip under 0.01 mm/h, bad address choice, capped note, litres rounding</td><td>UI, behaviour</td><td><code>today-recommendation.tsx</code>, <code>lib/format.ts</code></td><td><span class="pill recorded">O106, O109, O110, O113</span></td></tr>
+        <tr><td>Real 404 for an unknown plot and for <code>/plot-not-found</code></td><td>behaviour</td><td><code>src/proxy.ts</code></td><td><span class="pill recorded">O98, O111, A66</span></td></tr>
+        <tr><td>P1 dashboard look, shared components</td><td>UI</td><td><code>globals.css</code>, <code>components/</code></td><td><span class="pill recorded">Y17, A65</span></td></tr>
+        <tr><td>Planner query parameters <code>start_pct</code>, <code>trigger_pct</code></td><td>API</td><td><code>plan.py</code></td><td><span class="pill recorded">Y14, Y15, O87, A62</span></td></tr>
+        <tr><td>Plan fields beyond FR-2.10 (rain, stage, need, capped, bucket size, trigger, <code>drip_mm_per_hour</code>, ...)</td><td>API</td><td><code>plan.py</code></td><td><span class="pill recorded">O86, O91</span></td></tr>
+        <tr><td>At most 24 h of drip a day (<code>capped</code>); bucket bounded at empty</td><td>behaviour</td><td><code>engine.py</code></td><td><span class="pill recorded">O90, O99</span></td></tr>
+        <tr><td>Weather rules the spec left open: cell edges, local date, 24 h stale limit, strict answer checks</td><td>behaviour</td><td><code>forecast.py</code>, <code>provider.py</code></td><td><span class="pill recorded">O69-O74, A58, A59</span></td></tr>
+        <tr><td><code>/docs</code> on for registry and planner</td><td>API</td><td><code>main.py</code> of both</td><td><span class="pill recorded">Y13</span></td></tr>
+        <tr><td>Frontend unit tests (Vitest)</td><td>tooling</td><td><code>src/lib/*.test.ts</code></td><td><span class="pill recorded">O95, extras.md</span></td></tr>
+        <tr><td>Latency scripts (registry, weather)</td><td>tooling</td><td><code>services/*/scripts/</code></td><td><span class="pill recorded">Y12, extras.md</span></td></tr>
+        <tr><td>Skills <code>run-stack</code>, <code>test</code>, <code>qa</code>, <code>requirements</code>, <code>submit-task</code>; QA database <code>registry_qa</code></td><td>tooling</td><td><code>.claude/skills/</code></td><td><span class="pill recorded">O92-O94, O100-O102, A64, A67, extras.md</span></td></tr>
+        <tr><td><code>registry-api</code> skill, <code>.claude/rules/registry-service.md</code>, Ollama agent</td><td>tooling</td><td><code>.claude/</code>, <code>experiments/ollama-agent/</code></td><td><span class="pill recorded">extras.md</span></td></tr>
+        <tr><td>Test plan, QA reports, requirements pages, skills to-do</td><td>docs</td><td><code>docs/test-plan.md</code>, <code>docs/qa/</code>, <code>docs/requirements/</code>, <code>docs/todo-new-skills.md</code></td><td><span class="pill recorded">O92, O94, O100, O101</span></td></tr>
+        <tr><td>Research beyond FAO-56: long-season Kc, soil by feel</td><td>docs</td><td><code>services/planner-service/docs/research/</code></td><td><span class="pill recorded">O88, O89</span></td></tr>
+        <tr><td>Planner start-level design doc</td><td>docs</td><td><code>docs/superpowers/specs/2026-11-17-planner-start-level-design.md</code></td><td><span class="pill recorded">Y14</span></td></tr>
+        <tr><td>Registry demo UI <code>/ui</code> and <code>Time-Zone</code> header (carried from P1)</td><td>UI, API</td><td><code>services/registry-service/ui/</code>, <code>models.py</code></td><td><span class="pill recorded">O37, Y10, O50</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+</body>
+</html>

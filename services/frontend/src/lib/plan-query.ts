@@ -1,0 +1,39 @@
+// The choices the grower makes on the plot page. They live in the page address, so every link
+// and form must carry the ones it does not change.
+
+import { parseStart } from "./timeline";
+
+/**
+ * The choices, as the text in the address (the planner checks start_pct and trigger_pct).
+ * `view` is "chart" to show the 7 days as a chart instead of the table (Y26).
+ */
+export type PlanQuery = {
+  start_pct?: string;
+  trigger_pct?: string;
+  start?: string;
+  view?: string;
+};
+
+/** The address (query only) of this page with `changes` applied on top of `query`. */
+export function hrefWith(query: PlanQuery, changes: PlanQuery): string {
+  const params = new URLSearchParams();
+  for (const [name, value] of Object.entries({ ...query, ...changes })) {
+    if (value !== undefined) {
+      params.set(name, value);
+    }
+  }
+  return `?${params.toString()}`;
+}
+
+/** The address without `name`, keeping the other choices. */
+export function hrefWithout(query: PlanQuery, name: keyof PlanQuery): string {
+  return hrefWith({ ...query, [name]: undefined }, {});
+}
+
+/**
+ * The choices with an unusable `start` left out, so the "not a time" note (A63) shows once
+ * and the next choice falls back to 06:00 quietly instead of carrying the bad value on.
+ */
+export function withValidStart(query: PlanQuery): PlanQuery {
+  return parseStart(query.start).invalid ? { ...query, start: undefined } : query;
+}

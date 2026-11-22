@@ -61,7 +61,12 @@ def build_database(folder: Path, total_plots: int = 4) -> Path:
             for i in range(extra)
         )
         with sqlite3.connect(path) as conn:
-            conn.executemany("INSERT INTO plots VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
+            conn.executemany(
+                "INSERT INTO plots (id, farm_id, name, area_m2, crop_id, planting_date, soil_id, "
+                "row_spacing_m, emitter_spacing_m, emitter_id, lat, lon) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                rows,
+            )
     return path
 
 
@@ -71,7 +76,7 @@ def running_service(db_path: Path):
     server = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", str(PORT)],
         cwd=SERVICE_DIR,
-        env={**os.environ, "REGISTRY_DB_PATH": str(db_path)},
+        env={**os.environ, "DATABASE_URL": f"sqlite:///{db_path}"},
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )

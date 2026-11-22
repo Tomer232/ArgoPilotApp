@@ -59,8 +59,23 @@ def check_not_future(planting_date: str, today: datetime.date) -> None:
 
 # --- Field types used in request bodies -----------------------------------
 
-# A name: spaces at both ends are removed, and it must not be empty afterwards.
-Name = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+def reject_nul(value: str) -> str:
+    """422 for text with a NUL character: PostgreSQL text columns cannot store it."""
+    if "\x00" in value:
+        raise ValueError("must not contain a NUL character")
+    return value
+
+
+# A name: spaces at both ends are removed, then it must be 1 to 200 characters.
+# The limit keeps every name storable in PostgreSQL's unique index (decision 5).
+Name = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=200),
+    AfterValidator(reject_nul),
+]
+
+# A crop, soil or emitter id: any text the database can compare, so no NUL.
+CatalogueRef = Annotated[str, AfterValidator(reject_nul)]
 
 # A UUID that points at another row (e.g. the plot's farm).
 UuidRef = Annotated[str, AfterValidator(normalize_uuid)]
@@ -155,7 +170,7 @@ class Plot(BaseModel):
     name: str
     area_m2: float
     crop_id: str
-    planting_date: str
+    planting_date: datetime.date
     soil_id: str
     row_spacing_m: float
     emitter_spacing_m: float
@@ -170,12 +185,12 @@ class PlotCreate(RequestModel):
     farm_id: UuidRef
     name: Name
     area_m2: Positive
-    crop_id: str
+    crop_id: CatalogueRef
     planting_date: PlantingDate
-    soil_id: str
+    soil_id: CatalogueRef
     row_spacing_m: Positive
     emitter_spacing_m: Positive
-    emitter_id: str
+    emitter_id: CatalogueRef
     lat: Latitude
     lon: Longitude
 
@@ -186,11 +201,11 @@ class PlotUpdate(RequestModel):
     farm_id: UuidRef | None = None
     name: Name | None = None
     area_m2: Positive | None = None
-    crop_id: str | None = None
+    crop_id: CatalogueRef | None = None
     planting_date: PlantingDate | None = None
-    soil_id: str | None = None
+    soil_id: CatalogueRef | None = None
     row_spacing_m: Positive | None = None
     emitter_spacing_m: Positive | None = None
-    emitter_id: str | None = None
+    emitter_id: CatalogueRef | None = None
     lat: Latitude | None = None
     lon: Longitude | None = None

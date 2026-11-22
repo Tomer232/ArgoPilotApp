@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Requirements P2</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1c1f23; --muted: #5f6670; --line: #e3e6ea; --card: #f7f8fa;
+    --met: #1f7a3a; --met-bg: #e5f4e9; --partly: #8a5a00; --partly-bg: #fdf1d8;
+    --notmet: #b42318; --notmet-bg: #fde8e6; --canttell: #44546a; --canttell-bg: #e9edf2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15171a; --fg: #e8eaed; --muted: #9aa1ab; --line: #2c3036; --card: #1d2024;
+      --met: #7fd69a; --met-bg: #1d3325; --partly: #f0c36a; --partly-bg: #3a2f17;
+      --notmet: #f2958c; --notmet-bg: #3d1f1c; --canttell: #b3c0d1; --canttell-bg: #262c35;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, sans-serif; }
+  main { max-width: 1000px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  h2 { font-size: 1.1rem; margin: 32px 0 8px; }
+  h3 { font-size: 0.95rem; margin: 20px 0 6px; color: var(--muted); }
+  .meta { color: var(--muted); font-size: 0.85rem; margin: 2px 0; }
+  .counts { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+  .count { padding: 8px 12px; border-radius: 8px; background: var(--card); border: 1px solid var(--line); }
+  .count b { font-size: 1.2rem; margin-right: 4px; }
+  ul.owner { padding-left: 20px; }
+  ul.owner li { margin: 6px 0; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; vertical-align: top; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
+  td.id { white-space: nowrap; font-weight: 600; }
+  code { font-size: 0.85em; background: var(--card); padding: 1px 4px; border-radius: 4px; overflow-wrap: anywhere; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+  .met { color: var(--met); background: var(--met-bg); }
+  .partly { color: var(--partly); background: var(--partly-bg); }
+  .notmet { color: var(--notmet); background: var(--notmet-bg); }
+  .canttell { color: var(--canttell); background: var(--canttell-bg); }
+  .recorded { color: var(--met); background: var(--met-bg); }
+  .unrecorded { color: var(--notmet); background: var(--notmet-bg); }
+  svg { max-width: 100%; height: auto; display: block; margin-top: 8px; }
+  svg text { fill: var(--fg); font: 13px system-ui, sans-serif; }
+  svg .box { fill: var(--card); stroke: var(--line); }
+  svg .s-met { fill: var(--met); } svg .s-partly { fill: var(--partly); }
+  svg .s-notmet { fill: var(--notmet); } svg .s-canttell { fill: var(--canttell); }
+  svg .sub { fill: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Requirements check: P2</h1>
+  <p class="meta">Branch p2 at bfe938b, plus the uncommitted frontend redesign in the working tree &middot; 2026-11-17 &middot; task file <code>alonitac/OzVeruach26/tasks/p2.md</code> (NFR-1.1 from <code>p1_registry_api.md</code>)</p>
+  <p class="meta">Tests today: registry 448 passed, 2 skipped &middot; weather 75 passed &middot; planner 131 passed &middot; frontend 82 passed &middot; frontend lint clean. Static check: the stack was not started.</p>
+
+  <div class="counts">
+    <span class="count"><b>33</b><span class="pill met">Met</span></span>
+    <span class="count"><b>4</b><span class="pill partly">Partly</span></span>
+    <span class="count"><b>2</b><span class="pill notmet">Not met</span></span>
+    <span class="count"><b>2</b><span class="pill canttell">Can't tell</span></span>
+    <span class="count"><b>17</b> extras, <b>2</b><span class="pill unrecorded">unrecorded</span></span>
+  </div>
+
+  <h2>Needs the owner</h2>
+  <ul class="owner">
+    <li><span class="pill notmet">Not met</span> <b>Frontend prompt: "No other pages or features"</b>. The uncommitted redesign adds <code>/farms</code>, <code>/plots</code>, <code>/crops</code>, <code>/soils</code>, <code>/emitters</code> and a plot switcher, none in DECISIONS. Decides it: keep them (record a Y decision) or delete them.</li>
+    <li><span class="pill notmet">Not met</span> <b>Submit</b>: no PR yet (description with NFR numbers, skills used, changes to <code>irrigation-calc-reference</code>). Decides it: the planned <code>submit-task</code> skill, after the redesign is committed.</li>
+    <li><span class="pill canttell">Can't tell</span> <b>NFR-2.8</b>: 375 px, no horizontal scroll, today's answer above the fold. Never seen in a browser. Decides it: device toolbar at 375 px on <code>/</code> and a plot page.</li>
+    <li><span class="pill canttell">Can't tell</span> <b>Registry runs on the <code>registry</code> PostgreSQL database</b>: lives in <code>.env</code>, which is not read (the <code>use_postgres.py</code> switch is still pending). Decides it: <code>stack.sh start</code>, which fails unless the registry holds a PostgreSQL connection.</li>
+    <li><span class="pill partly">Partly</span> <b>FR-2.17</b>: the timeline's stale label (QA-2) sits in the uncommitted <code>week-plan.tsx</code> and hasn't been seen live. Decides it: commit the redesign, rerun the QA stale-forecast recipe.</li>
+    <li><span class="pill partly">Partly</span> <b>"All calls to the services live in <code>src/lib/</code>"</b>: <code>src/proxy.ts:15</code> fetches the registry itself (recorded in O98, A66). Decides it: accept the deviation, or move the call into <code>src/lib/registry.ts</code>.</li>
+    <li><span class="pill partly">Partly</span> <b><code>npm run build</code></b> not run here: it would rewrite <code>.next</code> under a possibly running dev server. Lint is clean. Decides it: one build before the PR.</li>
+    <li><span class="pill partly">Partly</span> <b>Push</b>: <code>origin/p2</code> is at c51f7c7, 3 commits behind the local branch.</li>
+    <li><span class="pill unrecorded">Unrecorded</span> The home page plans every plot and says "N of M plots need water today" (<code>src/app/page.tsx:45-60</code>). Record it or drop it.</li>
+  </ul>
+
+  <h2>Where the gaps sit</h2>
+  <svg viewBox="0 0 960 150" role="img" aria-label="Requirements met per area: registry 6 of 7, weather 8 of 8, planner 7 of 7, frontend 6 of 11, global 5 of 5, submit 1 of 3. Gaps are in the frontend, the submit steps and one registry setting.">
+    <g>
+      <rect class="box" x="0" y="10" width="150" height="120" rx="10"/>
+      <text x="14" y="38" font-weight="600">registry</text><text class="sub" x="14" y="58">6 of 7 met</text>
+      <circle class="s-canttell" cx="22" cy="100" r="7"/>
+    </g>
+    <g>
+      <rect class="box" x="162" y="10" width="150" height="120" rx="10"/>
+      <text x="176" y="38" font-weight="600">weather</text><text class="sub" x="176" y="58">8 of 8 met</text>
+    </g>
+    <g>
+      <rect class="box" x="324" y="10" width="150" height="120" rx="10"/>
+      <text x="338" y="38" font-weight="600">planner</text><text class="sub" x="338" y="58">7 of 7 met</text>
+    </g>
+    <g>
+      <rect class="box" x="486" y="10" width="150" height="120" rx="10"/>
+      <text x="500" y="38" font-weight="600">frontend</text><text class="sub" x="500" y="58">6 of 11 met</text>
+      <circle class="s-notmet" cx="508" cy="100" r="7"/><circle class="s-partly" cx="528" cy="100" r="7"/>
+      <circle class="s-partly" cx="548" cy="100" r="7"/><circle class="s-partly" cx="568" cy="100" r="7"/>
+      <circle class="s-canttell" cx="588" cy="100" r="7"/>
+    </g>
+    <g>
+      <rect class="box" x="648" y="10" width="150" height="120" rx="10"/>
+      <text x="662" y="38" font-weight="600">global config</text><text class="sub" x="662" y="58">5 of 5 met</text>
+    </g>
+    <g>
+      <rect class="box" x="810" y="10" width="150" height="120" rx="10"/>
+      <text x="824" y="38" font-weight="600">git and PR</text><text class="sub" x="824" y="58">1 of 3 met</text>
+      <circle class="s-notmet" cx="832" cy="100" r="7"/><circle class="s-partly" cx="852" cy="100" r="7"/>
+    </g>
+  </svg>
+  <p class="meta">Each dot is a requirement that is not met yet: red not met, amber partly, grey can't tell. The three services' FRs are all met; what's left is the frontend, the submit steps, and seeing things live.</p>
+
+  <h2>Requirements</h2>
+
+  <h3>registry-service</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>What it asks</th><th>Status</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td class="id">FR-2.1</td><td>PostgreSQL in production, SQLite locally</td><td><span class="pill met">Met</span></td><td><code>db.py</code> <code>make_engine</code>; whole suite also runs on PostgreSQL with <code>TEST_DATABASE_URL</code> (O65); README "Settings"</td></tr>
+      <tr><td class="id">FR-2.2</td><td>One documented command creates tables + the 15 seed rows</td><td><span class="pill met">Met</span></td><td><code>uv run python seed.py</code> (README "Seeding PostgreSQL"); <code>tests/test_seed.py</code>; O61, O66, O67</td></tr>
+      <tr><td class="id">NFR-2.1</td><td>Switch databases by configuration only</td><td><span class="pill met">Met</span></td><td><code>DATABASE_URL</code> in <code>config.py:18</code>; same tests on both databases (O65)</td></tr>
+      <tr><td class="id">NFR-2.2 / 1.1</td><td>GET list and by id, p95 &le; 100 ms at 10 req/s, on PostgreSQL</td><td><span class="pill met">Met</span></td><td>README "Latency": worst p95 8.7 ms on PostgreSQL 18, 0 errors of 3,000</td></tr>
+      <tr><td class="id">Note</td><td>Superpowers design doc and plan committed</td><td><span class="pill met">Met</span></td><td><code>docs/superpowers/specs/2026-11-15-registry-sqlalchemy-design.md</code>, <code>docs/superpowers/plans/2026-11-15-registry-sqlalchemy.md</code></td></tr>
+      <tr><td class="id">Note</td><td>All data access through SQLAlchemy</td><td><span class="pill met">Met</span></td><td><code>tables.py</code>, Core queries in <code>farms.py</code>, <code>plots.py</code>, <code>catalogues.py</code></td></tr>
+      <tr><td class="id">Note</td><td><code>DATABASE_URL</code> in <code>.env</code> points at the <code>registry</code> PostgreSQL database</td><td><span class="pill canttell">Can't tell</span></td><td><code>.env</code> not read; <code>stack.sh start</code> proves it (A64)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>weather-service</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>What it asks</th><th>Status</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td class="id">FR-2.3</td><td>Daily date, ET0 and rain for <code>days</code> days from today</td><td><span class="pill met">Met</span></td><td><code>test_forecast_answer</code>, <code>test_days_cuts_the_forecast</code>; README "Where the numbers come from"</td></tr>
+      <tr><td class="id">FR-2.4</td><td>lat/lon/days ranges, else 422 VALIDATION</td><td><span class="pill met">Met</span></td><td><code>test_bad_query_is_422</code>, <code>test_edges_are_allowed</code></td></tr>
+      <tr><td class="id">FR-2.5</td><td>One forecast per 0.1&deg; cell, fresh for 3 h, no provider call while fresh</td><td><span class="pill met">Met</span></td><td><code>test_same_cell_shares_one_forecast</code>, <code>test_fresh_forecast_does_not_call_the_provider</code>, <code>test_after_three_hours_the_provider_is_called_again</code>; O71</td></tr>
+      <tr><td class="id">FR-2.6</td><td>Provider fails: retry twice, then last forecast with <code>stale: true</code></td><td><span class="pill met">Met</span></td><td><code>test_bad_answer_is_tried_three_times_then_fails</code> (25 bad answers), <code>test_provider_down_serves_last_forecast_as_stale</code>; O73</td></tr>
+      <tr><td class="id">FR-2.7</td><td>Fails with nothing cached: 503 UNAVAILABLE + Retry-After</td><td><span class="pill met">Met</span></td><td><code>test_provider_down_and_nothing_cached_is_503</code></td></tr>
+      <tr><td class="id">FR-2.8</td><td>Never numbers the provider didn't give</td><td><span class="pill met">Met</span></td><td>null, NaN, missing and short lists refused (<code>tests/test_provider.py:95</code>), <code>test_a_failed_call_is_not_cached</code>; O74, A58</td></tr>
+      <tr><td class="id">NFR-2.3</td><td>Fresh forecast p95 &le; 100 ms at 10 req/s</td><td><span class="pill met">Met</span></td><td>README "Latency": p95 5.7 ms, 600 requests, 0 errors</td></tr>
+      <tr><td class="id">Notes</td><td>In-memory cache, httpx, settings and API key in <code>.env</code>, variables and max stale age in README</td><td><span class="pill met">Met</span></td><td><code>config.py:18-24</code>, <code>tests/test_config.py</code>; README "How old a stale forecast may be: 24 hours" (O72); Mermaid flow</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>planner-service</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>What it asks</th><th>Status</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td class="id">FR-2.9</td><td>Plan for 1-7 days, default 7, first day is today</td><td><span class="pill met">Met</span></td><td><code>test_days_defaults_to_7</code>, <code>test_one_day_plan_is_today</code></td></tr>
+      <tr><td class="id">FR-2.10</td><td>Per day: date, et0_mm, kc, litres, run_minutes, stale, bucket level</td><td><span class="pill met">Met</span></td><td><code>test_response_has_exactly_the_agreed_fields</code>; <code>plan.py:39-55</code>; O86</td></tr>
+      <tr><td class="id">FR-2.11</td><td>Every number as written in the skill</td><td><span class="pill met">Met</span></td><td>5 hand-calculated cases in <code>test_engine.py</code>, <code>test_case_3_through_the_api</code>; QA-1 fixed (O99)</td></tr>
+      <tr><td class="id">FR-2.12</td><td>Bad days 422, unknown plot 404</td><td><span class="pill met">Met</span></td><td><code>test_bad_days_is_422_and_calls_nobody</code>, <code>test_unknown_plot_is_404</code></td></tr>
+      <tr><td class="id">FR-2.13</td><td>Stale forecast still plans, days <code>stale: true</code></td><td><span class="pill met">Met</span></td><td><code>test_stale_forecast_still_plans_with_every_day_stale</code></td></tr>
+      <tr><td class="id">FR-2.14</td><td>Upstream down or slow: 503 UPSTREAM_UNAVAILABLE naming the service</td><td><span class="pill met">Met</span></td><td><code>test_registry_failure_is_503_naming_registry</code>, <code>test_weather_failure_is_503_naming_weather</code>, <code>test_each_service_gets_its_own_timeout</code>; O84</td></tr>
+      <tr><td class="id">Notes</td><td>README JSON example, <code>fao56.md</code> research, <code>irrigation-calc-reference</code> with hand cases</td><td><span class="pill met">Met</span></td><td>README "Endpoint"; <code>docs/research/fao56.md</code>; skill with 5 cases in <code>references/cases.md</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>frontend</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>What it asks</th><th>Status</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td class="id">FR-2.15</td><td><code>/</code> lists every farm with its plots, linked</td><td><span class="pill met">Met</span></td><td><code>src/app/page.tsx:64-89</code>; QA report "Tried and held" (no automated test)</td></tr>
+      <tr><td class="id">FR-2.16</td><td>Today's answer first, big; then the 7-day plan</td><td><span class="pill met">Met</span></td><td><code>src/app/plots/[id]/page.tsx:88-89</code>; "Water for" / "No irrigation" in <code>today-recommendation.tsx</code></td></tr>
+      <tr><td class="id">FR-2.17</td><td>Stale shown next to the numbers it affects</td><td><span class="pill partly">Partly</span></td><td>Today card and table rows labelled; timeline fix (QA-2, <code>bfe938b</code>) only in uncommitted <code>week-plan.tsx</code>, not seen live</td></tr>
+      <tr><td class="id">FR-2.18</td><td>Planner error: say what happened, no blank page</td><td><span class="pill met">Met</span></td><td><code>problem-notice.tsx</code>; QA: each service stopped in turn, the notice names it</td></tr>
+      <tr><td class="id">FR-2.19</td><td>Status line from the three <code>/health</code></td><td><span class="pill met">Met</span></td><td><code>src/lib/health.ts</code>, <code>status-card.tsx</code>; QA: shows which one is down</td></tr>
+      <tr><td class="id">NFR-2.8</td><td>375 px: no horizontal scroll, today's answer visible</td><td><span class="pill canttell">Can't tell</span></td><td>QA "Not checked": no browser. Settle with the device toolbar</td></tr>
+      <tr><td class="id">Prompt</td><td>Only the server calls services, all calls in <code>src/lib/</code></td><td><span class="pill partly">Partly</span></td><td>Server-only, <code>no-store</code> (<code>src/lib/http.ts:24</code>); but <code>src/proxy.ts:15</code> fetches too (O98, A66)</td></tr>
+      <tr><td class="id">Prompt</td><td><code>REGISTRY_URL</code>, <code>WEATHER_URL</code>, <code>PLANNER_URL</code> + <code>.env.example</code></td><td><span class="pill met">Met</span></td><td><code>services/frontend/.env.example</code>; startup check <code>src/instrumentation.ts</code></td></tr>
+      <tr><td class="id">Prompt</td><td>No other pages or features</td><td><span class="pill notmet">Not met</span></td><td>Uncommitted <code>src/app/{farms,plots,crops,soils,emitters}/page.tsx</code>, unrecorded; the recorded extras below</td></tr>
+      <tr><td class="id">Prompt</td><td><code>npm run build</code> and <code>npm run lint</code> pass</td><td><span class="pill partly">Partly</span></td><td>Lint clean today; build not run</td></tr>
+      <tr><td class="id">Note</td><td>Commit the frontend without <code>node_modules</code>, <code>.next</code>, <code>.env.local</code></td><td><span class="pill met">Met</span></td><td><code>services/frontend/.gitignore</code>; none tracked</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Global configuration</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>What it asks</th><th>Status</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td class="id">Config</td><td>pydantic-settings in one <code>config.py</code> per Python service</td><td><span class="pill met">Met</span></td><td><code>services/{registry,weather,planner}-service/config.py</code></td></tr>
+      <tr><td class="id">Config</td><td><code>.env.example</code> per service, committed</td><td><span class="pill met">Met</span></td><td>four files tracked</td></tr>
+      <tr><td class="id">Config</td><td><code>.env</code> never committed</td><td><span class="pill met">Met</span></td><td><code>git ls-files</code> shows only the examples</td></tr>
+      <tr><td class="id">Config</td><td>Clear error at startup when a variable is missing</td><td><span class="pill met">Met</span></td><td><code>test_missing_setting_stops_with_clear_message</code> and each service's <code>tests/test_config.py</code>; frontend <code>instrumentation.ts</code></td></tr>
+      <tr><td class="id">Config</td><td><code>.claude/settings.json</code> denies <code>Read(**/.env)</code></td><td><span class="pill met">Met</span></td><td><code>.claude/settings.json</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Git and pull request</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Id</th><th>What it asks</th><th>Status</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td class="id">Git</td><td>Work on branch <code>p2</code> off a clean <code>main</code></td><td><span class="pill met">Met</span></td><td>41 commits on <code>p2</code> since <code>main</code></td></tr>
+      <tr><td class="id">Submit</td><td>Push <code>p2</code></td><td><span class="pill partly">Partly</span></td><td><code>origin/p2</code> at c51f7c7; 3 local commits and the redesign not pushed</td></tr>
+      <tr><td class="id">Submit</td><td>PR into <code>main</code>: what was built, NFR numbers, skills used, changes to <code>irrigation-calc-reference</code></td><td><span class="pill notmet">Not met</span></td><td>Not opened yet</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Out of spec</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>What</th><th>Form</th><th>Where</th><th>Recorded</th></tr></thead>
+    <tbody>
+      <tr><td>Pages for farms, plots, crops, soils, emitters; side and phone navigation; a plot switcher (uncommitted)</td><td>UI</td><td><code>src/app/{farms,plots,crops,soils,emitters}/</code>, <code>app-nav.tsx</code>, <code>mobile-nav.tsx</code>, <code>plot-switcher.tsx</code></td><td><span class="pill unrecorded">unrecorded</span></td></tr>
+      <tr><td>Home page plans every plot and shows "N of M plots need water today"</td><td>UI, behaviour</td><td><code>src/app/page.tsx:45-60</code></td><td><span class="pill unrecorded">unrecorded</span></td></tr>
+      <tr><td>Planner query parameters <code>start_pct</code> (soil level today) and <code>trigger_pct</code></td><td>API</td><td><code>plan.py:31-33</code></td><td><span class="pill recorded">Y14, Y15, O87, A62</span></td></tr>
+      <tr><td>Plan fields beyond FR-2.10 (rain, stage, need, irrigation, capped, bucket size, trigger, ids, <code>drip_mm_per_hour</code>, ...)</td><td>API</td><td><code>plan.py:39-69</code></td><td><span class="pill recorded">O86, O91</span></td></tr>
+      <tr><td>At most 24 h of drip a day (<code>capped</code>)</td><td>behaviour</td><td><code>engine.py</code> step 8</td><td><span class="pill recorded">O90</span></td></tr>
+      <tr><td>Bucket bounded at empty</td><td>behaviour</td><td><code>engine.py</code> step 7</td><td><span class="pill recorded">O99</span></td></tr>
+      <tr><td>Weather rules the spec left open: cell edges, local date, <code>precipitation_sum</code>, 24 h stale limit, strict answer checks</td><td>behaviour</td><td><code>forecast.py</code>, <code>provider.py</code></td><td><span class="pill recorded">O69-O74, A58, A59</span></td></tr>
+      <tr><td><code>/docs</code> back on for registry and planner</td><td>API</td><td><code>main.py</code> of both</td><td><span class="pill recorded">Y13</span></td></tr>
+      <tr><td>Plot page pickers: soil level by feel, trigger, timeline start time; the timeline itself</td><td>UI</td><td><code>plan-controls.tsx</code>, <code>week-plan.tsx</code>, <code>src/lib/soil-feel.ts</code></td><td><span class="pill recorded">Y14-Y16, O88, A63</span></td></tr>
+      <tr><td>Real HTTP 404 for an unknown plot</td><td>behaviour</td><td><code>src/proxy.ts</code></td><td><span class="pill recorded">O98, A66</span></td></tr>
+      <tr><td>P1 dashboard look, shared components</td><td>UI</td><td><code>globals.css</code>, <code>components/</code></td><td><span class="pill recorded">Y17, A65</span></td></tr>
+      <tr><td>Frontend unit tests (Vitest)</td><td>tooling</td><td><code>src/lib/*.test.ts</code></td><td><span class="pill recorded">O95, extras.md</span></td></tr>
+      <tr><td>Weather latency script</td><td>tooling</td><td><code>services/weather-service/scripts/</code></td><td><span class="pill recorded">Y12, extras.md</span></td></tr>
+      <tr><td>Skills <code>run-stack</code>, <code>test</code>, <code>qa</code>, <code>requirements</code>; QA database <code>registry_qa</code></td><td>tooling</td><td><code>.claude/skills/</code></td><td><span class="pill recorded">O92-O94, O100, O101, A64, A67, extras.md</span></td></tr>
+      <tr><td>Test plan and QA reports</td><td>docs</td><td><code>docs/test-plan.md</code>, <code>docs/qa/</code></td><td><span class="pill recorded">O94, O100</span></td></tr>
+      <tr><td>Research beyond FAO-56: long-season Kc, soil by feel</td><td>docs</td><td><code>services/planner-service/docs/research/</code></td><td><span class="pill recorded">O88, O89</span></td></tr>
+      <tr><td>Planner start-level design doc</td><td>docs</td><td><code>docs/superpowers/specs/2026-11-17-planner-start-level-design.md</code></td><td><span class="pill recorded">Y14</span></td></tr>
+    </tbody>
+  </table></div>
+</main>
+</body>
+</html>

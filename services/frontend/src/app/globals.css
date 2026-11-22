@@ -1,0 +1,150 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Tailwind names for the colors below: bg-water, bg-leaf-soft, text-stale, ... */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-heading: var(--font-sans);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-water: var(--water);
+  --color-soil: var(--soil);
+  --color-leaf: var(--leaf);
+  --color-stale: var(--stale);
+  --color-alarm: var(--alarm);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-page: var(--page);
+  --color-water-soft: var(--water-soft);
+  --color-leaf-soft: var(--leaf-soft);
+  --color-soil-soft: var(--soil-soft);
+  --color-beige: var(--beige);
+  --color-beige-wet: var(--beige-wet);
+  --color-low: var(--low);
+  --color-stale-soft: var(--stale-soft);
+  --color-alarm-soft: var(--alarm-soft);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+/*
+ * One light theme, in the P1 registry dashboard style: a grey canvas, a light panel,
+ * white cards with thin borders. Each signal color has one meaning, with a soft tint for
+ * pills and selected rows. Green is the app's own color (brand mark, main buttons) and
+ * also means "no irrigation needed".
+ */
+:root {
+  --page: #ececee; /* the canvas around the panels */
+  --surface: #f7f7f8; /* the main panel and sidebar */
+  --ink: #18181b;
+
+  --brand: #1f7a4d; /* AgroPilot itself: the logo mark and the main buttons */
+  --brand-foreground: #ffffff;
+  --water: #2f6fde; /* irrigate: run time, litres, the watering timeline */
+  --water-soft: #e8eefb;
+  --leaf: #23784f; /* no irrigation needed, a service is up */
+  --leaf-soft: #e3f4ec;
+  --soil: #a9c8f5; /* water held in the soil (the bucket bars): a pale water blue */
+  --soil-soft: #edf3fd;
+  --beige: #f4eee3; /* the soil column on the Today card: dry soil above the water line */
+  --beige-wet: #e2d4bb; /* the same column below the water line: wet soil */
+  --low: #f3bd5b; /* soil water below the trigger: a clear light amber, never brown */
+  --stale: #b3601f; /* stale forecast */
+  --stale-soft: #fcefe3;
+  --alarm: #c0353a; /* a service is down, an error */
+  --alarm-soft: #fde8e8;
+
+  --background: var(--surface);
+  --foreground: var(--ink);
+  --card: #ffffff;
+  --card-foreground: var(--ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--ink);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --secondary: #f1f1f3;
+  --secondary-foreground: var(--ink);
+  --muted: #f1f1f3;
+  --muted-foreground: #71717a;
+  --accent: #f1f1f3;
+  --accent-foreground: var(--ink);
+  --destructive: var(--alarm);
+  --border: #e6e6e9;
+  --input: #e0e0e4;
+  --ring: var(--brand);
+  --radius: 0.75rem;
+
+  /* Motion, after Emil Kowalski: ease-out that starts fast, short durations. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-page text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* Pressable things answer the press: a small shrink, fast, no easing delay. */
+@layer components {
+  [data-slot="button"],
+  [data-slot="select-trigger"],
+  .pressable {
+    transition-property: transform, background-color, border-color, color, box-shadow;
+    transition-duration: 160ms;
+    transition-timing-function: var(--ease-out);
+  }
+  [data-slot="button"]:active,
+  [data-slot="select-trigger"]:active,
+  .pressable:active {
+    transform: scale(0.97);
+  }
+
+  /* A level bar (soil water): its fill is clipped, so a new value slides to its place. */
+  .level-fill {
+    transition: clip-path 360ms var(--ease-out);
+    @starting-style {
+      clip-path: inset(0 100% 0 0 round 999px);
+    }
+  }
+
+  h1,
+  .tight {
+    letter-spacing: -0.02em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="button"]:active,
+  [data-slot="select-trigger"]:active,
+  .pressable:active {
+    transform: none;
+  }
+  .level-fill {
+    transition: none;
+  }
+}

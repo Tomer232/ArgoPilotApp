@@ -1,6 +1,18 @@
-"""Seed ids, a valid plot body, and a check for problem+json errors."""
+"""Seed ids, a valid plot body, a check for problem+json errors, and a database switch."""
 
 import datetime
+import os
+
+import pytest
+
+import db
+
+# TEST_DATABASE_URL set: the suite runs against that PostgreSQL database instead of SQLite.
+ON_POSTGRES = "TEST_DATABASE_URL" in os.environ
+
+# For tests that break the SQLite file itself; there is no such file on PostgreSQL.
+sqlite_only = pytest.mark.skipif(ON_POSTGRES, reason="breaks the SQLite file; no such file on PostgreSQL")
+postgres_only = pytest.mark.skipif(not ON_POSTGRES, reason="needs TEST_DATABASE_URL (PostgreSQL)")
 
 # Ids from seed_registry.sh
 DEMO_FARM = "b7e2c0a0-3c1d-4f0a-9a11-0c5d2e6f1001"  # North block, East block
@@ -47,3 +59,11 @@ def assert_problem(response, status: int, code: str | None) -> dict:
     else:
         assert body["code"] == code
     return body
+
+
+def use_database(monkeypatch, url: str):
+    """Point the app at another database for one test. Returns the engine."""
+    engine = db.make_engine(url)
+    monkeypatch.setenv("DATABASE_URL", url)
+    monkeypatch.setattr(db, "engine", engine)
+    return engine

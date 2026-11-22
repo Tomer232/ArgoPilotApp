@@ -293,3 +293,11 @@ def test_delete_plot(client):
 
 def test_delete_unknown_plot_is_404(client):
     assert_problem(client.delete(f"/v1/plots/{UNKNOWN_ID}"), 404, "NOT_FOUND")
+
+
+def test_patch_without_date_keeps_date_text(client):
+    """A PATCH that doesn't send planting_date returns the stored date as YYYY-MM-DD text."""
+    response = client.patch(f"/v1/plots/{NORTH_BLOCK}", json={"area_m2": 1200})
+    assert response.status_code == 200
+    assert response.json()["planting_date"] == "2026-03-01"
+    assert client.get(f"/v1/plots/{NORTH_BLOCK}").json()["planting_date"] == "2026-03-01"
