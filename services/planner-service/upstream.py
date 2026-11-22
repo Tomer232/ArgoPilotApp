@@ -78,6 +78,18 @@ class Forecast(UpstreamAnswer):
 # --- One GET, checked -------------------------------------------------------------
 
 
+def upstream_reason(service: str, response: httpx.Response) -> str:
+    """Why `service` failed, for our 503's detail: its own problem+json `detail` when it sent
+    one (e.g. "registry-service: Database unavailable"), otherwise its status (QA-3, live QA)."""
+    try:
+        detail = response.json().get("detail")
+    except (ValueError, AttributeError):
+        detail = None
+    if isinstance(detail, str) and detail.strip():
+        return f"{service}: {detail.strip()}"
+    return f"{service} answered with status {response.status_code}"
+
+
 def get_checked(service: str, url: str, model: type[UpstreamAnswer], timeout: float, params=None):
     """GET `url` and return its body as `model`. Every failure is a 503 naming `service`.
     A 404 is returned as None, so the caller decides what it means."""
@@ -90,7 +102,7 @@ def get_checked(service: str, url: str, model: type[UpstreamAnswer], timeout: fl
     if response.status_code == 404:
         return None
     if response.status_code != 200:
-        raise UpstreamUnavailableError(f"{service} answered with status {response.status_code}")
+        raise UpstreamUnavailableError(upstream_reason(service, response))
     try:
         return model.model_validate_json(response.content)
     except ValidationError:

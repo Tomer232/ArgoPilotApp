@@ -115,7 +115,7 @@ The planner never answers with a plan built on missing or doubtful numbers (FR-2
 | `days` not 1 to 7, `start_pct` not a number from 0 to 100 or `trigger_pct` not a number from 1 to 99 (`nan` and `inf` too), or an unknown query parameter | `422 VALIDATION`, no other service is asked |
 | The id is not a UUID | `404 NOT_FOUND`, the registry is not asked |
 | The registry has no such plot | `404 NOT_FOUND` |
-| Registry or weather down, too slow, an error status, or data that fails the checks | `503 UPSTREAM_UNAVAILABLE`, `detail` names the service, for example `weather-service is not reachable` |
+| Registry or weather down, too slow, an error status, or data that fails the checks | `503 UPSTREAM_UNAVAILABLE`, `detail` names the service, for example `weather-service is not reachable`; when the service answered with its own problem `detail`, that is passed on: `registry-service: Database unavailable` |
 | The plot's soil or emitter is missing in the registry | `503 UPSTREAM_UNAVAILABLE` (the registry's data is broken, not the request) |
 | The planner has no data for the plot's crop | `503 UNAVAILABLE` |
 | The forecast is stale | `200`, every day `stale: true` |
