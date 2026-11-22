@@ -4,17 +4,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getConfig } from "@/lib/config";
 
-const NOT_FOUND_PAGE = "/plot-not-found";
+// An address with no page: rewriting to it makes Next.js serve src/app/not-found.tsx with 404.
+// A rewrite's own `status` is lost in the production build, so we rely on the missing route.
+const NO_PAGE = "/plot-not-found";
 
 /**
- * Ask the registry for the plot. Only a 404 from the registry turns into our 404 page.
+ * Ask the registry for the plot. Only a 404 from the registry turns into the 404 page.
  * Any other answer, an error or a timeout lets the page render and handle it as before.
- * The 404 page opened by its own address is a 404 too (QA-8); the proxy doesn't run again on its own rewrite.
  */
 export async function proxy(request: NextRequest) {
-  if (request.nextUrl.pathname === NOT_FOUND_PAGE) {
-    return notFoundPage(request);
-  }
   const plotId = request.nextUrl.pathname.split("/")[2];
   const config = getConfig();
   try {
@@ -23,7 +21,8 @@ export async function proxy(request: NextRequest) {
       signal: AbortSignal.timeout(config.registryTimeoutSeconds * 1000),
     });
     if (response.status === 404) {
-      return notFoundPage(request);
+      // Keeps the address the grower typed.
+      return NextResponse.rewrite(new URL(NO_PAGE, request.url));
     }
   } catch {
     // The registry did not answer: the page shows its own error.
@@ -31,11 +30,6 @@ export async function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-/** Show the "Plot not found" page with status 404, keeping the address the grower typed. */
-function notFoundPage(request: NextRequest): NextResponse {
-  return NextResponse.rewrite(new URL(NOT_FOUND_PAGE, request.url), { status: 404 });
-}
-
 export const config = {
-  matcher: ["/plots/:id", "/plot-not-found"],
+  matcher: ["/plots/:id"],
 };

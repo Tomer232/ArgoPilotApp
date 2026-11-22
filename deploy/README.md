@@ -58,6 +58,6 @@ sudo ss -ltnp | grep -E ':(3000|800[0-2]|5432)' # who listens where
 
 Start and stop the instance from the console (filter by the instance id, never by name: the account is shared). After a start, copy the new public IP; the services start by themselves. If SSH times out, update the security group's port 22 rule to your current IP.
 
-## Known issue
+## Found on the first deploy
 
-An unknown plot (`/plots/<unknown id>`) shows the "Plot not found" page, but with HTTP 200, not 404. `proxy.ts` rewrites to `/plot-not-found` with `status: 404`, and `next dev` honours it; the production build prerenders `/plot-not-found` and serves it with 200. O98/O111 were checked only with `next dev`. Not fixed yet.
+An unknown plot showed the "Plot not found" page with HTTP 200 in production (404 under `next dev`): the production build prerenders the page, and a rewrite's own `status` is lost. Fixed in O116: the proxy rewrites to an address with no page, and Next.js serves `src/app/not-found.tsx` with 404. Lesson: check HTTP behaviour on `npm run build && npm start`, not only on `npm run dev`.
