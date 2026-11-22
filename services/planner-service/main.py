@@ -11,12 +11,16 @@ ALLOWED_QUERY_PARAMS = {"/v1/plots/{plot_id}/plan": {"days", "start_pct", "trigg
 
 
 def reject_unknown_query_params(request: Request) -> None:
-    """Runs before every route: 422 on any query parameter the route does not accept."""
+    """Runs before every route: 422 on any query parameter the route does not accept, or one given twice."""
     route = request.scope.get("route")
     allowed = ALLOWED_QUERY_PARAMS.get(getattr(route, "path", ""), set())
     unknown = set(request.query_params) - allowed
     if unknown:
         raise ValidationFailedError(f"Unknown query parameter: {', '.join(sorted(unknown))}")
+    names = [name for name, _ in request.query_params.multi_items()]
+    repeated = sorted({name for name in names if names.count(name) > 1})
+    if repeated:
+        raise ValidationFailedError(f"Query parameter given more than once: {', '.join(repeated)}")
 
 
 # /docs and /openapi.json are on: the frontend's prompt reads the API there (Y13).

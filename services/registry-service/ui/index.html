@@ -1398,14 +1398,14 @@ function selectActivity(i) {
 const pretty = (text) => { try { return JSON.stringify(JSON.parse(text), null, 2); } catch { return text; } };
 
 // ============================================================
-// Health: /health says the API is up; a list request says the database is up.
-// Polled every 5 s, and not logged in the activity panel.
+// Health: /health says the API is up (503 when its database is down); a list request
+// says the database answers. Polled every 5 s, and not logged in the activity panel.
 // ============================================================
 async function checkHealth() {
   const health = await api("GET", "/health", undefined, { log: false });
-  const db = health.ok ? await api("GET", "/v1/crops", undefined, { log: false }) : null;
+  const db = health.ok ? await api("GET", "/v1/crops", undefined, { log: false }) : health;
   let color, title, text;
-  if (!health.ok) {
+  if (!health.ok && health.status !== 503) {
     [color, title, text] = ["var(--red)", "API unreachable", "The service is not answering."];
   } else if (!db.ok) {
     const retry = db.headers["retry-after"];

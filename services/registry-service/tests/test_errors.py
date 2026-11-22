@@ -54,6 +54,14 @@ def test_unknown_query_parameter_is_422(client):
     assert_problem(client.get("/v1/plots?farmid=abc"), 422, "VALIDATION")
 
 
+def test_repeated_query_parameter_is_422(client):
+    """A filter given twice is ambiguous, like an unknown one (QA-6, live QA)."""
+    farm = "b7e2c0a0-3c1d-4f0a-9a11-0c5d2e6f1001"
+    body = assert_problem(client.get(f"/v1/plots?farm_id={farm}&farm_id={farm}"), 422, "VALIDATION")
+    assert body["detail"] == "Query parameter given more than once: farm_id"
+    assert client.get(f"/v1/plots?farm_id={farm}").status_code == 200
+
+
 # --- Database unreachable -------------------------------------------------
 
 

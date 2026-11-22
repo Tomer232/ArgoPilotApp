@@ -16,7 +16,7 @@ uv run uvicorn main:app --port 8000
 ```
 
 - API: `http://127.0.0.1:8000/v1/...`
-- Health check: `/health`
+- Health check: `/health`: 200 `{"status": "ok"}` when the API answers and the database runs a query; 503 `UNAVAILABLE` (with `Retry-After`) when the database is down.
 - Demo UI: `/ui`, which opens on a playground for trying any request
 
 **Settings.** The one required setting is `DATABASE_URL`, read from the environment or from `.env` (the environment wins). Without it the service stops at startup with `Missing required setting DATABASE_URL. Copy .env.example to .env and fill it in.` A malformed URL (for example `postgres://...` instead of `postgresql+psycopg://...`) also stops it with one line: `DATABASE_URL is not a valid database URL. ...`. `.env.example` has a line for each database:

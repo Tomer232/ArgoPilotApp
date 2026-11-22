@@ -371,6 +371,31 @@ def test_registry_failure_is_503_naming_registry(client, services, key, answer):
     assert "days" not in body
 
 
+def test_registry_reason_is_passed_on(client, services):
+    """The registry's own detail reaches the grower, not just its status (QA-3, live QA)."""
+    services.answers[PLOT] = (503, {"code": "UNAVAILABLE", "detail": "Database unavailable"})
+    body = assert_problem(client.get(PLAN_URL), 503, "UPSTREAM_UNAVAILABLE")
+    assert body["detail"] == "registry-service: Database unavailable"
+
+
+def test_weather_reason_is_passed_on(client, services):
+    detail = "No forecast available: the weather provider is not answering"
+    services.answers[WEATHER] = (503, {"code": "UNAVAILABLE", "detail": detail})
+    body = assert_problem(client.get(PLAN_URL), 503, "UPSTREAM_UNAVAILABLE")
+    assert body["detail"] == f"weather-service: {detail}"
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [(500, "<html>oops</html>"), (503, {"code": "UNAVAILABLE"}), (503, {"detail": 5}), (503, {"detail": "  "}), (503, [1])],
+    ids=["not JSON", "no detail", "detail not text", "detail blank", "not an object"],
+)
+def test_upstream_without_a_reason_gives_its_status(client, services, answer):
+    services.answers[PLOT] = answer
+    body = assert_problem(client.get(PLAN_URL), 503, "UPSTREAM_UNAVAILABLE")
+    assert body["detail"] == f"registry-service answered with status {answer[0]}"
+
+
 @pytest.mark.parametrize("answer", WEATHER_FAILURES.values(), ids=WEATHER_FAILURES.keys())
 def test_weather_failure_is_503_naming_weather(client, services, answer):
     services.answers[WEATHER] = answer

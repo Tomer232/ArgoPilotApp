@@ -270,6 +270,10 @@ DB_CASES = [
     ("text in a number column: get plot", text_in_number_column, "GET", f"/v1/plots/{NORTH_BLOCK}", 503),
     ("text in catalogue number", text_in_catalogue_number, "GET", "/v1/emitters", 503),
     ("garbage date stored", garbage_date, "GET", f"/v1/plots/{NORTH_BLOCK}", None),
+    # /health runs a query, so a database that can't answer makes it 503 (QA-2, live QA).
+    ("no permission at all: health", make_unreadable, "GET", "/health", 503),
+    ("a folder instead of a file: health", make_directory, "GET", "/health", 503),
+    ("read-only file: health", make_read_only, "GET", "/health", 200),
 ]
 
 

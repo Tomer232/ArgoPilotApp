@@ -27,3 +27,10 @@ def test_wrong_method_is_405_without_code(client):
 def test_unknown_query_parameter_is_422(client):
     body = assert_problem(client.get("/health?verbose=1"), 422, "VALIDATION")
     assert body["detail"] == "Unknown query parameter: verbose"
+
+
+def test_repeated_query_parameter_is_422(client):
+    """?days=1&days=2 is ambiguous: 422, not one of them picked silently (QA-6, live QA)."""
+    url = "/v1/plots/c8f3d1b0-4d2e-5a1b-8b22-1d6e3f702002/plan?days=1&days=2"
+    body = assert_problem(client.get(url), 422, "VALIDATION")
+    assert body["detail"] == "Query parameter given more than once: days"
