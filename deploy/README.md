@@ -17,7 +17,7 @@ The whole system runs on one EC2 instance in us-east-1, from the course tutorial
 | | |
 | --- | --- |
 | Instance | `i-02119bbbf95e78e0c` (`agropilot-dev-registry`), t3.medium, Ubuntu 24.04 |
-| Security group | `agropilot-dev-registry-sg`: 22 (my IP), ICMP, 8000, 3000 |
+| Security group | `agropilot-dev-registry-sg`: 22 and 8000 from my laptop IP only (Y32), 3000 and ICMP from anywhere |
 | App URL | `http://<public-ip>:3000` (the IP changes on every stop/start, O115) |
 | Registry API | `http://<public-ip>:8000/v1/...`, docs at `/docs` |
 | Code | `/opt/agropilot/app`, a clone of `main`, owned by `agropilot` |
@@ -56,7 +56,7 @@ sudo systemctl restart agropilot-frontend      # one service
 sudo ss -ltnp | grep -E ':(3000|800[0-2]|5432)' # who listens where
 ```
 
-Start and stop the instance from the console (filter by the instance id, never by name: the account is shared). After a start, copy the new public IP; the services start by themselves. If SSH times out, update the security group's port 22 rule to your current IP.
+Start and stop the instance from the console (filter by the instance id, never by name: the account is shared). After a start, copy the new public IP; the services start by themselves. If SSH or port 8000 times out, your laptop's IP changed (new network): update the port 22 and 8000 rules to your current IP.
 
 ## Found on the first deploy
 
