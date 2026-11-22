@@ -181,6 +181,7 @@ Every design decision, and who made it. P1 (registry API) decisions end at Y12, 
 | O128 | Live QA-4: won't fix. Under 30 parallel loads the overview takes ~7 s; it plans every plot on every load (Y22). Recommended and chosen | Fine for one grower; the spec has no page-time NFR, and the frontend has no cache by design |
 | O129 | Live QA-5: won't fix. `X-Powered-By: Next.js`, `server: uvicorn` and no `X-Frame-Options` stay. Recommended and chosen | No login and nothing secret on the pages; hardening headers are outside the spec |
 | O130 | Live QA-6: a query parameter given more than once is 422 `VALIDATION` ("Query parameter given more than once: <name>") in registry, planner and weather, in the same global check as unknown parameters (O28). Recommended and chosen; weather added by the agent for the same rule | `?days=1&days=2` silently used one value |
+| O131 | The plan chart's mm axis shows its unit on every tick ("60 mm") and draws the full bucket (TAW) as a dotted grey line; the axis top stays TAW rounded up to 20. Options 1 and 2 of three (3: a percent axis, which the mm bars would not fit). Option 1 recommended; the owner chose 1 and 2 | Live check: with a 90% trigger the dashed line sat at 52 under an axis ending at 60, which read as "52%". The axis was right (mm), but nothing said so or showed where full is |
 
 ## Agent's
 

@@ -1,7 +1,8 @@
 "use client";
 
-// The 7-day plan as a chart (Y26): the soil water at the end of each day, the trigger it must not
-// fall below, and the water the plan gives. A client component because Recharts draws in the browser.
+// The 7-day plan as a chart (Y26): the soil water at the end of each day, the full bucket, the
+// trigger it must not fall below, and the water the plan gives, all in mm (O131).
+// A client component because Recharts draws in the browser.
 
 import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
 import { StaleLabel } from "@/components/stale-label";
@@ -11,6 +12,7 @@ import type { PlanDay } from "@/lib/planner";
 
 const config = {
   soil: { label: "Soil water mm", color: "var(--soil)" },
+  full: { label: "Full bucket mm", color: "var(--muted-foreground)" },
   trigger: { label: "Trigger mm", color: "var(--foreground)" },
   water: { label: "Water given mm", color: "var(--water)" },
 } satisfies ChartConfig;
@@ -20,6 +22,7 @@ function chartRows(days: PlanDay[]) {
   return days.map((day, index) => ({
     label: `${index === 0 ? "Today" : formatWeekday(day.date)}${day.stale ? " *" : ""}`,
     soil: day.bucket_end_mm,
+    full: day.bucket_capacity_mm,
     trigger: day.trigger_mm,
     water: day.irrigation_mm,
   }));
@@ -30,7 +33,8 @@ function axisTop(days: PlanDay[]): number {
   return Math.ceil(Math.max(...days.map((day) => day.bucket_capacity_mm)) / 20) * 20;
 }
 
-/** Soil water as a line, the trigger as a dashed line, and the water given as bars, all in mm. */
+/** Soil water as a line, the full bucket as a dotted line, the trigger as a dashed line, and the
+ * water given as bars, all in mm. */
 export function PlanChart({ days }: { days: PlanDay[] }) {
   const anyStale = days.some((day) => day.stale);
   return (
@@ -41,14 +45,15 @@ export function PlanChart({ days }: { days: PlanDay[] }) {
         </p>
       )}
       <ChartContainer config={config} className="aspect-auto h-72 w-full">
-        <ComposedChart data={chartRows(days)} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+        <ComposedChart data={chartRows(days)} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid vertical={false} />
           <XAxis dataKey="label" tickLine={false} axisLine={false} />
-          <YAxis tickLine={false} axisLine={false} domain={[0, axisTop(days)]} />
+          <YAxis tickLine={false} axisLine={false} domain={[0, axisTop(days)]} unit=" mm" />
           <ChartTooltip content={<ChartTooltipContent />} />
           <ChartLegend content={<ChartLegendContent />} />
           <Bar dataKey="water" fill="var(--color-water)" radius={4} maxBarSize={28} isAnimationActive={false} />
           <Line dataKey="soil" stroke="var(--color-soil)" strokeWidth={3} dot={{ r: 3 }} isAnimationActive={false} />
+          <Line dataKey="full" stroke="var(--color-full)" strokeWidth={1.5} strokeDasharray="1 3" dot={false} isAnimationActive={false} />
           <Line dataKey="trigger" stroke="var(--color-trigger)" strokeWidth={1.5} strokeDasharray="5 4" dot={false} isAnimationActive={false} />
         </ComposedChart>
       </ChartContainer>
