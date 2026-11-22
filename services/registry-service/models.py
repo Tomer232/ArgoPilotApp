@@ -81,7 +81,7 @@ CatalogueRef = Annotated[str, AfterValidator(reject_nul)]
 UuidRef = Annotated[str, AfterValidator(normalize_uuid)]
 
 # Area and spacings: realistic ranges, so tiny or huge values can't break the planner's
-# arithmetic (live QA-1, O131). 1 m2 to 100 ha; rows 0.1-10 m apart; emitters 0.1-5 m apart.
+# arithmetic (live QA-1, O132). 1 m2 to 100 ha; rows 0.1-10 m apart; emitters 0.1-5 m apart.
 Area = Annotated[float, Field(ge=1, le=1_000_000)]
 RowSpacing = Annotated[float, Field(ge=0.1, le=10)]
 EmitterSpacing = Annotated[float, Field(ge=0.1, le=5)]

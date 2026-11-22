@@ -947,7 +947,7 @@ const farmWithPlots = () => state.farms.find((f) => state.allPlots.some((p) => p
 const BREAKERS = [
   { title: "Duplicate plot name on the same farm", why: "Plot names are unique inside one farm", expect: 409,
     run: () => firstPlot() ? api("POST", "/v1/plots", validPlot({ farm_id: firstPlot().farm_id, name: firstPlot().name })) : null },
-  { title: "Area of 0 m²", why: "FR-1.3: area_m2 must be greater than 0 (O131: at least 1 m²)", expect: 422,
+  { title: "Area of 0 m²", why: "FR-1.3: area_m2 must be greater than 0 (O132: at least 1 m²)", expect: 422,
     run: () => api("POST", "/v1/plots", validPlot({ area_m2: 0 })) },
   { title: "Planting date in the future", why: "FR-1.3: planting_date not in the future", expect: 422,
     run: () => api("POST", "/v1/plots", validPlot({ planting_date: futureDate() })) },

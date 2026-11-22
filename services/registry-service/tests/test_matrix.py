@@ -84,7 +84,7 @@ FIELD_CASES = (
         # Numbers at and past their limits
         ("area_m2=0", {"area_m2": 0}, 422),
         ("area_m2=-0.0", {"area_m2": -0.0}, 422),
-        # Realistic ranges (live QA-1, O131): area 1 m2-100 ha, rows 0.1-10 m, emitters 0.1-5 m
+        # Realistic ranges (live QA-1, O132): area 1 m2-100 ha, rows 0.1-10 m, emitters 0.1-5 m
         ("area_m2=1e-9", {"area_m2": 1e-9}, 422),
         ("area_m2=1e308", {"area_m2": 1e308}, 422),
         ("area_m2=1", {"area_m2": 1}, 201),
