@@ -1,6 +1,8 @@
 ---
 name: qa
 description: Try to break a section we consider complete, the way a hostile tester, a confused grower and a flaky network would, across the API, the frontend pages, UX/UI, service-to-service calls and failure of each service. Runs the real system on the throwaway registry_qa database, reports every gap with steps to reproduce in docs/qa/, and fixes nothing. Use whenever the user says "QA this", "/qa", "try to break it", "find the gaps", "is this section done", "check it before the PR", or calls a section complete, even if they only say "look for problems".
+context: fork
+agent: general-purpose
 ---
 
 # qa
@@ -15,7 +17,7 @@ You report; you don't fix. Every finding is something the owner decides about. A
 
 ## 1. Scope and requirements
 
-The section is everything changed on this branch plus uncommitted work (`git diff --stat main...HEAD`, `git status --short`), unless the user names one. Test the section through the **whole running system**, not just its own files: a planner change can break a frontend page. When the branch is large (a whole task's worth of services and pages) and the user named nothing, ask which part to QA, or propose the most recently changed feature; a run that tries to cover everything covers nothing deeply.
+The section is everything changed on this branch plus uncommitted work (`git diff --stat main...HEAD`, `git status --short`), unless the user names one. Test the section through the **whole running system**, not just its own files: a planner change can break a frontend page. When the branch is large (a whole task's worth of services and pages) and the user named nothing, QA the most recently changed feature and name it in the report's header (you run as a background sub-agent and can't ask; the owner can run you again on another part); a run that tries to cover everything covers nothing deeply.
 
 Before attacking, collect what "correct" means:
 
@@ -30,7 +32,7 @@ bash .claude/skills/run-stack/scripts/stack.sh status    # anything running?
 bash .claude/skills/run-stack/scripts/stack.sh start qa  # fresh registry_qa, all four services
 ```
 
-If the stack already runs in qa mode, `stop` it and `start qa` again so you begin on a freshly seeded database. If services are already running in normal mode and this session didn't start them, ask the user before stopping them; someone may be using them. If `start qa` fails (no `registry_qa`, PostgreSQL down), pass its message on and stop: never run QA against the real `registry` database.
+If the stack already runs in qa mode, `stop` it and `start qa` again so you begin on a freshly seeded database. If services are already running in normal mode and this session didn't start them, don't stop them: someone may be using them. End the run with a one-line message saying the stack must be stopped first, and the owner will run you again. If `start qa` fails (no `registry_qa`, PostgreSQL down), pass its message on and stop: never run QA against the real `registry` database.
 
 ## 3. Attack
 

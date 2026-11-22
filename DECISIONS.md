@@ -46,6 +46,7 @@ Every design decision, and who made it. P1 (registry API) decisions end at Y12, 
 | Y32 | AWS: port 8000 (registry API) is open only to the owner's laptop IP, like SSH, not to `0.0.0.0/0` as the tutorial does; the frontend (3000) stays open to everyone. The owner updates both rules when he changes network. Supersedes the 8000 part of O114 | The API has no login, so anyone could write or delete data. The tutorial's checks (`/health`, `/v1/crops` from the laptop) still work, and the frontend reaches the registry inside the instance |
 | Y33 | `qa-live` may do anything to our own instance: real writes, floods, stopping services and PostgreSQL, a reboot. In return it backs up the database first, names its rows `QA-<date>-`, and puts everything back at the end (services up, rows deleted, seed rows compared). The agent suggested only safe writes and no service stops | It is QA: the deployed system has to be tested fully, including how it survives failures |
 | Y34 | The `deploy` skill may start our instance when it is stopped (`StartInstances` by id only); the agent suggested stopping and asking the owner | Deploying is the whole point of the skill; starting our own instance by id touches nothing else in the account |
+| Y35 | The instance stays in "unlimited" CPU-credit mode; the agent suggested "standard" (no extra charge ever, the CPU slows down instead) | Owner's choice (2026-11-22). `qa-live` keeps its flood small and reports the extra CPU charge after every run (O124) |
 
 ## Ours
 
@@ -171,6 +172,9 @@ Every design decision, and who made it. P1 (registry API) decisions end at Y12, 
 | O119 | When a suite fails, `deploy` says what failed and why, reruns only the failed tests once (flaky or real) and stops for the owner; it never fixes code. Recommended and chosen | The owner decides whether to deploy with a failure |
 | O120 | "Merged" for `deploy`: after `git fetch`, a clean tree, no commits outside `origin/main`, local `main` equal to `origin/main`; the server pulls exactly that commit. Recommended and chosen | The server deploys `origin/main`, so anything else would not be what gets deployed |
 | O121 | `deploy` ends by suggesting `/qa-live`; it doesn't run it. Recommended and chosen | Two separate skills, each run on purpose |
+| O122 | `qa` and `qa-live` run as forked background sub-agents (`context: fork`, `agent: general-purpose` in their frontmatter), so the owner can keep talking to the main agent; the result arrives when the run ends. Neither asks questions mid-run: `qa` picks the most recently changed feature and stops with a message when the stack runs in normal mode. Recommended and chosen | QA runs take long. A forked sub-agent cannot ask the owner anything |
+| O123 | `deploy` and `qa-live` end by reminding the owner that the instance costs about $1 a day while it runs and to stop it from the console when unused; neither stops it. Recommended and chosen | The course pays for the account; running 24/7 is the biggest cost (about $30 a month) |
+| O124 | `qa-live` keeps its load small: one flood of 100 requests, 10 at a time, per target, at most a minute in total; NFR latency is measured on the server; the run ends with a read-only cost check (CPU-credit mode and `CPUSurplusCreditsCharged`, by id). Recommended and chosen | The first run's 300-at-30 flood held the CPU at 96% for 5 minutes; in unlimited mode a long one would cost the course money |
 
 ## Agent's
 
