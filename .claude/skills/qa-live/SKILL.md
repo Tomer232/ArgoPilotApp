@@ -1,6 +1,8 @@
 ---
 name: qa-live
 description: QA the deployed AgroPilot on our EC2 instance (i-02119bbbf95e78e0c) after a deploy - try to break the live API, website, service-to-service calls and the server itself (exposed ports, service account, secrets, crashes, restarts, a database outage, load, a reboot), then put everything back as it was and report every gap with steps to reproduce in docs/qa/. Fixes nothing and touches no other AWS resource. Use whenever the user says "/qa-live", "QA the deploy", "QA production", "try to break the server", "check the live site", "is the deploy OK", or right after /deploy, even if they only say "test it on AWS".
+context: fork
+agent: general-purpose
 ---
 
 # qa-live
@@ -64,7 +66,7 @@ Then the server itself:
 - **What listens where.** `sudo ss -ltnp`: 8001, 8002 and 5432 on 127.0.0.1 only; nothing unexpected on `0.0.0.0`.
 - **Crash recovery.** `sudo systemctl kill -s KILL agropilot-<service>` for each service in turn: does `Restart=on-failure` bring it back within seconds (`systemctl is-active`, and the app works again)? Kill the same one five times quickly: does systemd give up (start limit), and what does the grower see then?
 - **Database outage.** `sudo systemctl stop postgresql`: the registry must answer 503 problem+json with `Retry-After` (not 500, not hang), the frontend must say so plainly. `sudo systemctl start postgresql`: everything recovers without restarting the registry.
-- **Load.** A flood from this machine: e.g. 300 requests, 30 at a time, against the overview page, a plot page and `GET /v1/plots` (`xargs -P 30 -n 1 curl -s -o /dev/null -w '%{http_code} %{time_total}\n'`). Record the status mix and the slowest times; compare to the NFR latency numbers in the READMEs. Watch memory on the server (`free -m`) during it. Plot pages call the planner, which calls weather: pick plots whose forecast is already cached.
+- **Load (keep it small: the course pays for the instance).** One short flood per target, no more: 100 requests, 10 at a time, against the overview page, a plot page and `GET /v1/plots` (`yes <url> | head -100 | xargs -P 10 -n 1 curl -s -o /dev/null -w '%{http_code} %{time_total}\n'`). Never repeat a flood, never loop it, never more than a minute of load in total. Record the status mix and the slowest times. For the NFR latency numbers, measure on the server instead (`ssh <ip>` with a `curl` loop at 10 requests per second against `127.0.0.1`): from the laptop each request carries ~180 ms of round trip to us-east-1. Watch memory on the server (`free -m`) during it. Plot pages call the planner, which calls weather: pick plots whose forecast is already cached.
 - **Reboot.** Last of the attacks: `ssh <ip> 'sudo reboot'`, wait for SSH to come back (the public IP stays the same on a reboot), then: all four units `active` without anyone starting them, the app answers, the data is still there. Note how long it took.
 - **Logs.** `journalctl -u 'agropilot-*' --since '<start time>' -p warning --no-pager`: any traceback or error you didn't cause on purpose is a finding.
 
@@ -85,9 +87,12 @@ Go through this list and record each line's result in the report under "Restored
 4. The SSH tunnel and any helper process you started are stopped, by PID. Never `pkill -f` a pattern.
 5. The backup in `/root/` stays on the server; give its path in the report. If step 3 shows damage, **stop and tell the owner**, with the restore command (`sudo -u postgres pg_restore --clean --if-exists -d registry /root/qa-live-<date>.dump`); don't restore without their go.
 6. `http://<ip>:3000` answers 200 and shows the plots.
+7. **Cost check** (read-only, by id): the instance's CPU-credit mode (`DescribeInstanceCreditSpecifications` with `InstanceIds=["i-02119bbbf95e78e0c"]`) and the extra CPU charge for the last 6 hours (CloudWatch `GetMetricStatistics`, namespace `AWS/EC2`, metric `CPUSurplusCreditsCharged`, dimension `InstanceId=i-02119bbbf95e78e0c`, period 3600, `Sum`). Put both in the report. In "unlimited" mode, any charge above 0 is a finding for the owner.
 
 ## 7. Report
 
 Finish `docs/qa/<YYYY-MM-DD>-live.md`: the summary counts, every finding with steps anyone can paste (commands with `<ip>`, never a secret), expected with the FR/NFR/decision it comes from, actual (quoted), and area (API / services / UI / UX / server / security / NFR); "Tried and held" grouped by area (add "Server" and "Outside view"); "Restored" from step 6; "Not checked".
 
-In the chat: the counts by severity, the top three findings in one line each, whether everything was restored, and the report's path. Don't fix anything and don't commit; the owner decides what happens to each finding.
+In the chat: the counts by severity, the top three findings in one line each, whether everything was restored, the cost check, and the report's path. Don't fix anything and don't commit; the owner decides what happens to each finding.
+
+Last line: remind the owner that the instance costs about $1 a day while it runs, and to stop it from the console (by its id, `i-02119bbbf95e78e0c`) when nobody needs it; `/deploy` starts it again.
