@@ -61,6 +61,8 @@ npm test                                  # Vitest, for src/lib
 
 `bash .claude/skills/run-stack/scripts/stack.sh start` (from the repo root) starts all four services in order.
 
+`bash .claude/skills/test/scripts/run-all.sh` (from the repo root) runs every test suite, lint and the frontend build, one PASS/FAIL line each. The `deploy` skill uses it before putting `main` on EC2; the `qa-live` skill tests the deployed system. Both touch only our instance `i-02119bbbf95e78e0c`, by id: the AWS account is shared with classmates.
+
 The Python services have no linter or formatter configured. `DATABASE_URL` (environment or `.env`) picks the database: `sqlite:///registry.db` or `postgresql+psycopg://...`. Production is the PostgreSQL database `registry`; tests on PostgreSQL use `registry_test`. Never point `TEST_DATABASE_URL` at `registry`.
 
 ## Registry service architecture
