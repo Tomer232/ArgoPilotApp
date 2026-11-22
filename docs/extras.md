@@ -84,6 +84,13 @@ Each entry: what it is, why we made it, where it lives, and how to run it.
 - **Where:** `services/frontend/src/app/{farms,plots,crops,soils,emitters}/page.tsx`, `src/components/app-nav.tsx`, `list-page.tsx`, `simple-table.tsx`, `plot-switcher.tsx`; the home summary in `src/app/page.tsx`; the chart in `src/components/plan-chart.tsx` and `src/components/ui/chart.tsx`.
 - **Run:** start the stack, open http://localhost:3000 and use the sidebar, or the plot name on a plot page.
 
+## Plot cards with real maps (P2)
+
+- **What:** every plot on the Overview and on `/plots` is a card with a real OpenStreetMap map of its area, its status, today's answer and its crop, area, soil and planting date. `/plots` changed from a table to the same cards. Two demo plots on real farmland live only in the production database.
+- **Why:** the owner wanted each plot as a card with a map (Y36, Y37). The task asks for a list of farms with their plots that link to the plot page (FR-2.15); the map is beyond it, so it is recorded here.
+- **Where:** `services/frontend/src/components/plot-card.tsx`, `src/lib/map-tiles.ts` (with `map-tiles.test.ts`), `formatCoords` in `src/lib/format.ts`, `src/app/page.tsx`, `src/app/plots/page.tsx`; the tile choice is O134.
+- **Run:** start the stack and open http://localhost:3000 or http://localhost:3000/plots.
+
 ## VS Code debug launcher (P1)
 
 - **What:** one launch configuration that starts registry-service under the Python debugger (uvicorn on 127.0.0.1:8000).

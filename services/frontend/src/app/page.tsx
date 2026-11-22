@@ -1,15 +1,11 @@
-import { ChevronRight, Droplets, Leaf } from "lucide-react";
-import Link from "next/link";
 import { Suspense } from "react";
 import { plural } from "@/components/list-page";
 import { PageHeader } from "@/components/page-header";
-import { Panel } from "@/components/panel";
-import { Pill } from "@/components/pill";
+import { PlotCard } from "@/components/plot-card";
 import { ProblemNotice } from "@/components/problem-notice";
-import { formatArea, formatDuration } from "@/lib/format";
 import type { Result } from "@/lib/http";
 import { getPlan, type Plan } from "@/lib/planner";
-import { listCrops, listFarms, listPlots, type Plot } from "@/lib/registry";
+import { listCrops, listFarms, listPlots, listSoils } from "@/lib/registry";
 
 /** The overview: every farm with its plots (FR-2.15), each with today's answer. */
 export default function Home() {
@@ -28,9 +24,9 @@ export default function Home() {
   );
 }
 
-/** Load farms, plots and crops, then every plot's plan at the same time, and list them by farm. */
+/** Load farms, plots, crops and soils, then every plot's plan at the same time, and show them by farm. */
 async function Overview() {
-  const [farms, plots, crops] = await Promise.all([listFarms(), listPlots(), listCrops()]);
+  const [farms, plots, crops, soils] = await Promise.all([listFarms(), listPlots(), listCrops(), listSoils()]);
   if (!farms.ok || !plots.ok || !crops.ok) {
     const problem = !farms.ok ? farms.problem : !plots.ok ? plots.problem : !crops.ok ? crops.problem : null;
     return (
@@ -45,25 +41,37 @@ async function Overview() {
     await Promise.all(plots.data.map(async (plot) => [plot.id, await getPlan(plot.id)] as const)),
   );
   const cropNames = new Map(crops.data.map((crop) => [crop.id, crop.name]));
+  // Soil names are a nice-to-have: if the registry fails here, the card shows the soil's id.
+  const soilNames = new Map(soils.ok ? soils.data.map((soil) => [soil.id, soil.name]) : []);
 
   return (
     <>
       <PageHeader title="Overview" subtitle={todaySummary([...plans.values()])} />
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
+      <div className="flex flex-col gap-8">
         {farms.data.map((farm) => {
           const farmPlots = plots.data.filter((plot) => plot.farm_id === farm.id);
           return (
-            <Panel key={farm.id} id={`farm-${farm.id}`} title={farm.name} hint={plural(farmPlots.length, "plot")} flush>
+            <section key={farm.id} aria-labelledby={`farm-${farm.id}`} className="flex flex-col gap-3">
+              <h2 id={`farm-${farm.id}`} className="font-semibold">
+                {farm.name}
+                <span className="ml-1.5 font-normal text-muted-foreground">{plural(farmPlots.length, "plot")}</span>
+              </h2>
               {farmPlots.length === 0 ? (
-                <p className="px-4 py-6 text-center text-muted-foreground">No plots on this farm yet.</p>
+                <p className="text-muted-foreground">No plots on this farm yet.</p>
               ) : (
-                <ul className="divide-y">
+                <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {farmPlots.map((plot) => (
-                    <PlotRow key={plot.id} plot={plot} cropName={cropNames.get(plot.crop_id)} plan={plans.get(plot.id)} />
+                    <PlotCard
+                      key={plot.id}
+                      plot={plot}
+                      plan={plans.get(plot.id)}
+                      cropName={cropNames.get(plot.crop_id)}
+                      soilName={soilNames.get(plot.soil_id)}
+                    />
                   ))}
-                </ul>
+                </div>
               )}
-            </Panel>
+            </section>
           );
         })}
       </div>
@@ -92,50 +100,4 @@ function todaySummary(plans: Result<Plan>[]): string {
   }
   const verb = problems.length === 1 ? "has" : "have";
   return `${summary} ${plural(problems.length, "plot")} ${verb} no plan right now: ${problems[0].detail}.`;
-}
-
-/**
- * One plot: name, crop and area, today's answer, and a link to its page. When today's answer
- * comes from an old forecast, the line under the name says so, next to the answer (FR-2.17, QA-5).
- */
-function PlotRow({ plot, cropName, plan }: { plot: Plot; cropName?: string; plan?: Result<Plan> }) {
-  return (
-    <li>
-      <Link href={`/plots/${plot.id}`} className="flex min-h-14 items-center gap-3 px-4 py-2.5 hover:bg-muted/50 sm:px-5">
-        <span className="min-w-0 flex-1">
-          <span className="block font-medium">{plot.name}</span>
-          <span className="block text-xs text-muted-foreground">
-            {cropName ?? plot.crop_id}, {formatArea(plot.area_m2)}
-          </span>
-          {plan?.ok && plan.data.days[0].stale && (
-            <span className="block text-xs font-medium text-stale">Stale forecast</span>
-          )}
-        </span>
-        <TodayAnswer plan={plan} />
-        <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
-      </Link>
-    </li>
-  );
-}
-
-/** Today's answer as a pill, or a short note when the plan could not be calculated. */
-function TodayAnswer({ plan }: { plan?: Result<Plan> }) {
-  if (!plan || !plan.ok) {
-    return <span className="text-xs text-alarm">Plan unavailable</span>;
-  }
-  const today = plan.data.days[0];
-  if (today.run_minutes === 0) {
-    return (
-      <Pill tone="leaf">
-        <Leaf aria-hidden />
-        No irrigation
-      </Pill>
-    );
-  }
-  return (
-    <Pill tone="water">
-      <Droplets aria-hidden />
-      Water {formatDuration(today.run_minutes)}
-    </Pill>
-  );
 }
