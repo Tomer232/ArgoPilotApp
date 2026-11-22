@@ -45,7 +45,7 @@ npm test                        # Vitest, for the logic in src/lib
 
 What the pages do when something goes wrong:
 
-- **Unknown plot:** `src/proxy.ts` asks the registry before the page renders. A 404 from the registry gives our "Plot not found" page with HTTP 404. Any other answer lets the page render and handle it.
+- **Unknown plot:** `src/proxy.ts` asks the registry before the page renders. A 404 from the registry gives the "Not found" page (`src/app/not-found.tsx`) with HTTP 404, in `next dev` and in the production build (O116). Any other answer lets the page render and handle it.
 - **A service down or slow:** the page says what could not be done, in the service's own words, for example "planner-service is not reachable." (FR-2.18). With choices in the address, a "Plan with the default choices" link is offered. The status card marks that service down (FR-2.19).
 - **Old forecast:** each day calculated from a stale forecast carries an amber "Stale forecast" label, and today's card says when the weather is from (FR-2.17).
 
@@ -57,7 +57,7 @@ What the pages do when something goes wrong:
 | `src/app/page.tsx` | The overview: every farm with its plots |
 | `src/app/{farms,plots,crops,soils,emitters}/page.tsx` | The list pages (Y20) |
 | `src/app/plots/[id]/page.tsx` | The plot page |
-| `src/app/plot-not-found/page.tsx` | Where `proxy.ts` sends an unknown plot, with status 404 |
+| `src/app/not-found.tsx` | The 404 page for any address with no page and for an unknown plot (O116) |
 | `src/proxy.ts` | The unknown-plot check before `/plots/{id}` renders |
 | `src/components/` | One file per part of the page (`today-recommendation`, `soil-column`, `week-plan`, `timeline-bar`, `run-list`, `plan-chart`, `plan-controls` with the pickers, the Table/Chart switch and the "Updating" spinner, ...), the navigation (`app-nav`, `mobile-nav`, `plot-switcher`) and the shared `panel`, `pill`, `page-header`, `simple-table` |
 | `src/components/ui/` | shadcn/ui components (`button`, `card`, `alert`, `badge`, `input`, `table`, `select`, `sheet`, `separator`, `chart`), added with `npx shadcn add`; `chart` brings `recharts` |
