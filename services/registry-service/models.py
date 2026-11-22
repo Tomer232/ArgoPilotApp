@@ -80,8 +80,11 @@ CatalogueRef = Annotated[str, AfterValidator(reject_nul)]
 # A UUID that points at another row (e.g. the plot's farm).
 UuidRef = Annotated[str, AfterValidator(normalize_uuid)]
 
-# Area and spacings: must be greater than 0.
-Positive = Annotated[float, Field(gt=0)]
+# Area and spacings: realistic ranges, so tiny or huge values can't break the planner's
+# arithmetic (live QA-1, O132). 1 m2 to 100 ha; rows 0.1-10 m apart; emitters 0.1-5 m apart.
+Area = Annotated[float, Field(ge=1, le=1_000_000)]
+RowSpacing = Annotated[float, Field(ge=0.1, le=10)]
+EmitterSpacing = Annotated[float, Field(ge=0.1, le=5)]
 
 Latitude = Annotated[float, Field(ge=-90, le=90)]
 Longitude = Annotated[float, Field(ge=-180, le=180)]
@@ -184,12 +187,12 @@ class PlotCreate(RequestModel):
 
     farm_id: UuidRef
     name: Name
-    area_m2: Positive
+    area_m2: Area
     crop_id: CatalogueRef
     planting_date: PlantingDate
     soil_id: CatalogueRef
-    row_spacing_m: Positive
-    emitter_spacing_m: Positive
+    row_spacing_m: RowSpacing
+    emitter_spacing_m: EmitterSpacing
     emitter_id: CatalogueRef
     lat: Latitude
     lon: Longitude
@@ -200,12 +203,12 @@ class PlotUpdate(RequestModel):
 
     farm_id: UuidRef | None = None
     name: Name | None = None
-    area_m2: Positive | None = None
+    area_m2: Area | None = None
     crop_id: CatalogueRef | None = None
     planting_date: PlantingDate | None = None
     soil_id: CatalogueRef | None = None
-    row_spacing_m: Positive | None = None
-    emitter_spacing_m: Positive | None = None
+    row_spacing_m: RowSpacing | None = None
+    emitter_spacing_m: EmitterSpacing | None = None
     emitter_id: CatalogueRef | None = None
     lat: Latitude | None = None
     lon: Longitude | None = None

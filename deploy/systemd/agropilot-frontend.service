@@ -11,6 +11,8 @@ WorkingDirectory=/opt/agropilot/app/services/frontend
 ExecStart=/opt/agropilot/app/services/frontend/node_modules/.bin/next start --hostname 0.0.0.0 --port 3000
 Restart=on-failure
 RestartSec=2
+# next start exits with 143 (128 + SIGTERM) on a normal stop; that is not a failure (live QA-2, O133).
+SuccessExitStatus=143
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
