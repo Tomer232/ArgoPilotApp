@@ -67,7 +67,7 @@ Only pure logic in `src/lib` gets frontend tests; pages and clicks belong to the
 
 ## 5. Run everything you touched
 
-Run every suite you added to, the whole suite, not just the new tests. On PostgreSQL too when you touched registry database code and `TEST_DATABASE_URL` is set (never point it at `registry`).
+Run every suite you added to, the whole suite, not just the new tests (`bash .claude/skills/test/scripts/run-all.sh` runs all of them at once). On PostgreSQL too when you touched registry database code and `TEST_DATABASE_URL` is set (never point it at `registry`).
 
 All green is the goal, with one exception: **when a new test exposes a real bug in the code, don't fix the code.** Keep the failing test as it is (no `xfail`, no skip), and stop to report it. The owner decides the fix. Do fix your own mistakes: a test that fails because the test is wrong gets corrected.
 

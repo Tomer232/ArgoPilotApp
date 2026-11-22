@@ -16,16 +16,13 @@ There are two stop points, and both are the owner's call: whether to continue wh
 
 ## 2. Checks
 
-Run all of these and keep the results for the PR body:
+Run every suite with the shared script, and keep its summary for the PR body:
 
 ```bash
-(cd services/registry-service && uv run pytest -q)
-(cd services/weather-service && uv run pytest -q)
-(cd services/planner-service && uv run pytest -q)
-(cd services/frontend && npm test && npm run lint && npm run build)
+bash .claude/skills/test/scripts/run-all.sh
 ```
 
-`npm run build` rewrites `.next`. Run it only when `bash .claude/skills/run-stack/scripts/stack.sh status` shows the frontend down, or after asking the owner to stop it.
+It runs the three pytest suites and the frontend's tests, lint and build, prints one PASS/FAIL line per suite with its log file, and exits 1 if any failed. It skips the build when the frontend runs on :3000 (`npm run build` rewrites `.next`); ask the owner to stop it, then run the script again.
 
 Then run the `requirements` skill. It writes `docs/requirements/<date>-<task>.html`.
 
