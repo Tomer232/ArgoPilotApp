@@ -947,7 +947,7 @@ const farmWithPlots = () => state.farms.find((f) => state.allPlots.some((p) => p
 const BREAKERS = [
   { title: "Duplicate plot name on the same farm", why: "Plot names are unique inside one farm", expect: 409,
     run: () => firstPlot() ? api("POST", "/v1/plots", validPlot({ farm_id: firstPlot().farm_id, name: firstPlot().name })) : null },
-  { title: "Area of 0 m²", why: "FR-1.3: area_m2 must be greater than 0", expect: 422,
+  { title: "Area of 0 m²", why: "FR-1.3: area_m2 must be greater than 0 (O131: at least 1 m²)", expect: 422,
     run: () => api("POST", "/v1/plots", validPlot({ area_m2: 0 })) },
   { title: "Planting date in the future", why: "FR-1.3: planting_date not in the future", expect: 422,
     run: () => api("POST", "/v1/plots", validPlot({ planting_date: futureDate() })) },
@@ -1256,7 +1256,7 @@ function pgWhy(req, r) {
     if (unknown) return `That ${unknown[1]} doesn't exist, so the plot is refused.`;
     if (detail.includes("must not be in the future")) return `The planting date is after today in the client's time zone (${r.requestHeaders["Time-Zone"] ?? "UTC+14, no header"}).`;
     if (detail.startsWith("Time-Zone")) return "That isn't a real time zone, so the API can't know the client's today.";
-    if (detail.includes("greater than 0")) return "Area and both spacings must be more than 0.";
+    if (/^(area_m2|row_spacing_m|emitter_spacing_m):/.test(detail)) return "Area must be 1 to 1,000,000 m², rows 0.1 to 10 m apart, emitters 0.1 to 5 m apart.";
     if (/^(lat|lon):/.test(detail)) return "Latitude must be −90 to 90, longitude −180 to 180.";
     if (detail.includes("Field required")) return "A required field is missing.";
     if (detail.includes("Extra inputs")) return "Only the spec's fields are accepted.";
