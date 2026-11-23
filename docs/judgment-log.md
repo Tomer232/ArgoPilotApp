@@ -101,21 +101,13 @@ Today's card says when the forecast was fetched. The server works in UTC, and th
 - **I decided:** show the clock time in the phone's own time zone ("Forecast from 18 Nov, 13:40") (Y28).
 - **Why:** it just makes sense.
 
-## 13. Live QA may do anything to our own instance (AWS)
-
-`qa-live` tests the deployed system on the real database in a shared AWS account.
-
-- **Agent suggested:** only safe writes, and no service stops.
-- **I decided:** real writes, floods, stopping services and PostgreSQL, a reboot; in return it backs up the database first and puts everything back at the end (Y33).
-- **Why:** it is QA: the deployed system has to be tested fully, including how it survives failures.
-
-## 14. Deploy may start a stopped instance (AWS)
+## 13. Deploy may start a stopped instance (AWS)
 
 - **Agent suggested:** when the instance is stopped, `deploy` stops and asks me.
 - **I decided:** `deploy` starts it, by id only (Y34).
 - **Why:** deploying is the whole point of the skill; starting our own instance by id touches nothing else in the account.
 
-## 15. "Unlimited" CPU credits on the instance (AWS)
+## 14. "Unlimited" CPU credits on the instance (AWS)
 
 - **Agent suggested:** switch to "standard": no extra charge ever, the CPU slows down instead.
 - **I decided:** keep "unlimited" (Y35).
