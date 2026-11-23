@@ -104,3 +104,10 @@ Each entry: what it is, why we made it, where it lives, and how to run it.
 - **Why:** deploying by hand has several gates that are easy to skip, and production differs from `next dev` (O116); the account is shared, so both skills touch only our instance, by id (DECISIONS Y33, Y34, O117-O121, A71, A72).
 - **Where:** `.claude/skills/deploy/`, `.claude/skills/qa-live/`, `.claude/skills/test/scripts/run-all.sh`.
 - **Run:** ask Claude Code "/deploy" or "/qa-live"; the tests alone: `bash .claude/skills/test/scripts/run-all.sh` from the repo root.
+
+## `interview-prep` skill (course)
+
+- **What:** a project skill that checks a task is really finished, drafts the story from the repo, interviews the owner, then writes an English slide deck and a Hebrew study guide for the task's interview on an `interview/<task>` branch.
+- **Why:** the owner is interviewed on every task and must explain every part; the deck and guide are built from the repo so every claim points to its source.
+- **Where:** `.claude/skills/interview-prep/` (`SKILL.md`, `references/deck-template.html`).
+- **Run:** ask Claude Code "/interview-prep".
