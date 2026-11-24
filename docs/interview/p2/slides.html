@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgroPilot P2 - interview</title>
+<!--
+  The AgroPilot interview deck. Copy this file to docs/interview/<task>/slides.html and fill it.
+
+  The rules:
+  - Change the content, never the CSS: every task's deck must look the same.
+  - Each slide is one <section class="slide ...">. The examples below show every layout once;
+    copy the one you need, delete the ones you don't, keep the order SKILL.md gives.
+  - Colours come from the frontend (services/frontend/src/app/globals.css), each with one meaning:
+    brand green = AgroPilot itself, water blue = irrigation, leaf green = fine / required,
+    amber = add-on, alarm red = a problem.
+  - No external files except screenshots/*.png next to this file. No fonts, no scripts from the web.
+  - Keys: right/left arrow, space, PageDown/PageUp to move, Home/End, F for full screen.
+-->
+<style>
+  :root {
+    --page: #ececee;
+    --surface: #f7f7f8;
+    --card: #ffffff;
+    --ink: #18181b;
+    --muted: #71717a;
+    --border: #e6e6e9;
+    --brand: #1f7a4d;
+    --water: #2f6fde;
+    --water-soft: #e8eefb;
+    --leaf: #23784f;
+    --leaf-soft: #e3f4ec;
+    --soil: #a9c8f5;
+    --addon: #b3601f;
+    --addon-soft: #fcefe3;
+    --alarm: #c0353a;
+    --alarm-soft: #fde8e8;
+    --radius: 14px;
+    --font: "Geist", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: "Geist Mono", "Cascadia Code", Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--page); color: var(--ink); font-family: var(--font); }
+  body { overflow: hidden; }
+
+  /* The stage: a fixed 1280x720 slide, scaled to fit the window. */
+  #deck { position: absolute; left: 50%; top: 50%; width: 1280px; height: 720px; transform-origin: center; }
+  .slide {
+    position: absolute; inset: 0; display: none; flex-direction: column;
+    background: var(--surface); border-radius: 20px; padding: 56px 72px 64px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 12px 40px rgba(0,0,0,.08);
+  }
+  .slide.active { display: flex; animation: enter 260ms cubic-bezier(0.23, 1, 0.32, 1); }
+  @keyframes enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* Header shared by every slide except the title. */
+  .kicker { font-size: 15px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--brand); }
+  h1 { font-size: 64px; line-height: 1.05; font-weight: 700; letter-spacing: -.02em; }
+  h2 { font-size: 44px; line-height: 1.1; font-weight: 700; letter-spacing: -.015em; margin-top: 6px; }
+  .lead { font-size: 24px; color: var(--muted); margin-top: 12px; max-width: 900px; }
+  .body { flex: 1; display: flex; gap: 32px; margin-top: 36px; min-height: 0; }
+
+  /* Footer: brand mark and slide number. */
+  .foot { position: absolute; left: 72px; right: 72px; bottom: 24px; display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); }
+  .mark { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--ink); }
+  .mark i { width: 14px; height: 14px; border-radius: 4px; background: var(--brand); display: inline-block; }
+
+  /* Pills: the meaning tags. */
+  .pill { display: inline-block; font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; letter-spacing: .02em; }
+  .pill.required { background: var(--leaf-soft); color: var(--leaf); }
+  .pill.addon { background: var(--addon-soft); color: var(--addon); }
+  .pill.business { background: var(--water-soft); color: var(--water); }
+  .pill.tech { background: #f1f1f3; color: var(--ink); }
+  .ref { font-size: 13px; color: var(--muted); font-family: var(--mono); }
+
+  /* Cards. */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; }
+  .card h3 { font-size: 14px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .card p { font-size: 22px; line-height: 1.3; }
+  .card.problem { border-left: 5px solid var(--alarm); }
+  .card.solution { border-left: 5px solid var(--leaf); }
+  .card.why { border-left: 5px solid var(--water); }
+
+  /* Lists: short phrases, never sentences. */
+  ul.points { list-style: none; display: flex; flex-direction: column; gap: 16px; }
+  ul.points li { font-size: 26px; line-height: 1.3; padding-left: 28px; position: relative; }
+  ul.points li::before { content: ""; position: absolute; left: 0; top: 12px; width: 12px; height: 12px; border-radius: 3px; background: var(--brand); }
+
+  /* Big numbers. */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .stat .n { font-size: 64px; font-weight: 700; letter-spacing: -.02em; line-height: 1; }
+  .stat .l { font-size: 17px; color: var(--muted); margin-top: 8px; }
+
+  /* Bars: one row per item, width in % set inline. */
+  .bars { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+  .bar { display: grid; grid-template-columns: 220px 1fr 70px; align-items: center; gap: 16px; font-size: 19px; }
+  .bar .track { height: 26px; background: #f1f1f3; border-radius: 8px; overflow: hidden; }
+  .bar .fill { height: 100%; background: var(--water); border-radius: 8px; }
+  .bar .fill.leaf { background: var(--leaf); }
+  .bar .fill.addon { background: var(--addon); }
+  .bar .v { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* The split bar: required vs add-on, as one line. */
+  .split { display: flex; height: 40px; border-radius: 10px; overflow: hidden; font-size: 16px; font-weight: 600; color: #fff; }
+  .split > div { display: flex; align-items: center; padding: 0 14px; }
+
+  /* Diagrams: inline SVG with these classes. */
+  svg.diagram { width: 100%; height: 100%; }
+  svg .node rect { fill: var(--card); stroke: var(--border); stroke-width: 1.5; }
+  svg .node.brand rect { fill: var(--brand); stroke: var(--brand); }
+  svg .node.brand text, svg .node.brand text.sub { fill: #fff; }
+  svg .node.water rect { fill: var(--water-soft); stroke: var(--water); }
+  svg .node.addon rect { fill: var(--addon-soft); stroke: var(--addon); stroke-dasharray: 6 4; }
+  svg .node.external rect { fill: #f1f1f3; stroke: var(--muted); stroke-dasharray: 4 4; }
+  svg .node text { font-family: var(--font); font-size: 20px; font-weight: 600; fill: var(--ink); text-anchor: middle; }
+  svg .node text.sub { font-size: 14px; font-weight: 500; fill: var(--muted); }
+  svg .edge { stroke: var(--muted); stroke-width: 2; fill: none; marker-end: url(#arrow); }
+  svg .edge.water { stroke: var(--water); marker-end: url(#arrow-water); }
+  svg .label { font-family: var(--font); font-size: 14px; fill: var(--muted); text-anchor: middle; }
+  svg .step circle { fill: var(--water); }
+  svg .step text { font-family: var(--font); font-size: 15px; font-weight: 700; fill: #fff; text-anchor: middle; }
+
+  /* Screenshot frame. */
+  .shot { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--card); box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+  .shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+
+  /* Layout: title. */
+  .slide.title { justify-content: center; background: var(--brand); color: #fff; }
+  .slide.title .kicker { color: rgba(255,255,255,.75); }
+  .slide.title h1 { margin-top: 14px; font-size: 80px; }
+  .slide.title .lead { color: rgba(255,255,255,.85); }
+  .slide.title .foot, .slide.title .foot .mark { color: rgba(255,255,255,.8); }
+  .slide.title .mark i { background: #fff; }
+
+  /* Layout: part (one per service/area). Visual left, story right, key test across the bottom. */
+  .part .visual { flex: 1.15; display: flex; min-width: 0; }
+  .part .story { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+  .part .story .card { padding: 14px 20px; }
+  .part .story .card p { font-size: 20px; }
+  .test { margin-top: 18px; display: flex; align-items: center; gap: 14px; font-size: 18px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; }
+  .test b { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--leaf); }
+  .test code { font-family: var(--mono); font-size: 15px; background: #f1f1f3; padding: 2px 8px; border-radius: 6px; }
+
+  /* Layout: cards grid (add-ons, skills). */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-content: start; width: 100%; }
+  .grid .card h4 { font-size: 22px; margin-bottom: 6px; }
+  .grid .card p { font-size: 17px; color: var(--muted); }
+  .grid .card .pill { margin-top: 10px; }
+
+  /* Progress line at the very bottom of the window. */
+  #progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--brand); transition: width 200ms; }
+</style>
+<style>
+  /* P2 addition, on the owner's request: the interactive "All together" slide (slide 13).
+     The page on the left, the architecture on the right; each step lights what it uses. */
+  .flow-body { gap: 28px; align-items: flex-start; }
+  .flow-page { position: relative; width: 610px; flex: none; aspect-ratio: 1440 / 1000; }
+  .flow-page .hl { position: absolute; border: 3px solid var(--water); border-radius: 8px; background: rgba(47,111,222,.10); box-shadow: 0 0 0 9999px rgba(24,24,27,.28); opacity: 0; transition: opacity 200ms; pointer-events: none; }
+  .flow-page .hl.on { opacity: 1; }
+  .flow-side { flex: 1; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  svg.flow-arch { height: auto; }
+  .flow-arch .node text { font-size: 15px; }
+  .flow-arch .fnode { opacity: .28; transition: opacity 200ms; }
+  .flow-arch .fnode.on { opacity: 1; }
+  .flow-arch .fedge { stroke: var(--water); stroke-width: 3; fill: none; opacity: 0; transition: opacity 200ms; }
+  .flow-arch .fedge.on { opacity: 1; }
+  .flow-arch .fedge.ans { stroke: #f0954a; }
+  .flow-arch .flabel { font: 600 12px var(--font); fill: var(--water); opacity: 0; transition: opacity 200ms; }
+  .flow-arch .flabel.ans { fill: #c9742c; }
+  .flow-arch .flabel.on, .flow-arch .flabel.legend { opacity: 1; text-anchor: start; }
+  .flow-caption { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; }
+  .flow-num { font-size: 14px; font-weight: 600; letter-spacing: .06em; color: var(--water); text-transform: uppercase; }
+  .flow-text { display: none; font-size: 21px; line-height: 1.3; margin-top: 6px; min-height: 56px; }
+  .flow-text.on { display: block; }
+  .flow-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; }
+  .flow-buttons button { font: 600 15px var(--font); padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--ink); cursor: pointer; }
+  .flow-buttons .flow-next { background: var(--water); border-color: var(--water); color: #fff; }
+  .flow-buttons button:disabled { opacity: .4; cursor: default; }
+</style>
+</head>
+<body>
+<div id="deck">
+
+  <!-- 1. Title -->
+  <section class="slide title">
+    <div class="kicker">OzVeruach26 - Task P2</div>
+    <h1>AgroPilot</h1>
+    <p class="lead">Tells a grower when to water each plot, and for how long.</p>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span>2026-11-24</span></div>
+  </section>
+
+  <!-- 2. The ask -->
+  <section class="slide">
+    <div class="kicker">The ask</div>
+    <h2>Should I water today, and for how long?</h2>
+    <p class="lead">A farmer with drip irrigation asks this every morning, for every plot.</p>
+    <div class="body">
+      <ul class="points">
+        <li>Registry: from a SQLite file to PostgreSQL</li>
+        <li>Weather: rain, and the water a field loses per day (ET0)</li>
+        <li>Planner: how long to water, 7 days ahead</li>
+        <li>Website: today's answer first, then the week</li>
+      </ul>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- 3. What we built -->
+  <section class="slide">
+    <div class="kicker">What we built</div>
+    <h2>Four services, one answer</h2>
+    <div class="body" style="flex-direction: column; gap: 48px;">
+      <div class="stats">
+        <div class="stat"><div class="n">3</div><div class="l">new services</div></div>
+        <div class="stat"><div class="n">876</div><div class="l">tests</div></div>
+        <div class="stat"><div class="n">141</div><div class="l">decisions recorded</div></div>
+        <div class="stat"><div class="n">34</div><div class="l">QA findings, all closed</div></div>
+      </div>
+      <div>
+        <div class="split">
+          <div style="width: 58%; background: var(--leaf);">Required - 41</div>
+          <div style="width: 42%; background: var(--addon);">Add-on - 30</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- 4. Architecture -->
+  <section class="slide">
+    <div class="kicker">Architecture</div>
+    <h2>HTTP only, the browser calls nobody</h2>
+    <div class="body">
+      <svg class="diagram" viewBox="0 0 1136 480" role="img" aria-label="Architecture: browser, frontend, registry, planner, weather, Open-Meteo, PostgreSQL">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#71717a"/></marker>
+          <marker id="arrow-water" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2f6fde"/></marker>
+        </defs>
+        <g class="node external"><rect x="10" y="198" width="150" height="84" rx="12"/><text x="85" y="236">Browser</text><text class="sub" x="85" y="260">the grower</text></g>
+        <g class="node brand"><rect x="220" y="198" width="200" height="84" rx="12"/><text x="320" y="236">frontend</text><text class="sub" x="320" y="260">Next.js - 3000</text></g>
+        <g class="node"><rect x="520" y="40" width="230" height="84" rx="12"/><text x="635" y="78">registry</text><text class="sub" x="635" y="102">FastAPI - 8000</text></g>
+        <g class="node water"><rect x="520" y="356" width="230" height="84" rx="12"/><text x="635" y="394">planner</text><text class="sub" x="635" y="418">FastAPI - 8002</text></g>
+        <g class="node water"><rect x="840" y="356" width="230" height="84" rx="12"/><text x="955" y="394">weather</text><text class="sub" x="955" y="418">FastAPI - 8001</text></g>
+        <g class="node external"><rect x="840" y="40" width="230" height="84" rx="12"/><text x="955" y="78">PostgreSQL</text><text class="sub" x="955" y="102">database registry</text></g>
+        <g class="node external"><rect x="840" y="200" width="230" height="84" rx="12"/><text x="955" y="238">Open-Meteo</text><text class="sub" x="955" y="262">ET0 and rain</text></g>
+        <path class="edge" d="M160,240 L220,240"/>
+        <path class="edge" d="M420,225 L520,100"/>
+        <path class="edge water" d="M420,255 L520,380"/>
+        <path class="edge" d="M600,356 L600,124"/>
+        <path class="edge water" d="M750,398 L840,398"/>
+        <path class="edge" d="M955,356 L955,284"/>
+        <path class="edge" d="M750,82 L840,82"/>
+        <text class="label" x="440" y="150">farms, plots</text>
+        <text class="label" x="445" y="340">the plan</text>
+        <text class="label" x="560" y="245">plot, crop,</text>
+        <text class="label" x="560" y="263">soil, emitter</text>
+        <text class="label" x="795" y="385">forecast</text>
+      </svg>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- 5. Registry -->
+  <section class="slide part">
+    <div class="kicker">registry-service <span class="pill required">Required</span></div>
+    <h2>From a SQLite file to PostgreSQL</h2>
+    <div class="body">
+      <div class="visual">
+        <svg class="diagram" viewBox="0 0 600 440" role="img" aria-label="Saving a plot locks its farm, so a farm delete waits and gets the right answer">
+          <defs>
+            <marker id="arrow-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#71717a"/></marker>
+          </defs>
+          <g class="node water"><rect x="20" y="10" width="250" height="60" rx="12"/><text x="145" y="48">Save a plot</text></g>
+          <g class="node"><rect x="330" y="10" width="250" height="60" rx="12"/><text x="455" y="48">Delete its farm</text></g>
+          <g class="node water"><rect x="20" y="110" width="250" height="60" rx="12"/><text x="145" y="138">farm exists?</text><text class="sub" x="145" y="158">lock it</text></g>
+          <g class="node external"><rect x="330" y="110" width="250" height="60" rx="12"/><text x="455" y="138">waits</text><text class="sub" x="455" y="158">for the lock</text></g>
+          <g class="node water"><rect x="20" y="210" width="250" height="60" rx="12"/><text x="145" y="248">plot written</text></g>
+          <g class="node water"><rect x="20" y="310" width="250" height="60" rx="12"/><text x="145" y="348">201 (Created)</text></g>
+          <g class="node"><rect x="330" y="310" width="250" height="60" rx="12"/><text x="455" y="338">409 (Conflict)</text><text class="sub" x="455" y="358">Farm still has plots</text></g>
+          <path class="edge" style="marker-end:url(#arrow-r)" d="M145,70 L145,110"/>
+          <path class="edge" style="marker-end:url(#arrow-r)" d="M145,170 L145,210"/>
+          <path class="edge" style="marker-end:url(#arrow-r)" d="M145,270 L145,310"/>
+          <path class="edge" style="marker-end:url(#arrow-r)" d="M455,70 L455,110"/>
+          <path class="edge" style="marker-end:url(#arrow-r)" d="M455,170 L455,310"/>
+          <text class="label" x="300" y="410">without the lock: a wrong 409 (Conflict), "name taken"</text>
+        </svg>
+      </div>
+      <div class="story">
+        <div class="card problem"><h3>Problem</h3><p>Farm deleted while a plot saves</p></div>
+        <div class="card solution"><h3>Solution</h3><p>Lock the farm during the save</p></div>
+        <div class="card why"><h3>Why <span class="pill tech">Tech</span></h3><p>Same answers on both databases</p></div>
+      </div>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- 6. Weather -->
+  <section class="slide part">
+    <div class="kicker">weather-service <span class="pill required">Required</span></div>
+    <h2>Rain and ET0, never made up</h2>
+    <div class="body">
+      <div class="visual">
+        <svg class="diagram" viewBox="0 0 600 440" role="img" aria-label="Two nearby points share one 0.1 degree cell; the forecast is reused for 3 hours, served as old for up to 24 hours, then 503">
+          <defs>
+            <marker id="arrow-wx" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#71717a"/></marker>
+          </defs>
+          <g class="node water"><rect x="10" y="10" width="270" height="64" rx="12"/><text x="145" y="40">31.25, 34.79</text><text class="sub" x="145" y="62">North block</text></g>
+          <g class="node water"><rect x="320" y="10" width="270" height="64" rx="12"/><text x="455" y="40">31.29, 34.71</text><text class="sub" x="455" y="62">a plot nearby</text></g>
+          <g class="node brand"><rect x="150" y="122" width="300" height="64" rx="12"/><text x="300" y="152">area 31.2, 34.7</text><text class="sub" x="300" y="174">one weather call for both</text></g>
+          <path class="edge" style="marker-end:url(#arrow-wx)" d="M145,74 L250,122"/>
+          <path class="edge" style="marker-end:url(#arrow-wx)" d="M455,74 L350,122"/>
+          <text class="label" x="300" y="212">0.1 degree squares (about 10 km), as the task asks</text>
+          <text class="label" x="300" y="268" style="font-weight:600;fill:#18181b">The saved forecast, by age</text>
+          <rect x="10" y="284" width="130" height="50" rx="8" fill="#e3f4ec"/>
+          <rect x="140" y="284" width="320" height="50" fill="#fcefe3"/>
+          <rect x="460" y="284" width="130" height="50" rx="8" fill="#fde8e8"/>
+          <text class="label" x="75" y="306" style="fill:#23784f;font-weight:600">fresh</text>
+          <text class="label" x="75" y="324" style="fill:#23784f">no new call</text>
+          <text class="label" x="300" y="306" style="fill:#b3601f;font-weight:600">provider fails 3 times</text>
+          <text class="label" x="300" y="324" style="fill:#b3601f">last forecast, marked old</text>
+          <text class="label" x="525" y="306" style="fill:#c0353a;font-weight:600">503</text>
+          <text class="label" x="525" y="324" style="fill:#c0353a">(Unavailable)</text>
+          <text class="label" x="10" y="356" style="text-anchor:start">0 h</text>
+          <text class="label" x="140" y="356">3 h</text>
+          <text class="label" x="460" y="356">24 h</text>
+        </svg>
+      </div>
+      <div class="story">
+        <div class="card problem"><h3>Problem</h3><p>Provider down or sending bad data</p></div>
+        <div class="card solution"><h3>Solution</h3><p>Retry, then old forecast, clearly marked</p></div>
+        <div class="card why"><h3>Why <span class="pill business">Business</span></h3><p>Zeros would mean: don't water</p></div>
+      </div>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- 7. Planner -->
+  <section class="slide part">
+    <div class="kicker">planner-service <span class="pill required">Required</span></div>
+    <h2>The soil as a bucket of water</h2>
+    <div class="body">
+      <div class="visual">
+        <svg class="diagram" viewBox="0 0 600 440" role="img" aria-label="Soil feel from the USDA guide gives the starting level; North block today: bucket 122.5 mm, trigger 61.25 mm, dry start, 40 mm in 24 hours">
+          <defs>
+            <marker id="arrow-plw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2f6fde"/></marker>
+          </defs>
+          <g class="node"><rect x="10" y="20" width="240" height="300" rx="12"/></g>
+          <text class="label" x="130" y="48" style="font-size:16px;fill:#18181b;font-weight:600">Squeeze a handful</text>
+          <text class="label" x="130" y="68">USDA soil-feel guide</text>
+          <text class="label" x="130" y="104">Wet, free water - 100% full</text>
+          <text class="label" x="130" y="140">Wet - 87.5%</text>
+          <text class="label" x="130" y="176">Moist - 62.5%</text>
+          <text class="label" x="130" y="212">Slightly moist - 37.5%</text>
+          <text class="label" x="130" y="250" style="fill:#2f6fde;font-weight:700">Dry - 12.5%</text>
+          <text class="label" x="130" y="296">one list per soil type</text>
+          <path class="edge water" style="marker-end:url(#arrow-plw)" d="M250,250 L330,250"/>
+          <rect x="340" y="20" width="160" height="300" rx="14" fill="#f7f7f8" stroke="#a9a9b0" stroke-width="2"/>
+          <rect x="342" y="282" width="156" height="36" rx="4" fill="#e7d9c2"/>
+          <rect x="342" y="190" width="156" height="92" fill="#a9c8f5"/>
+          <line x1="330" y1="170" x2="512" y2="170" stroke="#18181b" stroke-width="2" stroke-dasharray="6 4"/>
+          <text class="label" x="556" y="30">full</text>
+          <text class="label" x="556" y="48" style="font-weight:600;fill:#18181b">122.5</text>
+          <text class="label" x="556" y="164">water</text>
+          <text class="label" x="556" y="180">below</text>
+          <text class="label" x="556" y="198" style="font-weight:600;fill:#18181b">61.25</text>
+          <text class="label" x="420" y="306">start 15.3</text>
+          <text class="label" x="420" y="240" style="fill:#2f6fde;font-weight:700">+40 mm</text>
+          <text class="label" x="420" y="258" style="fill:#2f6fde">24 h, 40,000 L</text>
+          <text class="label" x="300" y="362">North block today, in mm</text>
+          <text class="label" x="300" y="398" style="font-weight:600;fill:#18181b">Can't check the soil? The plan assumes full, and says so</text>
+        </svg>
+      </div>
+      <div class="story">
+        <div class="card problem"><h3>Problem</h3><p>Planner can't know today's soil</p></div>
+        <div class="card solution"><h3>Solution</h3><p>Grower squeezes soil, picks a description</p></div>
+        <div class="card why"><h3>Why <span class="pill business">Business</span></h3><p>Plan starts from the real field</p></div>
+      </div>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- 8. Frontend -->
+  <section class="slide part">
+    <div class="kicker">frontend <span class="pill required">Required</span></div>
+    <h2>Today first, then the week</h2>
+    <div class="body">
+      <div class="visual">
+        <div class="shot" style="width: 100%;"><img src="screenshots/plot-page.png" alt="The plot page: water for 24 h, the soil column and the 7-day timeline"></div>
+      </div>
+      <div class="story">
+        <div class="card problem"><h3>Problem</h3><p>Plan has minutes, not clock times</p></div>
+        <div class="card solution"><h3>Solution</h3><p>Pick start hour; runs cross midnight</p></div>
+        <div class="card why"><h3>Why <span class="pill business">Business</span></h3><p>The start time is the grower's</p></div>
+      </div>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- 9. AWS: CI/CD from the code on my laptop to the live system, and where the system sits. -->
+  <section class="slide">
+    <div class="kicker">AWS deployment <span class="pill addon">Add-on</span></div>
+    <h2>From my laptop to a live system</h2>
+    <div class="body" style="flex-direction: column; gap: 18px; margin-top: 22px;">
+        <svg class="diagram" viewBox="0 0 1136 104" style="height: 100px; flex: none;" role="img" aria-label="The pipeline: code, commit, push, pull request, merge, then the deploy gates: merged, tests, server, ship, check, then live">
+          <defs><marker id="arrow-belt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#71717a"/></marker></defs>
+          <text class="label" x="258" y="16" style="font-weight:600;fill:#18181b">Git flow</text>
+          <line x1="0" y1="20" x2="506" y2="20" stroke="#a9a9b0" stroke-width="1.5"/>
+          <text class="label" x="770" y="16" style="font-weight:600;fill:#2f6fde">/deploy - every step is a gate, it stops on the first fail</text>
+          <line x1="517" y1="20" x2="1023" y2="20" stroke="#2f6fde" stroke-width="1.5"/>
+          <rect x="0" y="86" width="1136" height="14" rx="7" fill="#e6e6e9"/>
+          <circle cx="30" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="90" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="150" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="210" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="270" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="330" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="390" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="450" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="510" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="570" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="630" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="690" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="750" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="810" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="870" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="930" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="990" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="1050" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="1110" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/>
+          <g class="node"><rect x="0.0" y="26" width="92" height="54" rx="9"/><text x="46.0" y="50" style="font-size:15px">Code</text><text class="sub" x="46.0" y="69" style="font-size:11px">my laptop</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M93.0,53 L102.4,53"/><g class="node"><rect x="103.4" y="26" width="92" height="54" rx="9"/><text x="149.4" y="50" style="font-size:15px">Commit</text><text class="sub" x="149.4" y="69" style="font-size:11px">git</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M196.4,53 L205.8,53"/><g class="node"><rect x="206.8" y="26" width="92" height="54" rx="9"/><text x="252.8" y="50" style="font-size:15px">Push</text><text class="sub" x="252.8" y="69" style="font-size:11px">GitHub</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M299.8,53 L309.2,53"/><g class="node"><rect x="310.2" y="26" width="92" height="54" rx="9"/><text x="356.2" y="50" style="font-size:15px">PR</text><text class="sub" x="356.2" y="69" style="font-size:11px">review</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M403.2,53 L412.6,53"/><g class="node"><rect x="413.6" y="26" width="92" height="54" rx="9"/><text x="459.6" y="50" style="font-size:15px">Merge</text><text class="sub" x="459.6" y="69" style="font-size:11px">main</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M506.6,53 L516.0,53"/><g class="node water"><rect x="517.0" y="26" width="92" height="54" rx="9"/><text x="563.0" y="50" style="font-size:15px">Merged?</text><text class="sub" x="563.0" y="69" style="font-size:11px">main = GitHub</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M610.0,53 L619.4,53"/><g class="node water"><rect x="620.4" y="26" width="92" height="54" rx="9"/><text x="666.4" y="50" style="font-size:15px">Tests</text><text class="sub" x="666.4" y="69" style="font-size:11px">all suites pass</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M713.4,53 L722.8,53"/><g class="node water"><rect x="723.8" y="26" width="92" height="54" rx="9"/><text x="769.8" y="50" style="font-size:15px">Server</text><text class="sub" x="769.8" y="69" style="font-size:11px">start if off</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M816.8,53 L826.2,53"/><g class="node water"><rect x="827.2" y="26" width="92" height="54" rx="9"/><text x="873.2" y="50" style="font-size:15px">Ship</text><text class="sub" x="873.2" y="69" style="font-size:11px">update.sh, SSH</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M920.2,53 L929.6,53"/><g class="node water"><rect x="930.6" y="26" width="92" height="54" rx="9"/><text x="976.6" y="50" style="font-size:15px">Check</text><text class="sub" x="976.6" y="69" style="font-size:11px">4 services up</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M1023.6,53 L1033.0,53"/><g class="node brand"><rect x="1034.0" y="26" width="92" height="54" rx="9"/><text x="1080.0" y="50" style="font-size:15px">Live</text><text class="sub" x="1080.0" y="69" style="font-size:11px">:3000</text></g>
+        </svg>
+        <svg class="diagram" viewBox="0 0 1136 340" style="flex: 1; min-height: 0;" role="img" aria-label="The grower reaches the system through port 3000, I deploy through SSH, the server pulls main from GitHub; the system sits inside the agropilot user, the EC2 server, the firewall and AWS">
+          <defs>
+            <marker id="arrow-cd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#71717a"/></marker>
+            <marker id="arrow-cdw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#23784f"/></marker>
+          </defs>
+          <g class="node external"><rect x="0" y="54" width="170" height="64" rx="12"/><text x="85" y="82" style="font-size:18px">The grower</text><text class="sub" x="85" y="104">any browser, anywhere</text></g>
+          <g class="node external"><rect x="0" y="214" width="170" height="64" rx="12"/><text x="85" y="242" style="font-size:18px">Me</text><text class="sub" x="85" y="264">laptop, /deploy</text></g>
+          <rect x="250" y="8" width="640" height="324" rx="16" fill="#fcefe3" stroke="#b3601f"/>
+          <text class="label" x="268" y="30" style="text-anchor:start;font-weight:600;fill:#b3601f">AWS - us-east-1</text>
+          <rect x="272" y="42" width="596" height="272" rx="14" fill="#fff7ef" stroke="#18181b" stroke-width="2.5"/>
+          <text class="label" x="852" y="62" style="text-anchor:end;font-weight:600;fill:#18181b">Firewall</text>
+          <rect x="300" y="72" width="540" height="226" rx="12" fill="#ffffff" stroke="#e6e6e9" stroke-width="1.5"/>
+          <text class="label" x="822" y="92" style="text-anchor:end;font-weight:600;fill:#18181b">EC2 server - Ubuntu</text>
+          <rect x="324" y="102" width="492" height="180" rx="10" fill="#e8eefb" stroke="#2f6fde" stroke-dasharray="6 4"/>
+          <text class="label" x="800" y="122" style="text-anchor:end;fill:#2f6fde;font-weight:600">user agropilot - cannot log in</text>
+          <g class="node brand"><rect x="348" y="134" width="444" height="130" rx="12"/><text x="570" y="178" style="font-size:24px">AgroPilot system</text><text class="sub" x="570" y="206" style="font-size:15px">website, registry, planner, weather, PostgreSQL</text><text class="sub" x="570" y="232" style="font-size:14px">each restarts by itself if it crashes</text></g>
+          <rect x="246" y="72" width="120" height="30" rx="15" fill="#e3f4ec" stroke="#23784f"/><text class="label" x="306" y="92" style="fill:#23784f;font-weight:600">:3000 everyone</text>
+          <rect x="246" y="152" width="120" height="30" rx="15" fill="#fde8e8" stroke="#c0353a"/><text class="label" x="306" y="172" style="fill:#c0353a;font-weight:600">:8000 my IP</text>
+          <rect x="246" y="241" width="120" height="30" rx="15" fill="#fde8e8" stroke="#c0353a"/><text class="label" x="306" y="261" style="fill:#c0353a;font-weight:600">SSH my IP</text>
+          <path class="edge" style="stroke:#23784f;marker-end:url(#arrow-cdw)" d="M170,86 L244,86"/>
+          <text class="label" x="207" y="76" style="fill:#23784f;font-weight:600">http://&lt;IP&gt;:3000</text>
+          <path class="edge" style="marker-end:url(#arrow-cd)" d="M170,256 L244,256"/>
+          <text class="label" x="207" y="278">deploy</text>
+          <path class="edge" style="marker-end:url(#arrow-cd)" d="M170,232 L212,232 L212,167 L244,167"/>
+          <text class="label" x="218" y="204" style="text-anchor:start">API</text>
+          <g class="node"><rect x="950" y="138" width="180" height="64" rx="12"/><text x="1040" y="166" style="font-size:18px">GitHub</text><text class="sub" x="1040" y="188">main, merged and tested</text></g>
+          <path class="edge" style="marker-end:url(#arrow-cd)" d="M950,170 L794,170"/>
+          <text class="label" x="1040" y="126">the server pulls main</text>
+          <text class="label" x="570" y="330" style="fill:#b3601f">one server; its IP changes on each start</text>
+        </svg>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- 10. Add-ons -->
+  <section class="slide part">
+    <div class="kicker">Add-ons <span class="pill addon">30, all recorded</span></div>
+    <h2>Beyond the spec, on purpose</h2>
+    <div class="body">
+      <div class="visual" style="flex-direction: column; gap: 14px;">
+        <div class="shot" style="flex: 1; min-height: 0;"><img src="screenshots/overview.png" alt="The overview: plot cards with real maps and today's answer"></div>
+        <div class="shot" style="position: relative; padding-bottom: 36.3%; height: 0;"><img src="screenshots/plan-chart.png" alt="The plan as a chart: soil water, the trigger line and the water given" style="position: absolute; width: 150.3%; height: auto; left: -37.58%; top: 0; margin-top: -75.16%; object-fit: initial;"></div>
+      </div>
+      <div class="story">
+        <div class="card"><h3>Plot cards with real maps <span class="pill business">Business</span></h3></div>
+        <div class="card"><h3>The plan as a chart <span class="pill business">Business</span></h3></div>
+        <div class="card"><h3>List pages, plot switcher <span class="pill business">Business</span></h3></div>
+        <div class="card"><h3>Grower sets the trigger, 1-99% <span class="pill business">Business</span></h3></div>
+      </div>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- 11. Tests -->
+  <section class="slide">
+    <div class="kicker">Tests</div>
+    <h2>876 tests: each service alone, then together</h2>
+    <div class="body">
+      <div class="grid">
+        <div class="card"><h4>registry - 483</h4><p>Every endpoint, bad input, broken database, parallel requests</p><span class="pill tech">fresh database copy per test</span></div>
+        <div class="card"><h4>planner - 143</h4><p>The math against my hand calculations; services failing</p><span class="pill tech">stand-in registry and weather</span></div>
+        <div class="card"><h4>weather - 76</h4><p>Shared areas, 3-hour reuse, provider failures, old forecasts</p><span class="pill tech">stand-in Open-Meteo and clock</span></div>
+        <div class="card"><h4>website - 169</h4><p>Timeline, midnight, time zones, numbers, maps</p><span class="pill tech">the logic, without a browser</span></div>
+        <div class="card"><h4>all together - 5</h4><p>A new plot through all four services; unknown plot 404 (Not Found)</p><span class="pill tech">the real running system</span></div>
+        <div class="card"><h4>one command</h4><p>All suites, lint and build: pass or fail per line</p><span class="pill tech">before every deploy</span></div>
+      </div>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- 12. Skills -->
+  <section class="slide">
+    <div class="kicker">Skills we used</div>
+    <h2>The agent works from written rules</h2>
+    <div class="body">
+      <div class="grid">
+        <div class="card"><h4>/irrigation-calc-reference</h4><p>Every watering formula and my 5 hand-calculated cases; the planner is built and tested from it</p><span class="pill tech">planner</span></div>
+        <div class="card"><h4>Superpowers</h4><p>/brainstorming, /writing-plans: design and plan for the PostgreSQL move, before any code</p><span class="pill tech">registry</span></div>
+        <div class="card"><h4>/run-stack, /deploy</h4><p>All four services in one command; main to EC2 only after every test passes</p><span class="pill tech">daily, and to release</span></div>
+        <div class="card"><h4>/test</h4><p>After each part: writes the missing tests and keeps the test plan</p><span class="pill tech">after each part</span></div>
+        <div class="card"><h4>/qa, /qa-live</h4><p>Tries to break it on my laptop and on AWS, then reports every gap</p><span class="pill tech">before each PR</span></div>
+        <div class="card"><h4>/requirements, /submit-task</h4><p>Every requirement with its evidence, then the PR text</p><span class="pill tech">at the end</span></div>
+      </div>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- 13. All together: an interactive walk through one visit. Next/Back (or the arrow keys) move
+       one step; each step lights the part of the page and the services it comes from. -->
+  <section class="slide flow" data-steps="8">
+    <div class="kicker">All together</div>
+    <h2>A grower opens a plot</h2>
+    <div class="body flow-body">
+      <div class="flow-page shot">
+        <img src="screenshots/plot-page.png" alt="The plot page">
+        <div class="hl" data-on="1" style="left:0.5%;top:0.5%;width:99%;height:99%;"></div>
+        <div class="hl" data-on="2" style="left:24%;top:3.5%;width:39%;height:8%;"></div>
+        <div class="hl" data-on="3" style="left:70.5%;top:19%;width:20.5%;height:13%;"></div>
+        <div class="hl" data-on="4" style="left:24%;top:3.5%;width:39%;height:8%;"></div>
+        <div class="hl" data-on="5" style="left:34.5%;top:13.5%;width:13.5%;height:4%;"></div>
+        <div class="hl" data-on="6" style="left:25.5%;top:19%;width:44%;height:28%;"></div>
+        <div class="hl" data-on="7" style="left:24.5%;top:49.5%;width:67.5%;height:50%;"></div>
+        <div class="hl" data-on="8" style="left:1.5%;top:86%;width:14%;height:12%;"></div>
+      </div>
+      <div class="flow-side">
+        <svg class="diagram flow-arch" viewBox="0 0 560 365" role="img" aria-label="The architecture; blue arrows are the questions of this step, orange arrows the answers">
+          <defs>
+            <marker id="arrow-fq" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2f6fde"/></marker>
+            <marker id="arrow-fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f0954a"/></marker>
+          </defs>
+          <path class="fedge" data-on="1 3" style="marker-end:url(#arrow-fq)" d="M90,158 L133,158"/>
+          <path class="fedge ans" data-on="1 6 7" style="marker-end:url(#arrow-fa)" d="M135,172 L92,172"/>
+          <path class="fedge" data-on="2 8" style="marker-end:url(#arrow-fq)" d="M245,147 L290,72"/>
+          <path class="fedge ans" data-on="2 8" style="marker-end:url(#arrow-fa)" d="M300,78 L255,153"/>
+          <path class="fedge" data-on="3 8" style="marker-end:url(#arrow-fq)" d="M245,183 L290,256"/>
+          <path class="fedge ans" data-on="6 8" style="marker-end:url(#arrow-fa)" d="M300,250 L255,177"/>
+          <path class="fedge" data-on="4" style="marker-end:url(#arrow-fq)" d="M343,240 L343,86"/>
+          <path class="fedge ans" data-on="4" style="marker-end:url(#arrow-fa)" d="M357,84 L357,238"/>
+          <path class="fedge" data-on="2 4" style="marker-end:url(#arrow-fq)" d="M405,48 L448,48"/>
+          <path class="fedge ans" data-on="2 4" style="marker-end:url(#arrow-fa)" d="M450,62 L407,62"/>
+          <path class="fedge" data-on="5" style="marker-end:url(#arrow-fq)" d="M405,261 L448,261"/>
+          <path class="fedge ans" data-on="5" style="marker-end:url(#arrow-fa)" d="M450,275 L407,275"/>
+          <path class="fedge" data-on="5" style="marker-end:url(#arrow-fq)" d="M495,240 L495,195"/>
+          <path class="fedge ans" data-on="5" style="marker-end:url(#arrow-fa)" d="M509,193 L509,238"/>
+          <path class="fedge" data-on="8" style="marker-end:url(#arrow-fq)" d="M182,193 L182,312 L496,312 L496,300"/>
+          <path class="fedge ans" data-on="8" style="marker-end:url(#arrow-fa)" d="M510,298 L510,324 L196,324 L196,197"/>
+          <g class="fnode node external" data-on="1 3 6 7"><rect x="0" y="137" width="90" height="56" rx="10"/><text x="45" y="170">Browser</text></g>
+          <g class="fnode node brand" data-on="1 2 3 6 7 8"><rect x="135" y="137" width="110" height="56" rx="10"/><text x="190" y="170">frontend</text></g>
+          <g class="fnode node" data-on="2 4 8"><rect x="295" y="27" width="110" height="56" rx="10"/><text x="350" y="60">registry</text></g>
+          <g class="fnode node external" data-on="2 4"><rect x="450" y="27" width="105" height="56" rx="10"/><text x="502" y="60">database</text></g>
+          <g class="fnode node water" data-on="3 4 5 6 8"><rect x="295" y="240" width="110" height="56" rx="10"/><text x="350" y="273">planner</text></g>
+          <g class="fnode node water" data-on="5 8"><rect x="450" y="240" width="105" height="56" rx="10"/><text x="502" y="273">weather</text></g>
+          <g class="fnode node external" data-on="5"><rect x="450" y="137" width="105" height="56" rx="10"/><text x="502" y="170">Open-Meteo</text></g>
+          <text class="flabel" data-on="1" x="112" y="128" style="text-anchor:middle">open plot</text>
+          <text class="flabel ans" data-on="1" x="112" y="212" style="text-anchor:middle">the page</text>
+          <text class="flabel" data-on="3" x="112" y="128" style="text-anchor:middle">soil: dry</text>
+          <text class="flabel ans" data-on="6" x="112" y="212" style="text-anchor:middle">24 h, 40,000 L</text>
+          <text class="flabel ans" data-on="7" x="112" y="212" style="text-anchor:middle">the week</text>
+          <text class="flabel" data-on="2" x="262" y="100" style="text-anchor:end">plot?</text>
+          <text class="flabel ans" data-on="2" x="290" y="128" style="text-anchor:start">name, crop, soil</text>
+          <text class="flabel" data-on="8" x="262" y="100" style="text-anchor:end">/health</text>
+          <text class="flabel ans" data-on="8" x="290" y="128" style="text-anchor:start">up</text>
+          <text class="flabel" data-on="3" x="262" y="232" style="text-anchor:end">a plan, soil dry</text>
+          <text class="flabel" data-on="8" x="262" y="232" style="text-anchor:end">/health</text>
+          <text class="flabel ans" data-on="6" x="300" y="222" style="text-anchor:start">the plan</text>
+          <text class="flabel ans" data-on="8" x="300" y="222" style="text-anchor:start">up</text>
+          <text class="flabel" data-on="4" x="336" y="165" style="text-anchor:end">this plot</text>
+          <text class="flabel ans" data-on="4" x="364" y="165" style="text-anchor:start">crop, soil, drip</text>
+          <text class="flabel" data-on="5" x="427" y="252" style="text-anchor:middle">ET0?</text>
+          <text class="flabel ans" data-on="5" x="427" y="292" style="text-anchor:middle">7 days</text>
+          <text class="flabel" data-on="5" x="488" y="212" style="text-anchor:end">if not fresh</text>
+          <text class="flabel ans" data-on="5" x="488" y="228" style="text-anchor:end">ET0, rain</text>
+          <text class="flabel" data-on="8" x="420" y="307" style="text-anchor:middle">/health</text>
+          <text class="flabel ans" data-on="8" x="420" y="338" style="text-anchor:middle">up</text>
+          <g transform="translate(0,356)">
+            <line x1="0" y1="0" x2="26" y2="0" stroke="#2f6fde" stroke-width="3" style="marker-end:url(#arrow-fq)"/>
+            <text class="flabel legend" x="34" y="5">question</text>
+            <line x1="120" y1="0" x2="146" y2="0" stroke="#f0954a" stroke-width="3" style="marker-end:url(#arrow-fa)"/>
+            <text class="flabel legend ans" x="154" y="5">answer</text>
+          </g>
+        </svg>
+        <div class="flow-caption">
+          <div class="flow-num"><span class="flow-i">1</span> / 8</div>
+          <p class="flow-text" data-on="1">The grower opens North block</p>
+          <p class="flow-text" data-on="2">The website asks the registry: is it a real plot? Its name, crop, soil</p>
+          <p class="flow-text" data-on="3">The grower says the soil feels dry; the website asks the planner</p>
+          <p class="flow-text" data-on="4">The planner reads the plot, crop, soil and drip line from the registry</p>
+          <p class="flow-text" data-on="5">The planner asks weather: saved copy, or a new call to Open-Meteo</p>
+          <p class="flow-text" data-on="6">Today's answer: water 24 h, 40,000 L</p>
+          <p class="flow-text" data-on="7">The week: when each run starts and ends</p>
+          <p class="flow-text" data-on="8">The status line: is each service up?</p>
+          <div class="flow-buttons"><button type="button" class="flow-back">Back</button><button type="button" class="flow-next">Next step</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- 14. Live -->
+  <section class="slide title">
+    <div class="kicker">Live now</div>
+    <h1>Questions</h1>
+    <p class="lead">http://&lt;EC2 public IP&gt;:3000 - the grower's page</p>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+</div>
+<div id="progress"></div>
+<script>
+  /* Navigation: one active slide, its number in the address (#3), keys and clicks to move. */
+  const slides = Array.from(document.querySelectorAll(".slide"));
+  const deck = document.getElementById("deck");
+  const progress = document.getElementById("progress");
+  let current = 0;
+
+  /** Show slide i (clamped), update the number, the progress line and the address. */
+  function show(i) {
+    current = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, k) => s.classList.toggle("active", k === current));
+    progress.style.width = ((current + 1) / slides.length) * 100 + "%";
+    history.replaceState(null, "", "#" + (current + 1));
+  }
+
+  /** Scale the 1280x720 stage to fit the window, keeping its shape. */
+  function fit() {
+    const scale = Math.min(window.innerWidth / 1300, window.innerHeight / 740);
+    deck.style.transform = "translate(-50%, -50%) scale(" + scale + ")";
+  }
+
+  /** Write "n / total" into every slide footer. */
+  function number() {
+    slides.forEach((s, k) => s.querySelectorAll(".foot .n").forEach(n => n.textContent = (k + 1) + " / " + slides.length));
+  }
+
+  document.addEventListener("keydown", e => {
+    if (["ArrowRight", "PageDown", " "].includes(e.key)) show(current + 1);
+    else if (["ArrowLeft", "PageUp"].includes(e.key)) show(current - 1);
+    else if (e.key === "Home") show(0);
+    else if (e.key === "End") show(slides.length - 1);
+    else if (e.key === "f" || e.key === "F") document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+    else return;
+    e.preventDefault();
+  });
+  document.addEventListener("click", e => show(current + (e.clientX > window.innerWidth / 2 ? 1 : -1)));
+  window.addEventListener("resize", fit);
+
+  number();
+  fit();
+  show((parseInt(location.hash.slice(1), 10) || 1) - 1);
+</script>
+<script>
+  /* P2 addition, on the owner's request: steps inside the "All together" slide.
+     On that slide, Next/right arrow and Back/left arrow move one step; past the last or first
+     step they move to the next or previous slide as usual. */
+  const flow = document.querySelector(".slide.flow");
+  const flowSteps = Number(flow.dataset.steps);
+  let flowStep = 1;
+
+  /** Light the page area, services, arrows and caption of step k. */
+  function showStep(k) {
+    flowStep = Math.max(1, Math.min(flowSteps, k));
+    flow.querySelectorAll("[data-on]").forEach(el => {
+      el.classList.toggle("on", el.dataset.on.split(" ").includes(String(flowStep)));
+    });
+    flow.querySelector(".flow-i").textContent = flowStep;
+    flow.querySelector(".flow-back").disabled = flowStep === 1;
+    flow.querySelector(".flow-next").disabled = flowStep === flowSteps;
+  }
+
+  /** On the flow slide, the arrow keys move a step first; the deck's own keys work otherwise. */
+  window.addEventListener("keydown", e => {
+    if (!flow.classList.contains("active")) return;
+    const forward = ["ArrowRight", "PageDown", " "].includes(e.key);
+    const back = ["ArrowLeft", "PageUp"].includes(e.key);
+    if ((forward && flowStep < flowSteps) || (back && flowStep > 1)) {
+      showStep(flowStep + (forward ? 1 : -1));
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  flow.querySelector(".flow-next").addEventListener("click", e => { e.stopPropagation(); showStep(flowStep + 1); });
+  flow.querySelector(".flow-back").addEventListener("click", e => { e.stopPropagation(); showStep(flowStep - 1); });
+  showStep(1);
+</script>
+</body>
+</html>
