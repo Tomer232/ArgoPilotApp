@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { Pill } from "@/components/pill";
 import { StaleLabel } from "@/components/stale-label";
 import { Card } from "@/components/ui/card";
-import { formatArea, formatCoords, formatDate, formatDuration, formatLitres } from "@/lib/format";
+import { asSentence, formatArea, formatCoords, formatDate, formatDuration, formatLitres } from "@/lib/format";
 import type { Result } from "@/lib/http";
 import { tilesAround } from "@/lib/map-tiles";
 import type { Plan } from "@/lib/planner";
@@ -50,7 +50,7 @@ export function PlotCard({
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <Title className="text-base font-semibold">{plot.name}</Title>
-            {farmName !== undefined && <p className="text-xs text-muted-foreground">{farmName}</p>}
+            {farmName && <p className="text-xs text-muted-foreground">{farmName}</p>}
           </div>
           <StatusPill plan={plan} />
         </div>
@@ -67,7 +67,9 @@ export function PlotCard({
         href={`/plots/${plot.id}`}
         className="mt-auto flex min-h-11 items-center justify-between border-t px-4 font-medium text-water after:absolute after:inset-0"
       >
-        Open plan
+        <span>
+          Open plan<span className="sr-only"> for {plot.name}</span>
+        </span>
         <ChevronRight aria-hidden className="size-4" />
       </Link>
     </Card>
@@ -81,32 +83,31 @@ export function PlotCard({
 function PlotMap({ plot }: { plot: Plot }) {
   const tiles = tilesAround(plot.lat, plot.lon, MAP_WIDTH, MAP_HEIGHT);
   return (
-    <div
-      role="img"
-      aria-label={`Map of the area around ${plot.name}`}
-      className="relative h-40 overflow-hidden border-b bg-muted"
-    >
-      {tiles.map((tile) => (
-        <Image
-          key={tile.url}
-          src={tile.url}
-          alt=""
-          width={256}
-          height={256}
-          unoptimized
-          className="absolute max-w-none"
-          style={{ left: `calc(50% + ${tile.dx}px)`, top: `calc(50% + ${tile.dy}px)` }}
-        />
-      ))}
-      <span className="absolute bottom-2 left-2 rounded-md bg-white/90 px-1.5 py-0.5 text-xs font-medium">
-        {formatCoords(plot.lat, plot.lon)}
-      </span>
-      {/* Above the card's link, so the credit link can be clicked on its own (OSM asks for it). */}
+    <div className="relative h-40 overflow-hidden border-b bg-muted">
+      <div role="img" aria-label={`Map of the area around ${plot.name}`} className="absolute inset-0">
+        {tiles.map((tile) => (
+          <Image
+            key={tile.url}
+            src={tile.url}
+            alt=""
+            width={256}
+            height={256}
+            unoptimized
+            className="absolute max-w-none"
+            style={{ left: `calc(50% + ${tile.dx}px)`, top: `calc(50% + ${tile.dy}px)` }}
+          />
+        ))}
+        <span className="absolute bottom-2 left-2 rounded-md bg-white/90 px-1.5 py-0.5 text-xs font-medium">
+          {formatCoords(plot.lat, plot.lon)}
+        </span>
+      </div>
+      {/* Outside the map's role="img", so screen readers keep it, and above the card's link, so it
+          can be tapped on its own (OSM asks for the credit; QA-5, 2026-11-24). */}
       <a
         href="https://www.openstreetmap.org/copyright"
         target="_blank"
         rel="noreferrer"
-        className="absolute right-0 bottom-0 z-10 rounded-tl-md bg-white/85 px-1.5 py-px text-[10px] text-foreground/75 hover:text-foreground"
+        className="absolute right-0 bottom-0 z-10 rounded-tl-md bg-white/85 px-2 py-1 text-xs text-foreground/75 hover:text-foreground"
       >
         © OpenStreetMap
       </a>
@@ -134,7 +135,7 @@ function TodayBox({ plan }: { plan?: Result<Plan> }) {
   if (!plan || !plan.ok) {
     return (
       <TodayFrame tone="alarm" answer="Plan unavailable">
-        {plan && <span className="text-xs">{plan.problem.detail}</span>}
+        {plan && <span className="text-xs">{asSentence(plan.problem.detail)}</span>}
       </TodayFrame>
     );
   }
@@ -150,6 +151,7 @@ function TodayBox({ plan }: { plan?: Result<Plan> }) {
   return (
     <TodayFrame tone="water" answer={`Water ${formatDuration(today.run_minutes)}`}>
       <span className="text-xs">{formatLitres(today.litres)}</span>
+      {today.capped && <span className="text-xs">Most in 24 h: the soil ends the day below full</span>}
       {staleNote}
     </TodayFrame>
   );

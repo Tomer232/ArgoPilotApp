@@ -27,7 +27,8 @@ async function Plots() {
   const plans = new Map(
     await Promise.all(plots.data.map(async (plot) => [plot.id, await getPlan(plot.id)] as const)),
   );
-  // Names are a nice-to-have: a name the registry could not send falls back to the id.
+  // Names are a nice-to-have: a crop or soil the registry could not name shows its id; a farm
+  // it could not name is left out, since its id means nothing to a grower (QA-6, 2026-11-24).
   const farmNames = new Map(farms.ok ? farms.data.map((farm) => [farm.id, farm.name]) : []);
   const cropNames = new Map(crops.ok ? crops.data.map((crop) => [crop.id, crop.name]) : []);
   const soilNames = new Map(soils.ok ? soils.data.map((soil) => [soil.id, soil.name]) : []);
@@ -39,7 +40,7 @@ async function Plots() {
           key={plot.id}
           plot={plot}
           plan={plans.get(plot.id)}
-          farmName={farmNames.get(plot.farm_id) ?? plot.farm_id}
+          farmName={farmNames.get(plot.farm_id) ?? ""}
           cropName={cropNames.get(plot.crop_id)}
           soilName={soilNames.get(plot.soil_id)}
         />

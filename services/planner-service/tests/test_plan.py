@@ -385,6 +385,35 @@ def test_weather_reason_is_passed_on(client, services):
     assert body["detail"] == f"weather-service: {detail}"
 
 
+def test_upstream_reason_is_trimmed(client, services):
+    """O127: spaces around the upstream's detail don't reach the grower's sentence."""
+    services.answers[PLOT] = (503, {"code": "UNAVAILABLE", "detail": "  Database unavailable \n"})
+    body = assert_problem(client.get(PLAN_URL), 503, "UPSTREAM_UNAVAILABLE")
+    assert body["detail"] == "registry-service: Database unavailable"
+
+
+def test_a_very_long_upstream_reason_is_cut_to_200_characters(client, services):
+    """QA-2 (2026-11-24): a 20,000-character detail is cut to its first 200 characters plus "...",
+    so one broken upstream can't fill every card on the overview."""
+    services.answers[PLOT] = (503, {"code": "UNAVAILABLE", "detail": "A" * 20_000})
+    body = assert_problem(client.get(PLAN_URL), 503, "UPSTREAM_UNAVAILABLE")
+    assert body["detail"] == "registry-service: " + "A" * 200 + "..."
+
+
+def test_a_reason_of_exactly_200_characters_is_kept_whole(client, services):
+    """The cut starts after 200 characters: exactly 200 is passed on as it is."""
+    services.answers[PLOT] = (503, {"code": "UNAVAILABLE", "detail": "B" * 200})
+    body = assert_problem(client.get(PLAN_URL), 503, "UPSTREAM_UNAVAILABLE")
+    assert body["detail"] == "registry-service: " + "B" * 200
+
+
+def test_upstream_500_with_a_detail_passes_it_on(client, services):
+    """O127 holds for any failing status, not only 503: a 500 problem's detail is passed on too."""
+    services.answers[PLOT] = (500, {"code": "INTERNAL", "detail": "Something broke"})
+    body = assert_problem(client.get(PLAN_URL), 503, "UPSTREAM_UNAVAILABLE")
+    assert body["detail"] == "registry-service: Something broke"
+
+
 @pytest.mark.parametrize(
     "answer",
     [(500, "<html>oops</html>"), (503, {"code": "UNAVAILABLE"}), (503, {"detail": 5}), (503, {"detail": "  "}), (503, [1])],

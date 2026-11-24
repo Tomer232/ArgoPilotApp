@@ -1,10 +1,11 @@
 import { Suspense } from "react";
-import { plural } from "@/components/list-page";
 import { PageHeader } from "@/components/page-header";
 import { PlotCard } from "@/components/plot-card";
 import { ProblemNotice } from "@/components/problem-notice";
-import type { Result } from "@/lib/http";
-import { getPlan, type Plan } from "@/lib/planner";
+import { plural } from "@/lib/format";
+import type { Problem } from "@/lib/http";
+import { todaySummary } from "@/lib/overview";
+import { getPlan } from "@/lib/planner";
 import { listCrops, listFarms, listPlots, listSoils } from "@/lib/registry";
 
 /** The overview: every farm with its plots (FR-2.15), each with today's answer. */
@@ -27,21 +28,19 @@ export default function Home() {
 /** Load farms, plots, crops and soils, then every plot's plan at the same time, and show them by farm. */
 async function Overview() {
   const [farms, plots, crops, soils] = await Promise.all([listFarms(), listPlots(), listCrops(), listSoils()]);
-  if (!farms.ok || !plots.ok || !crops.ok) {
-    const problem = !farms.ok ? farms.problem : !plots.ok ? plots.problem : !crops.ok ? crops.problem : null;
-    return (
-      <>
-        <PageHeader title="Overview" />
-        {problem && <ProblemNotice title="The farms can't be loaded right now" problem={problem} />}
-      </>
-    );
+  if (!farms.ok) {
+    return <OverviewProblem title="The farms can't be loaded right now" problem={farms.problem} />;
+  }
+  if (!plots.ok) {
+    return <OverviewProblem title="The plots can't be loaded right now" problem={plots.problem} />;
   }
 
   const plans = new Map(
     await Promise.all(plots.data.map(async (plot) => [plot.id, await getPlan(plot.id)] as const)),
   );
-  const cropNames = new Map(crops.data.map((crop) => [crop.id, crop.name]));
-  // Soil names are a nice-to-have: if the registry fails here, the card shows the soil's id.
+  // Crop and soil names are a nice-to-have, as on /plots: if the registry fails here, the card
+  // shows the id (QA-1, 2026-11-24).
+  const cropNames = new Map(crops.ok ? crops.data.map((crop) => [crop.id, crop.name]) : []);
   const soilNames = new Map(soils.ok ? soils.data.map((soil) => [soil.id, soil.name]) : []);
 
   return (
@@ -79,25 +78,12 @@ async function Overview() {
   );
 }
 
-/**
- * The line under the title: how many plots need water today. Only plots with a plan are
- * counted (O105); the others are named apart, with the first reason. With no plan at all,
- * there is no count, only the reason (QA-1 of the live QA).
- */
-function todaySummary(plans: Result<Plan>[]): string {
-  if (plans.length === 0) {
-    return "No plots yet. Farms and plots are added in the registry.";
-  }
-  const planned = plans.flatMap((plan) => (plan.ok ? [plan.data] : []));
-  const problems = plans.flatMap((plan) => (plan.ok ? [] : [plan.problem]));
-  if (planned.length === 0) {
-    return `No plan right now: ${problems[0].detail}.`;
-  }
-  const needWater = planned.filter((plan) => plan.days[0].run_minutes > 0).length;
-  const summary = `${needWater} of ${plural(planned.length, "plot")} need water today, with the default choices.`;
-  if (problems.length === 0) {
-    return summary;
-  }
-  const verb = problems.length === 1 ? "has" : "have";
-  return `${summary} ${plural(problems.length, "plot")} ${verb} no plan right now: ${problems[0].detail}.`;
+/** The overview's title and what could not be loaded, in the registry's words (FR-2.18). */
+function OverviewProblem({ title, problem }: { title: string; problem: Problem }) {
+  return (
+    <>
+      <PageHeader title="Overview" />
+      <ProblemNotice title={title} problem={problem} />
+    </>
+  );
 }

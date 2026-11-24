@@ -78,15 +78,23 @@ class Forecast(UpstreamAnswer):
 # --- One GET, checked -------------------------------------------------------------
 
 
+# The longest upstream detail we pass on: one line on the grower's screen (QA-2, 2026-11-24).
+MAX_REASON_CHARS = 200
+
+
 def upstream_reason(service: str, response: httpx.Response) -> str:
     """Why `service` failed, for our 503's detail: its own problem+json `detail` when it sent
-    one (e.g. "registry-service: Database unavailable"), otherwise its status (QA-3, live QA)."""
+    one (e.g. "registry-service: Database unavailable"), otherwise its status (QA-3, live QA).
+    A detail longer than MAX_REASON_CHARS is cut there and ends with "..."."""
     try:
         detail = response.json().get("detail")
     except (ValueError, AttributeError):
         detail = None
     if isinstance(detail, str) and detail.strip():
-        return f"{service}: {detail.strip()}"
+        reason = detail.strip()
+        if len(reason) > MAX_REASON_CHARS:
+            reason = reason[:MAX_REASON_CHARS].rstrip() + "..."
+        return f"{service}: {reason}"
     return f"{service} answered with status {response.status_code}"
 
 
