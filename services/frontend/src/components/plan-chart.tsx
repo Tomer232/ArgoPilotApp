@@ -4,6 +4,8 @@
 // trigger it must not fall below, and the water the plan gives, all in mm (O131).
 // A day that ends below the trigger gets an amber point, as the table's bar turns amber (O142).
 // The tooltip lists the values highest first, the same top-to-bottom order as the chart (O143).
+// On a watering day the tooltip also shows where the soil would end without water, the level the
+// trigger was checked against, since the line only shows the level after watering (O144).
 // A client component because Recharts draws in the browser.
 
 import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
@@ -18,6 +20,7 @@ const config = {
   full: { label: "Full bucket mm", color: "var(--muted-foreground)" },
   trigger: { label: "Trigger mm", color: "var(--foreground)" },
   water: { label: "Water given mm", color: "var(--water)" },
+  dry: { label: "Without water mm", color: "var(--low)" },
 } satisfies ChartConfig;
 
 /** One point per day. A day from a stale forecast gets a "*" after its name (FR-2.17). */
@@ -29,6 +32,7 @@ function chartRows(days: PlanDay[]) {
     trigger: day.trigger_mm,
     water: day.irrigation_mm,
     below: day.bucket_end_mm < day.trigger_mm,
+    dry: day.irrigation_mm > 0 ? Math.round((day.bucket_end_mm - day.irrigation_mm) * 100) / 100 : undefined,
   }));
 }
 
@@ -42,7 +46,15 @@ function SoilDot({ cx, cy, index, payload }: DotProps) {
 }
 
 
-type TooltipItem = { value?: unknown };
+type TooltipItem = { value?: unknown; payload?: { dry?: number } };
+
+/** Adds a "Without water" row on a watering day: the level the day would end at with no water. */
+function withWithoutWater<T extends TooltipItem>(items: readonly T[] = []): T[] {
+  const dry = items[0]?.payload?.dry;
+  if (dry === undefined) return [...items];
+  const row = { name: "dry", dataKey: "dry", value: dry, color: "var(--color-dry)", payload: items[0].payload };
+  return [...items, row as unknown as T];
+}
 
 /** The tooltip's rows, highest value first, so they read in the chart's top-to-bottom order. */
 function byValueHighFirst<T extends TooltipItem>(items: readonly T[] = []): T[] {
@@ -67,7 +79,7 @@ export function PlanChart({ days }: { days: PlanDay[] }) {
           <XAxis dataKey="label" tickLine={false} axisLine={false} />
           <YAxis tickLine={false} axisLine={false} domain={[0, axis.top]} ticks={axis.ticks} unit=" mm" />
           <ChartTooltip content={({ active, label, payload }) => (
-              <ChartTooltipContent active={active} label={label} payload={byValueHighFirst(payload)} />
+              <ChartTooltipContent active={active} label={label} payload={byValueHighFirst(withWithoutWater(payload))} />
             )} />
           <ChartLegend content={<ChartLegendContent />} />
           <Bar dataKey="water" fill="var(--color-water)" radius={4} maxBarSize={28} isAnimationActive={false} />
