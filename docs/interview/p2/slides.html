@@ -151,7 +151,7 @@
   #progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--brand); transition: width 200ms; }
 </style>
 <style>
-  /* P2 addition, on the owner's request: the interactive "All together" slide (slide 13).
+  /* P2 addition, on the owner's request: the interactive "All together" slide (slide 9).
      The page on the left, the architecture on the right; each step lights what it uses. */
   .flow-body { gap: 28px; align-items: flex-start; }
   .flow-page { position: relative; width: 610px; flex: none; aspect-ratio: 1440 / 1000; }
@@ -178,7 +178,7 @@
   .flow-buttons button:disabled { opacity: .4; cursor: default; }
 </style>
 <style>
-  /* P2 addition, on the owner's request: the backup "When something breaks" slide (slide 14).
+  /* P2 addition, on the owner's request: the backup "When something breaks" slide (slide 10).
      Step 1 is the calm system; "Break something" turns the slide red and walks the failures. */
   .breaks { transition: background 300ms; }
   .breaks.bad { background: #fbeeee; }
@@ -452,109 +452,7 @@
     <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
   </section>
 
-  <!-- 9. AWS: CI/CD from the code on my laptop to the live system, and where the system sits. -->
-  <section class="slide">
-    <div class="kicker">AWS deployment <span class="pill addon">Add-on</span></div>
-    <h2>From my laptop to a live system</h2>
-    <div class="body" style="flex-direction: column; gap: 18px; margin-top: 22px;">
-        <svg class="diagram" viewBox="0 0 1136 104" style="height: 100px; flex: none;" role="img" aria-label="The pipeline: code, commit, push, pull request, merge, then the deploy gates: merged, tests, server, ship, check, then live">
-          <defs><marker id="arrow-belt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#71717a"/></marker></defs>
-          <text class="label" x="258" y="16" style="font-weight:600;fill:#18181b">Git flow</text>
-          <line x1="0" y1="20" x2="506" y2="20" stroke="#a9a9b0" stroke-width="1.5"/>
-          <text class="label" x="770" y="16" style="font-weight:600;fill:#2f6fde">/deploy - every step is a gate, it stops on the first fail</text>
-          <line x1="517" y1="20" x2="1023" y2="20" stroke="#2f6fde" stroke-width="1.5"/>
-          <rect x="0" y="86" width="1136" height="14" rx="7" fill="#e6e6e9"/>
-          <circle cx="30" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="90" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="150" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="210" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="270" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="330" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="390" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="450" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="510" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="570" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="630" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="690" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="750" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="810" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="870" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="930" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="990" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="1050" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="1110" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/>
-          <g class="node"><rect x="0.0" y="26" width="92" height="54" rx="9"/><text x="46.0" y="50" style="font-size:15px">Code</text><text class="sub" x="46.0" y="69" style="font-size:11px">my laptop</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M93.0,53 L102.4,53"/><g class="node"><rect x="103.4" y="26" width="92" height="54" rx="9"/><text x="149.4" y="50" style="font-size:15px">Commit</text><text class="sub" x="149.4" y="69" style="font-size:11px">git</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M196.4,53 L205.8,53"/><g class="node"><rect x="206.8" y="26" width="92" height="54" rx="9"/><text x="252.8" y="50" style="font-size:15px">Push</text><text class="sub" x="252.8" y="69" style="font-size:11px">GitHub</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M299.8,53 L309.2,53"/><g class="node"><rect x="310.2" y="26" width="92" height="54" rx="9"/><text x="356.2" y="50" style="font-size:15px">PR</text><text class="sub" x="356.2" y="69" style="font-size:11px">review</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M403.2,53 L412.6,53"/><g class="node"><rect x="413.6" y="26" width="92" height="54" rx="9"/><text x="459.6" y="50" style="font-size:15px">Merge</text><text class="sub" x="459.6" y="69" style="font-size:11px">main</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M506.6,53 L516.0,53"/><g class="node water"><rect x="517.0" y="26" width="92" height="54" rx="9"/><text x="563.0" y="50" style="font-size:15px">Merged?</text><text class="sub" x="563.0" y="69" style="font-size:11px">main = GitHub</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M610.0,53 L619.4,53"/><g class="node water"><rect x="620.4" y="26" width="92" height="54" rx="9"/><text x="666.4" y="50" style="font-size:15px">Tests</text><text class="sub" x="666.4" y="69" style="font-size:11px">all suites pass</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M713.4,53 L722.8,53"/><g class="node water"><rect x="723.8" y="26" width="92" height="54" rx="9"/><text x="769.8" y="50" style="font-size:15px">Server</text><text class="sub" x="769.8" y="69" style="font-size:11px">start if off</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M816.8,53 L826.2,53"/><g class="node water"><rect x="827.2" y="26" width="92" height="54" rx="9"/><text x="873.2" y="50" style="font-size:15px">Ship</text><text class="sub" x="873.2" y="69" style="font-size:11px">update.sh, SSH</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M920.2,53 L929.6,53"/><g class="node water"><rect x="930.6" y="26" width="92" height="54" rx="9"/><text x="976.6" y="50" style="font-size:15px">Check</text><text class="sub" x="976.6" y="69" style="font-size:11px">4 services up</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M1023.6,53 L1033.0,53"/><g class="node brand"><rect x="1034.0" y="26" width="92" height="54" rx="9"/><text x="1080.0" y="50" style="font-size:15px">Live</text><text class="sub" x="1080.0" y="69" style="font-size:11px">:3000</text></g>
-        </svg>
-        <svg class="diagram" viewBox="0 0 1136 340" style="flex: 1; min-height: 0;" role="img" aria-label="The grower reaches the system through port 3000, I deploy through SSH, the server pulls main from GitHub; the system sits inside the agropilot user, the EC2 server, the firewall and AWS">
-          <defs>
-            <marker id="arrow-cd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#71717a"/></marker>
-            <marker id="arrow-cdw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#23784f"/></marker>
-          </defs>
-          <g class="node external"><rect x="0" y="54" width="170" height="64" rx="12"/><text x="85" y="82" style="font-size:18px">The grower</text><text class="sub" x="85" y="104">any browser, anywhere</text></g>
-          <g class="node external"><rect x="0" y="214" width="170" height="64" rx="12"/><text x="85" y="242" style="font-size:18px">Me</text><text class="sub" x="85" y="264">laptop, /deploy</text></g>
-          <rect x="250" y="8" width="640" height="324" rx="16" fill="#fcefe3" stroke="#b3601f"/>
-          <text class="label" x="268" y="30" style="text-anchor:start;font-weight:600;fill:#b3601f">AWS - us-east-1</text>
-          <rect x="272" y="42" width="596" height="272" rx="14" fill="#fff7ef" stroke="#18181b" stroke-width="2.5"/>
-          <text class="label" x="852" y="62" style="text-anchor:end;font-weight:600;fill:#18181b">Firewall</text>
-          <rect x="300" y="72" width="540" height="226" rx="12" fill="#ffffff" stroke="#e6e6e9" stroke-width="1.5"/>
-          <text class="label" x="822" y="92" style="text-anchor:end;font-weight:600;fill:#18181b">EC2 server - Ubuntu</text>
-          <rect x="324" y="102" width="492" height="180" rx="10" fill="#e8eefb" stroke="#2f6fde" stroke-dasharray="6 4"/>
-          <text class="label" x="800" y="122" style="text-anchor:end;fill:#2f6fde;font-weight:600">user agropilot - cannot log in</text>
-          <g class="node brand"><rect x="348" y="134" width="444" height="130" rx="12"/><text x="570" y="178" style="font-size:24px">AgroPilot system</text><text class="sub" x="570" y="206" style="font-size:15px">website, registry, planner, weather, PostgreSQL</text><text class="sub" x="570" y="232" style="font-size:14px">each restarts by itself if it crashes</text></g>
-          <rect x="246" y="72" width="120" height="30" rx="15" fill="#e3f4ec" stroke="#23784f"/><text class="label" x="306" y="92" style="fill:#23784f;font-weight:600">:3000 everyone</text>
-          <rect x="246" y="152" width="120" height="30" rx="15" fill="#fde8e8" stroke="#c0353a"/><text class="label" x="306" y="172" style="fill:#c0353a;font-weight:600">:8000 my IP</text>
-          <rect x="246" y="241" width="120" height="30" rx="15" fill="#fde8e8" stroke="#c0353a"/><text class="label" x="306" y="261" style="fill:#c0353a;font-weight:600">SSH my IP</text>
-          <path class="edge" style="stroke:#23784f;marker-end:url(#arrow-cdw)" d="M170,86 L244,86"/>
-          <text class="label" x="207" y="76" style="fill:#23784f;font-weight:600">http://&lt;IP&gt;:3000</text>
-          <path class="edge" style="marker-end:url(#arrow-cd)" d="M170,256 L244,256"/>
-          <text class="label" x="207" y="278">deploy</text>
-          <path class="edge" style="marker-end:url(#arrow-cd)" d="M170,232 L212,232 L212,167 L244,167"/>
-          <text class="label" x="218" y="204" style="text-anchor:start">API</text>
-          <g class="node"><rect x="950" y="138" width="180" height="64" rx="12"/><text x="1040" y="166" style="font-size:18px">GitHub</text><text class="sub" x="1040" y="188">main, merged and tested</text></g>
-          <path class="edge" style="marker-end:url(#arrow-cd)" d="M950,170 L794,170"/>
-          <text class="label" x="1040" y="126">the server pulls main</text>
-          <text class="label" x="570" y="330" style="fill:#b3601f">one server; its IP changes on each start</text>
-        </svg>
-    </div>
-    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
-  </section>
-
-  <!-- 10. Add-ons -->
-  <section class="slide part">
-    <div class="kicker">Add-ons <span class="pill addon">30, all recorded</span></div>
-    <h2>Beyond the spec, on purpose</h2>
-    <div class="body">
-      <div class="visual" style="flex-direction: column; gap: 14px;">
-        <div class="shot" style="flex: 1; min-height: 0;"><img src="screenshots/overview.png" alt="The overview: plot cards with real maps and today's answer"></div>
-        <div class="shot" style="position: relative; padding-bottom: 36.3%; height: 0;"><img src="screenshots/plan-chart.png" alt="The plan as a chart: soil water, the trigger line and the water given" style="position: absolute; width: 150.3%; height: auto; left: -37.58%; top: 0; margin-top: -75.16%; object-fit: initial;"></div>
-      </div>
-      <div class="story">
-        <div class="card"><h3>Plot cards with real maps <span class="pill business">Business</span></h3></div>
-        <div class="card"><h3>The plan as a chart <span class="pill business">Business</span></h3></div>
-        <div class="card"><h3>List pages, plot switcher <span class="pill business">Business</span></h3></div>
-        <div class="card"><h3>Grower sets the trigger, 1-99% <span class="pill business">Business</span></h3></div>
-      </div>
-    </div>
-    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
-  </section>
-
-  <!-- 11. Tests -->
-  <section class="slide">
-    <div class="kicker">Tests</div>
-    <h2>876 tests: each service alone, then together</h2>
-    <div class="body">
-      <div class="grid">
-        <div class="card"><h4>registry - 483</h4><p>Every endpoint, bad input, broken database, parallel requests</p><span class="pill tech">fresh database copy per test</span></div>
-        <div class="card"><h4>planner - 143</h4><p>The math against my hand calculations; services failing</p><span class="pill tech">stand-in registry and weather</span></div>
-        <div class="card"><h4>weather - 76</h4><p>Shared areas, 3-hour reuse, provider failures, old forecasts</p><span class="pill tech">stand-in Open-Meteo and clock</span></div>
-        <div class="card"><h4>website - 169</h4><p>Timeline, midnight, time zones, numbers, maps</p><span class="pill tech">the logic, without a browser</span></div>
-        <div class="card"><h4>all together - 5</h4><p>A new plot through all four services; unknown plot 404 (Not Found)</p><span class="pill tech">the real running system</span></div>
-        <div class="card"><h4>one command</h4><p>All suites, lint and build: pass or fail per line</p><span class="pill tech">before every deploy</span></div>
-      </div>
-    </div>
-    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
-  </section>
-
-  <!-- 12. Skills -->
-  <section class="slide">
-    <div class="kicker">Skills we used</div>
-    <h2>The agent works from written rules</h2>
-    <div class="body">
-      <div class="grid">
-        <div class="card"><h4>/irrigation-calc-reference</h4><p>Every watering formula and my 5 hand-calculated cases; the planner is built and tested from it</p><span class="pill tech">planner</span></div>
-        <div class="card"><h4>Superpowers</h4><p>/brainstorming, /writing-plans: design and plan for the PostgreSQL move, before any code</p><span class="pill tech">registry</span></div>
-        <div class="card"><h4>/run-stack, /deploy</h4><p>All four services in one command; main to EC2 only after every test passes</p><span class="pill tech">daily, and to release</span></div>
-        <div class="card"><h4>/test</h4><p>After each part: writes the missing tests and keeps the test plan</p><span class="pill tech">after each part</span></div>
-        <div class="card"><h4>/qa, /qa-live</h4><p>Tries to break it on my laptop and on AWS, then reports every gap</p><span class="pill tech">before each PR</span></div>
-        <div class="card"><h4>/requirements, /submit-task</h4><p>Every requirement with its evidence, then the PR text</p><span class="pill tech">at the end</span></div>
-      </div>
-    </div>
-    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
-  </section>
-
-  <!-- 13. All together: an interactive walk through one visit. Next/Back (or the arrow keys) move
+  <!-- 9. All together: an interactive walk through one visit. Next/Back (or the arrow keys) move
        one step; each step lights the part of the page and the services it comes from. -->
   <section class="slide flow" data-steps="8">
     <div class="kicker">All together</div>
@@ -645,7 +543,7 @@
     <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
   </section>
 
-  <!-- 14. Backup: when something breaks. Shown only if asked. Step 1 is the calm system;
+  <!-- 10. Backup: when something breaks. Shown only if asked. Step 1 is the calm system;
        "Break something" turns the slide red and walks one failure per step: what breaks
        (red X), where the error travels (red arrows) and what the grower sees. -->
   <section class="slide breaks" data-steps="7">
@@ -793,11 +691,113 @@
   </section>
 
 
+  <!-- 11. AWS: CI/CD from the code on my laptop to the live system, and where the system sits. -->
+  <section class="slide">
+    <div class="kicker">AWS deployment <span class="pill addon">Add-on</span></div>
+    <h2>From my laptop to a live system</h2>
+    <div class="body" style="flex-direction: column; gap: 18px; margin-top: 22px;">
+        <svg class="diagram" viewBox="0 0 1136 104" style="height: 100px; flex: none;" role="img" aria-label="The pipeline: code, commit, push, pull request, merge, then the deploy gates: merged, tests, server, ship, check, then live">
+          <defs><marker id="arrow-belt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#71717a"/></marker></defs>
+          <text class="label" x="258" y="16" style="font-weight:600;fill:#18181b">Git flow</text>
+          <line x1="0" y1="20" x2="506" y2="20" stroke="#a9a9b0" stroke-width="1.5"/>
+          <text class="label" x="770" y="16" style="font-weight:600;fill:#2f6fde">/deploy - every step is a gate, it stops on the first fail</text>
+          <line x1="517" y1="20" x2="1023" y2="20" stroke="#2f6fde" stroke-width="1.5"/>
+          <rect x="0" y="86" width="1136" height="14" rx="7" fill="#e6e6e9"/>
+          <circle cx="30" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="90" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="150" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="210" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="270" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="330" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="390" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="450" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="510" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="570" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="630" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="690" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="750" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="810" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="870" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="930" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="990" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="1050" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/><circle cx="1110" cy="93" r="4" fill="#ffffff" stroke="#a9a9b0" stroke-width="1.5"/>
+          <g class="node"><rect x="0.0" y="26" width="92" height="54" rx="9"/><text x="46.0" y="50" style="font-size:15px">Code</text><text class="sub" x="46.0" y="69" style="font-size:11px">my laptop</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M93.0,53 L102.4,53"/><g class="node"><rect x="103.4" y="26" width="92" height="54" rx="9"/><text x="149.4" y="50" style="font-size:15px">Commit</text><text class="sub" x="149.4" y="69" style="font-size:11px">git</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M196.4,53 L205.8,53"/><g class="node"><rect x="206.8" y="26" width="92" height="54" rx="9"/><text x="252.8" y="50" style="font-size:15px">Push</text><text class="sub" x="252.8" y="69" style="font-size:11px">GitHub</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M299.8,53 L309.2,53"/><g class="node"><rect x="310.2" y="26" width="92" height="54" rx="9"/><text x="356.2" y="50" style="font-size:15px">PR</text><text class="sub" x="356.2" y="69" style="font-size:11px">review</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M403.2,53 L412.6,53"/><g class="node"><rect x="413.6" y="26" width="92" height="54" rx="9"/><text x="459.6" y="50" style="font-size:15px">Merge</text><text class="sub" x="459.6" y="69" style="font-size:11px">main</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M506.6,53 L516.0,53"/><g class="node water"><rect x="517.0" y="26" width="92" height="54" rx="9"/><text x="563.0" y="50" style="font-size:15px">Merged?</text><text class="sub" x="563.0" y="69" style="font-size:11px">main = GitHub</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M610.0,53 L619.4,53"/><g class="node water"><rect x="620.4" y="26" width="92" height="54" rx="9"/><text x="666.4" y="50" style="font-size:15px">Tests</text><text class="sub" x="666.4" y="69" style="font-size:11px">all suites pass</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M713.4,53 L722.8,53"/><g class="node water"><rect x="723.8" y="26" width="92" height="54" rx="9"/><text x="769.8" y="50" style="font-size:15px">Server</text><text class="sub" x="769.8" y="69" style="font-size:11px">start if off</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M816.8,53 L826.2,53"/><g class="node water"><rect x="827.2" y="26" width="92" height="54" rx="9"/><text x="873.2" y="50" style="font-size:15px">Ship</text><text class="sub" x="873.2" y="69" style="font-size:11px">update.sh, SSH</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M920.2,53 L929.6,53"/><g class="node water"><rect x="930.6" y="26" width="92" height="54" rx="9"/><text x="976.6" y="50" style="font-size:15px">Check</text><text class="sub" x="976.6" y="69" style="font-size:11px">4 services up</text></g><path class="edge" style="marker-end:url(#arrow-belt)" d="M1023.6,53 L1033.0,53"/><g class="node brand"><rect x="1034.0" y="26" width="92" height="54" rx="9"/><text x="1080.0" y="50" style="font-size:15px">Live</text><text class="sub" x="1080.0" y="69" style="font-size:11px">:3000</text></g>
+        </svg>
+        <svg class="diagram" viewBox="0 0 1136 340" style="flex: 1; min-height: 0;" role="img" aria-label="The grower reaches the system through port 3000, I deploy through SSH, the server pulls main from GitHub; the system sits inside the agropilot user, the EC2 server, the firewall and AWS">
+          <defs>
+            <marker id="arrow-cd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#71717a"/></marker>
+            <marker id="arrow-cdw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#23784f"/></marker>
+          </defs>
+          <g class="node external"><rect x="0" y="54" width="170" height="64" rx="12"/><text x="85" y="82" style="font-size:18px">The grower</text><text class="sub" x="85" y="104">any browser, anywhere</text></g>
+          <g class="node external"><rect x="0" y="214" width="170" height="64" rx="12"/><text x="85" y="242" style="font-size:18px">Me</text><text class="sub" x="85" y="264">laptop, /deploy</text></g>
+          <rect x="250" y="8" width="640" height="324" rx="16" fill="#fcefe3" stroke="#b3601f"/>
+          <text class="label" x="268" y="30" style="text-anchor:start;font-weight:600;fill:#b3601f">AWS - us-east-1</text>
+          <rect x="272" y="42" width="596" height="272" rx="14" fill="#fff7ef" stroke="#18181b" stroke-width="2.5"/>
+          <text class="label" x="852" y="62" style="text-anchor:end;font-weight:600;fill:#18181b">Firewall</text>
+          <rect x="300" y="72" width="540" height="226" rx="12" fill="#ffffff" stroke="#e6e6e9" stroke-width="1.5"/>
+          <text class="label" x="822" y="92" style="text-anchor:end;font-weight:600;fill:#18181b">EC2 server - Ubuntu</text>
+          <rect x="324" y="102" width="492" height="180" rx="10" fill="#e8eefb" stroke="#2f6fde" stroke-dasharray="6 4"/>
+          <text class="label" x="800" y="122" style="text-anchor:end;fill:#2f6fde;font-weight:600">user agropilot - cannot log in</text>
+          <g class="node brand"><rect x="348" y="134" width="444" height="130" rx="12"/><text x="570" y="178" style="font-size:24px">AgroPilot system</text><text class="sub" x="570" y="206" style="font-size:15px">website, registry, planner, weather, PostgreSQL</text><text class="sub" x="570" y="232" style="font-size:14px">each restarts by itself if it crashes</text></g>
+          <rect x="246" y="72" width="120" height="30" rx="15" fill="#e3f4ec" stroke="#23784f"/><text class="label" x="306" y="92" style="fill:#23784f;font-weight:600">:3000 everyone</text>
+          <rect x="246" y="152" width="120" height="30" rx="15" fill="#fde8e8" stroke="#c0353a"/><text class="label" x="306" y="172" style="fill:#c0353a;font-weight:600">:8000 my IP</text>
+          <rect x="246" y="241" width="120" height="30" rx="15" fill="#fde8e8" stroke="#c0353a"/><text class="label" x="306" y="261" style="fill:#c0353a;font-weight:600">SSH my IP</text>
+          <path class="edge" style="stroke:#23784f;marker-end:url(#arrow-cdw)" d="M170,86 L244,86"/>
+          <a href="http://100.53.209.1:3000" target="_blank"><text class="label" x="207" y="76" style="fill:#23784f;font-weight:600;text-decoration:underline;cursor:pointer">http://&lt;IP&gt;:3000</text></a>
+          <path class="edge" style="marker-end:url(#arrow-cd)" d="M170,256 L244,256"/>
+          <text class="label" x="207" y="278">deploy</text>
+          <path class="edge" style="marker-end:url(#arrow-cd)" d="M170,232 L212,232 L212,167 L244,167"/>
+          <text class="label" x="218" y="204" style="text-anchor:start">API</text>
+          <g class="node"><rect x="950" y="138" width="180" height="64" rx="12"/><text x="1040" y="166" style="font-size:18px">GitHub</text><text class="sub" x="1040" y="188">main, merged and tested</text></g>
+          <path class="edge" style="marker-end:url(#arrow-cd)" d="M950,170 L794,170"/>
+          <text class="label" x="1040" y="126">the server pulls main</text>
+          <text class="label" x="570" y="330" style="fill:#b3601f">one server; its IP changes on each start</text>
+        </svg>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- 12. Add-ons -->
+  <section class="slide part">
+    <div class="kicker">Add-ons <span class="pill addon">30, all recorded</span></div>
+    <h2>Beyond the spec, on purpose</h2>
+    <div class="body">
+      <div class="visual" style="flex-direction: column; gap: 14px;">
+        <div class="shot" style="flex: 1; min-height: 0;"><img src="screenshots/overview.png" alt="The overview: plot cards with real maps and today's answer"></div>
+        <div class="shot" style="position: relative; padding-bottom: 36.3%; height: 0;"><img src="screenshots/plan-chart.png" alt="The plan as a chart: soil water, the trigger line and the water given" style="position: absolute; width: 150.3%; height: auto; left: -37.58%; top: 0; margin-top: -75.16%; object-fit: initial;"></div>
+      </div>
+      <div class="story">
+        <div class="card"><h3>Plot cards with real maps <span class="pill business">Business</span></h3></div>
+        <div class="card"><h3>The plan as a chart <span class="pill business">Business</span></h3></div>
+        <div class="card"><h3>List pages, plot switcher <span class="pill business">Business</span></h3></div>
+        <div class="card"><h3>Grower sets the trigger, 1-99% <span class="pill business">Business</span></h3></div>
+      </div>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- 13. Tests -->
+  <section class="slide">
+    <div class="kicker">Tests</div>
+    <h2>876 tests: each service alone, then together</h2>
+    <div class="body">
+      <div class="grid">
+        <div class="card"><h4>registry - 483</h4><p>Every endpoint, bad input, broken database, parallel requests</p><span class="pill tech">fresh database copy per test</span></div>
+        <div class="card"><h4>planner - 143</h4><p>The math against my hand calculations; services failing</p><span class="pill tech">stand-in registry and weather</span></div>
+        <div class="card"><h4>weather - 76</h4><p>Shared areas, 3-hour reuse, provider failures, old forecasts</p><span class="pill tech">stand-in Open-Meteo and clock</span></div>
+        <div class="card"><h4>website - 169</h4><p>Timeline, midnight, time zones, numbers, maps</p><span class="pill tech">the logic, without a browser</span></div>
+        <div class="card"><h4>all together - 5</h4><p>A new plot through all four services; unknown plot 404 (Not Found)</p><span class="pill tech">the real running system</span></div>
+        <div class="card"><h4>one command</h4><p>All suites, lint and build: pass or fail per line</p><span class="pill tech">before every deploy</span></div>
+      </div>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- 14. Skills -->
+  <section class="slide">
+    <div class="kicker">Skills we used</div>
+    <h2>The agent works from written rules</h2>
+    <div class="body">
+      <div class="grid">
+        <div class="card"><h4>/irrigation-calc-reference</h4><p>Every watering formula and my 5 hand-calculated cases; the planner is built and tested from it</p><span class="pill tech">planner</span></div>
+        <div class="card"><h4>Superpowers</h4><p>/brainstorming, /writing-plans: design and plan for the PostgreSQL move, before any code</p><span class="pill tech">registry</span></div>
+        <div class="card"><h4>/run-stack, /deploy</h4><p>All four services in one command; main to EC2 only after every test passes</p><span class="pill tech">daily, and to release</span></div>
+        <div class="card"><h4>/test</h4><p>After each part: writes the missing tests and keeps the test plan</p><span class="pill tech">after each part</span></div>
+        <div class="card"><h4>/qa, /qa-live</h4><p>Tries to break it on my laptop and on AWS, then reports every gap</p><span class="pill tech">before each PR</span></div>
+        <div class="card"><h4>/requirements, /submit-task</h4><p>Every requirement with its evidence, then the PR text</p><span class="pill tech">at the end</span></div>
+      </div>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
   <!-- 15. Live (last slide) -->
   <section class="slide title">
     <div class="kicker">Live now</div>
     <h1>Questions</h1>
-    <p class="lead">http://100.53.209.1:3000 - the grower's page</p>
+    <p class="lead"><a href="http://100.53.209.1:3000" target="_blank" style="color:inherit">http://100.53.209.1:3000</a> - the grower's page</p>
     <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
   </section>
 
@@ -838,7 +838,10 @@
     else return;
     e.preventDefault();
   });
-  document.addEventListener("click", e => show(current + (e.clientX > window.innerWidth / 2 ? 1 : -1)));
+  document.addEventListener("click", e => {
+    if (e.target.closest("a")) return; // a link opens the live site; it does not change slide
+    show(current + (e.clientX > window.innerWidth / 2 ? 1 : -1));
+  });
   window.addEventListener("resize", fit);
 
   number();

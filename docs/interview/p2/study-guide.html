@@ -84,8 +84,8 @@
   <h2>1. איך להציג</h2>
   <ul>
     <li>פותחים את <code>docs/interview/p2/slides.html</code> בדפדפן. <b>F</b> למסך מלא, חצים או רווח כדי לזוז, <b>Home</b> חוזר להתחלה. מספר השקף נשמר בכתובת (<code>#5</code>).</li>
-    <li>14 שקפים, בערך 15 דקות דיבור: דקה לכל שקף, ושתיים לכל אחד מחמשת שקפי החלקים (5-9).</li>
-    <li>שקף 14 הוא שקף גיבוי, לפני "Questions" (15, האחרון): מה קורה כשמשהו נופל. לא מציגים אותו מעצמנו, רק אם שואלים על כישלונות (פרק <a href="#review">15</a>). בהצגה הרגילה מדלגים עליו: <b>End</b> קופץ ל-Questions, וחץ שמאלה חוזר אליו כשצריך.</li>
+    <li>15 שקפים, בערך 15 דקות דיבור: דקה לכל שקף, ושתיים לכל אחד מחמשת שקפי החלקים (5-8 ו-AWS ב-11).</li>
+    <li>שקף 10 הוא שקף גיבוי, אחרי "הכל ביחד" (9): מה קורה כשמשהו נופל. לא מציגים אותו מעצמנו, רק אם שואלים על כישלונות (פרק <a href="#review">15</a>). בהצגה הרגילה מדלגים עליו: חץ ימינה פעם אחת נוספת עובר ממנו ל-AWS (11). אחריו תוספות (12), בדיקות (13), סקילים (14) ו-"Questions" (15, האחרון).</li>
     <li>השקפים הם עוגן, לא טקסט לקריאה. כל ההסבר נמצא כאן.</li>
     <li>לפני הראיון: להפעיל את המכונה ב-AWS ולהריץ <code>/deploy</code> (הוא מדפיס את כתובת ה-IP החדשה, O115), ולעדכן את כללי הפורטים 22 ו-8000 לכתובת שלך (Y32). את הכתובת להגיד בעל פה בשקף 15, או לעדכן אותה בשקף.</li>
   </ul>
@@ -122,21 +122,7 @@
   <h3>שקף 8 - frontend</h3>
   <div class="box say">"התשובה של היום קודם וגדולה, אחר כך השבוע. ה-planner נותן דקות לכל יום, לא שעה, אבל מגדל צריך שעון. לכן המגדל בוחר באיזו שעה מתחילים, השקיה ארוכה ממשיכה אחרי חצות ליום הבא, וקו אדום מסמן את השעה עכשיו, כדי לראות אם שעת ההתחלה כבר עברה. בצילום: ריצה של 24 שעות מ-06:00 עד 06:00 למחרת, עם הערה שהיא נספרת כמים של היום."</div>
 
-  <h3>שקף 9 - AWS <span class="tag add">תוספת</span></h3>
-  <div class="box say">הפירוט המלא בפרק <a href="#aws">7</a>. "מלמעלה, הדרך מהקוד אצלי למערכת חיה. קודם git רגיל: commit, push, pull request, merge ל-main. משם <code>/deploy</code>, ובו כל צעד הוא שער שעוצר בכישלון הראשון. בודק ש-main אצלי שווה ל-GitHub, מריץ את כל הבדיקות, מדליק את השרת אם הוא כבוי, מריץ <code>update.sh</code> ב-SSH, ובודק שארבעת השירותים עונים. רק אז המערכת חיה.<br>למטה, איפה היא יושבת: שרת EC2 אחד ב-AWS, מאחורי firewall עם שלוש דלתות. 3000 פתוחה לכולם, כך שהמגדל נכנס מכל דפדפן. 8000 (ה-API) ו-SSH פתוחות רק ל-IP שלי. בתוך השרת, המערכת רצה תחת משתמש <code>agropilot</code> שאי אפשר להתחבר אליו, וכל שירות קם לבד אם הוא נופל. השרת מושך את הקוד מ-GitHub בעצמו."</div>
-  <div class="box watch">אם שואלים "זה CI/CD?": אין שרת CI כמו GitHub Actions. ה-pipeline הוא הסקיל <code>/deploy</code> שרץ מהמחשב שלי, עם שערים קבועים. זה עונה על אותה שאלה, "רק קוד ממוזג ובדוק עולה", אבל ההפעלה ידנית. השלב הבא הטבעי: להריץ את אותם צעדים ב-GitHub Actions על כל merge.</div>
-  <div class="box words">באג שמצאנו בפריסה הראשונה, אם שואלים: חלקה לא קיימת החזירה 200 (OK) בשרת ו-404 (Not Found) במחשב, כי ה-build של production שונה מ-<code>next dev</code>. התיקון בפרק 7.</div>
-
-  <h3>שקף 10 - תוספות</h3>
-  <div class="box say">"כרטיסי חלקה עם מפה אמיתית, דפי רשימה, גרף, ובחירת סף. כולן רשומות כהחלטות שלי. ההחלטה מתי מותר לצאת מהדרישות היא Y27: פיצ'רים קטנים שהמוצר צריך, כן. שינוי צורת המוצר או שמירת state אצל הלקוח, לא."</div>
-
-  <h3>שקף 11 - בדיקות</h3>
-  <div class="box say">"876 בדיקות. כל שירות נבדק לבד, כשמי שהוא תלוי בו מוחלף בגרסה מדומה שאנחנו שולטים בה, וכך אפשר לבדוק גם כישלונות: ספק שנופל, תשובה שבורה, שירות איטי. אחר כך חמש בדיקות על המערכת האמיתית, כל ארבעת השירותים יחד." לעבור על הכרטיסים: מה כל אחד בודק (השורה הראשונה) ואיך (התגית). הפירוט בפרק <a href="#tests">9</a>.</div>
-
-  <h3>שקף 12 - סקילים</h3>
-  <div class="box say">"הסוכן עבד מכללים כתובים. <code>irrigation-calc-reference</code> הוא המפרט של ה-engine, עם המקרים שחישבתי ביד. Superpowers כתב את התכנון והתוכנית למעבר ל-PostgreSQL. השאר הם סקילים שבנינו בעצמנו כדי להריץ, לבדוק, לשבור ולפרסם."</div>
-
-  <h3>שקף 13 - הכל ביחד</h3>
+  <h3>שקף 9 - הכל ביחד</h3>
   <div class="box say">שקף אינטראקטיבי: משמאל דף החלקה, מימין הארכיטקטורה. <b>Next step</b> או חץ ימינה מתקדמים צעד, <b>Back</b> או חץ שמאלה חוזרים. בכל צעד מסומן החלק בדף והשירותים שהוא בא מהם. אחרי הצעד האחרון, החץ עובר לשקף הבא. שמונה הצעדים:</div>
   <ol>
     <li>המגדל פותח את North block: דפדפן ו-frontend.</li>
@@ -149,8 +135,8 @@
     <li>שורת הסטטוס: האתר בודק שכל שירות למעלה.</li>
   </ol>
 
-  <h3>שקף 14 - מה אם משהו נשבר? <span class="tag tech">גיבוי</span></h3>
-  <div class="box say">רק אם שואלים. אותה ארכיטקטורה כמו בשקף 13, בלי הדף. בצעד הראשון הכל עובד: שאלות בכחול, תשובות בכתום. <b>Break something</b> (או חץ ימינה) הופך את השקף לאדום ושובר דבר אחד בכל צעד. בכרטיס מימין, מלמעלה למטה: <b>The problem</b> (מה נשבר, במשפט אחד), <b>What happens</b> (שלושה צעדים ממוספרים) ו-<b>The grower sees</b>. בשרטוט: השירות השבור מקבל X אדום, החצים האדומים מראים לאן השגיאה חוזרת, ומימין רואים בדיוק מה המגדל רואה (הטקסטים מהקוד האמיתי). <b>Back</b> חוזר.</div>
+  <h3>שקף 10 - מה אם משהו נשבר? <span class="tag tech">גיבוי</span></h3>
+  <div class="box say">רק אם שואלים. אותה ארכיטקטורה כמו בשקף 9, בלי הדף. בצעד הראשון הכל עובד: שאלות בכחול, תשובות בכתום. <b>Break something</b> (או חץ ימינה) הופך את השקף לאדום ושובר דבר אחד בכל צעד. בכרטיס מימין, מלמעלה למטה: <b>The problem</b> (מה נשבר, במשפט אחד), <b>What happens</b> (שלושה צעדים ממוספרים) ו-<b>The grower sees</b>. בשרטוט: השירות השבור מקבל X אדום, החצים האדומים מראים לאן השגיאה חוזרת, ומימין רואים בדיוק מה המגדל רואה (הטקסטים מהקוד האמיתי). <b>Back</b> חוזר.</div>
   <ol>
     <li>הכל עובד: "Water for 24 h", "All systems normal".</li>
     <li>Open-Meteo נופל, יש תחזית שמורה: 3 ניסיונות, ואז התחזית האחרונה עם <code>stale: true</code> (חצים כתומים-חומים, לא אדומים: התשובה נכונה, רק ישנה). המגדל רואה את התוכנית ו-"From an older weather update".</li>
@@ -161,6 +147,20 @@
     <li>planner למטה: הקריאה של האתר נכשלת, "planner-service is not reachable", ושורת הסטטוס אדומה.</li>
   </ol>
   <div class="box watch">המשפט שלמטה בשקף הוא הכלל שמאחורי הכל: "Never a plan of zeros". או תחזית ישנה שמסומנת כישנה, או 503 שאומר איזה שירות נפל.</div>
+
+  <h3>שקף 11 - AWS <span class="tag add">תוספת</span></h3>
+  <div class="box say">הפירוט המלא בפרק <a href="#aws">7</a>. "מלמעלה, הדרך מהקוד אצלי למערכת חיה. קודם git רגיל: commit, push, pull request, merge ל-main. משם <code>/deploy</code>, ובו כל צעד הוא שער שעוצר בכישלון הראשון. בודק ש-main אצלי שווה ל-GitHub, מריץ את כל הבדיקות, מדליק את השרת אם הוא כבוי, מריץ <code>update.sh</code> ב-SSH, ובודק שארבעת השירותים עונים. רק אז המערכת חיה.<br>למטה, איפה היא יושבת: שרת EC2 אחד ב-AWS, מאחורי firewall עם שלוש דלתות. 3000 פתוחה לכולם, כך שהמגדל נכנס מכל דפדפן. 8000 (ה-API) ו-SSH פתוחות רק ל-IP שלי. בתוך השרת, המערכת רצה תחת משתמש <code>agropilot</code> שאי אפשר להתחבר אליו, וכל שירות קם לבד אם הוא נופל. השרת מושך את הקוד מ-GitHub בעצמו."</div>
+  <div class="box watch">אם שואלים "זה CI/CD?": אין שרת CI כמו GitHub Actions. ה-pipeline הוא הסקיל <code>/deploy</code> שרץ מהמחשב שלי, עם שערים קבועים. זה עונה על אותה שאלה, "רק קוד ממוזג ובדוק עולה", אבל ההפעלה ידנית. השלב הבא הטבעי: להריץ את אותם צעדים ב-GitHub Actions על כל merge.</div>
+  <div class="box words">באג שמצאנו בפריסה הראשונה, אם שואלים: חלקה לא קיימת החזירה 200 (OK) בשרת ו-404 (Not Found) במחשב, כי ה-build של production שונה מ-<code>next dev</code>. התיקון בפרק 7.</div>
+
+  <h3>שקף 12 - תוספות</h3>
+  <div class="box say">"כרטיסי חלקה עם מפה אמיתית, דפי רשימה, גרף, ובחירת סף. כולן רשומות כהחלטות שלי. ההחלטה מתי מותר לצאת מהדרישות היא Y27: פיצ'רים קטנים שהמוצר צריך, כן. שינוי צורת המוצר או שמירת state אצל הלקוח, לא."</div>
+
+  <h3>שקף 13 - בדיקות</h3>
+  <div class="box say">"876 בדיקות. כל שירות נבדק לבד, כשמי שהוא תלוי בו מוחלף בגרסה מדומה שאנחנו שולטים בה, וכך אפשר לבדוק גם כישלונות: ספק שנופל, תשובה שבורה, שירות איטי. אחר כך חמש בדיקות על המערכת האמיתית, כל ארבעת השירותים יחד." לעבור על הכרטיסים: מה כל אחד בודק (השורה הראשונה) ואיך (התגית). הפירוט בפרק <a href="#tests">9</a>.</div>
+
+  <h3>שקף 14 - סקילים</h3>
+  <div class="box say">"הסוכן עבד מכללים כתובים. <code>irrigation-calc-reference</code> הוא המפרט של ה-engine, עם המקרים שחישבתי ביד. Superpowers כתב את התכנון והתוכנית למעבר ל-PostgreSQL. השאר הם סקילים שבנינו בעצמנו כדי להריץ, לבדוק, לשבור ולפרסם."</div>
 
   <h3>שקף 15 - חי</h3>
   <div class="box say">"זו המערכת שרצה עכשיו. תנסו חלקה, תשנו את רמת האדמה, תפתחו חלקה שלא קיימת."</div>
@@ -346,7 +346,7 @@
     <tr><td>weather</td><td>76</td><td><code>uv run pytest</code></td></tr>
     <tr><td>e2e</td><td>5</td><td><code>cd tests/e2e &amp;&amp; uv run pytest</code>, על המערכת הרצה</td></tr>
   </table>
-  <h3>מה כל סוויטה בודקת, ואיך (שקף 11)</h3>
+  <h3>מה כל סוויטה בודקת, ואיך (שקף 13)</h3>
   <table>
     <tr><th>סוויטה</th><th>מה</th><th>איך</th></tr>
     <tr><td>registry, 483</td><td>כל endpoint, קלט רע בכל שדה (מטריצה), מסד חסר, פגום, נעול או לקריאה בלבד, ובקשות במקביל</td><td>עותק טרי של מסד ה-seed לכל בדיקה (SQLite). עם <code>TEST_DATABASE_URL</code> אותה סוויטה על PostgreSQL</td></tr>
@@ -382,7 +382,7 @@
 </section>
 
 <section id="flow">
-  <h2>11. הזרימה מקצה לקצה (שקף 13)</h2>
+  <h2>11. הזרימה מקצה לקצה (שקף 9)</h2>
   <ol>
     <li>הדפדפן מבקש <code>/plots/{id}</code> מהשרת של Next.js.</li>
     <li><code>proxy.ts</code> שואל את ה-registry <code>GET /v1/plots/{id}</code>. 404 שם הופך לדף 404 אמיתי.</li>
@@ -392,8 +392,8 @@
     <li>ה-weather עונה מהמטמון של התא אם התחזית טרייה. אחרת הוא שואל את Open-Meteo, ואם זה נכשל, מחזיר תחזית stale.</li>
     <li>ה-engine מחשב, והדף מציג קודם את היום ואחר כך 7 ימים. ה-registry נקרא גם לסרגל הצד ולשורת הסטטוס.</li>
   </ol>
-  <p>מה קורה כשמשהו נופל: weather למטה עם תחזית במטמון נותן <code>stale</code>, ובלעדיה ה-planner מחזיר 503 עם שם השירות, והדף מציג את ההודעה. registry למטה: אותו דבר, ושורת הסטטוס מראה <bdi class="en">"registry-service down"</bdi>. כל מקרה בנפרד: שקף 14.</p>
-  <div class="box words"><b>איפה כישלונות מופיעים בשקפים:</b> שקף 6 (weather: "provider fails 3 times", תחזית ישנה, 503), שקף 11 (הכרטיסים של planner ו-weather: "services failing", "provider failures"), שקף 13 צעד 2 (חלקה לא קיימת: 404), ושקף 14, הגיבוי, שמראה כל כישלון מקצה לקצה.</div>
+  <p>מה קורה כשמשהו נופל: weather למטה עם תחזית במטמון נותן <code>stale</code>, ובלעדיה ה-planner מחזיר 503 עם שם השירות, והדף מציג את ההודעה. registry למטה: אותו דבר, ושורת הסטטוס מראה <bdi class="en">"registry-service down"</bdi>. כל מקרה בנפרד: שקף 10.</p>
+  <div class="box words"><b>איפה כישלונות מופיעים בשקפים:</b> שקף 6 (weather: "provider fails 3 times", תחזית ישנה, 503), שקף 13 (הכרטיסים של planner ו-weather: "services failing", "provider failures"), שקף 9 צעד 2 (חלקה לא קיימת: 404), ושקף 10, הגיבוי, שמראה כל כישלון מקצה לקצה.</div>
 </section>
 
 <section id="numbers">
@@ -471,7 +471,7 @@
     <li>חלקה לא קיימת: <code>/plots/00000000-0000-0000-0000-000000000000</code> מחזירה 404.</li>
     <li>אם יש זמן: <code>http://&lt;ip&gt;:8000/docs</code>, ושם <code>POST /v1/plots</code> עם <code>area_m2: 0.5</code> מחזיר 422 (O132).</li>
   </ol>
-  <div class="box watch">לא לעצור שירותים בשרת החי באמצע הראיון. אם רוצים להראות כישלון, לעשות את זה מקומית עם <code>stack.sh stop weather</code>, או להראות את שקף 14.</div>
+  <div class="box watch">לא לעצור שירותים בשרת החי באמצע הראיון. אם רוצים להראות כישלון, לעשות את זה מקומית עם <code>stack.sh stop weather</code>, או להראות את שקף 10.</div>
 </section>
 
 <section id="review">
@@ -491,11 +491,11 @@
 
   <details><summary>2. הזרימה של המשתמש, מהדפדפן לשירותים ובחזרה</summary>
   <div class="box say"><bdi class="en">"The grower opens the overview, clicks a plot, says how the soil feels, and the Next.js server builds the page: today's answer first, then the 7-day plan, with every choice kept in the address."</bdi></div>
-  <p>הבחירות (רמת אדמה, סף, שעת התחלה, תצוגה) נשמרות בכתובת (A63), כך שרענון או קישור ששולחים מראים את אותה תוכנית. להראות בשקף 13.</p></details>
+  <p>הבחירות (רמת אדמה, סף, שעת התחלה, תצוגה) נשמרות בכתובת (A63), כך שרענון או קישור ששולחים מראים את אותה תוכנית. להראות בשקף 9.</p></details>
 
   <details><summary>3. הזרימה של המערכת, כולל מה קורה בשגיאה</summary>
   <div class="box say"><bdi class="en">"The Next.js server checks the plot in the registry, calls the planner, and the planner reads the registry and the weather service. If anything fails, the planner returns 503 naming the service and the page shows that message, so the grower never gets a plan of zeros."</bdi></div>
-  <p>הדרך התקינה: פרק <a href="#flow">11</a> ושקף 13. הכישלונות, אחד אחד: שקף 14 ופרק <a href="#talk">2</a> (שקף 14).</p></details>
+  <p>הדרך התקינה: פרק <a href="#flow">11</a> ושקף 9. הכישלונות, אחד אחד: שקף 10 ופרק <a href="#talk">2</a> (שקף 10).</p></details>
 
   <details><summary>4. למה צריך שירות מזג אוויר, ולא לקרוא ל-Open-Meteo מה-frontend? איך בדקתם אותו?</summary>
   <div class="box say"><bdi class="en">"It caches one forecast per 0.1° area for 3 hours and shares it between all plots and growers, falls back to a forecast marked stale when Open-Meteo is down, and the planner needs it on the server anyway. We tested it with a fake Open-Meteo and a fake clock."</bdi></div>
@@ -513,7 +513,7 @@
     <li><code>RegistryPlot</code> ב-<code>services/planner-service/upstream.py</code> מחייב <code>lat</code> בין -90 ל-90, עם טיפוסים מדויקים (<code>"1000"</code> כטקסט נדחה). שדה חסר: <code>ValidationError</code>, ואז 503.</li>
     <li>ההוכחה: הטבלה <code>FAILURES</code> ב-<code>tests/test_plan.py</code>: שדה חסר, טקסט במקום מספר, תאריך לא חוקי, <code>lat</code> מחוץ לטווח, null, לא JSON ועוד. אין בדיקה בשם "latitude", אבל "missing field" הוא אותו מנגנון.</li>
     <li>שדות נוספים מתעלמים מהם, כך שה-registry יכול להוסיף שדה בלי לשבור את ה-planner.</li>
-    <li>להראות בשקף 14: Failure 3 (registry למטה) ו-Failure 5 (latitude).</li>
+    <li>להראות בשקף 10: Failure 3 (registry למטה) ו-Failure 5 (latitude).</li>
   </ul></details>
 
   <details><summary>6. איך בדקתם את ה-planner, שתלוי בשני שירותים?</summary>
