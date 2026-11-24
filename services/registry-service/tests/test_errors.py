@@ -88,3 +88,13 @@ def test_database_removed_while_running_is_503(client, db_path):
     assert client.get("/v1/farms").status_code == 200
     db_path.unlink()
     assert_problem(client.get("/v1/farms"), 503, "UNAVAILABLE")
+
+
+@sqlite_only
+def test_health_is_503_with_retry_after_when_the_database_is_missing(tmp_path, monkeypatch):
+    """O126: /health runs a query, so a missing database is 503 UNAVAILABLE with Retry-After: 5,
+    and the frontend's status line shows the registry as down."""
+    use_database(monkeypatch, f"sqlite:///{tmp_path / 'missing.db'}")
+    response = TestClient(app).get("/health")
+    assert_problem(response, 503, "UNAVAILABLE")
+    assert response.headers["retry-after"] == "5"

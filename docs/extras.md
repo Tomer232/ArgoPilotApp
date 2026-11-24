@@ -111,3 +111,10 @@ Each entry: what it is, why we made it, where it lives, and how to run it.
 - **Why:** the owner is interviewed on every task and must explain every part; the deck and guide are built from the repo so every claim points to its source.
 - **Where:** `.claude/skills/interview-prep/` (`SKILL.md`, `references/deck-template.html`).
 - **Run:** ask Claude Code "/interview-prep".
+
+## e2e test suite (P2)
+
+- **What:** five tests that run against the real, running services: a new plot gets a 7-day plan, its page shows it, an unknown plot page is a real 404, the planner's 404, and the registry refusing an unrealistic plot. They create only `e2e-` rows and delete them.
+- **Why:** each service's own suite fakes the others, so nothing checked that the four really work together.
+- **Where:** `tests/e2e/` (`pyproject.toml`, `conftest.py`, `test_plot_flow.py`).
+- **Run:** start the stack (`bash .claude/skills/run-stack/scripts/stack.sh start`), then `cd tests/e2e && uv run pytest`; it skips itself when the stack is down.
