@@ -194,6 +194,7 @@ Every design decision, and who made it. P1 (registry API) decisions end at Y12, 
 | O139 | QA-5: each card's link reads "Open plan for <plot name>" to a screen reader (the name in `sr-only`); the OSM credit sits outside the map's `role="img"` and is a larger tap target (12 px text, more padding). Recommended and approved | 51 identical link names; a credit inside `role="img"` is dropped by screen readers |
 | O140 | QA-6: when the farm list fails, a card on `/plots` leaves the farm line out instead of showing the farm's UUID. Recommended and approved | An id means nothing to a grower (FR-2.18) |
 | O141 | QA-7: won't fix. While the weather provider is down, weather-service asks it again (with retries) on every request for a stale cell, so the overview takes about 7.6 s instead of 0.9 s. Recommended and approved | The answers stay right and stale is marked; no NFR covers page time (like O128); backing off would change the weather service's design (FR-2.6) |
+| O142 | The plan chart's soil point is amber (`--low`, a little larger) on a day that ends below the trigger, and a line under the chart says so; the line itself stays blue. Option 1 of two (2: amber line segments too, which needs a gradient). Recommended and chosen | The table's bar turned amber for such a day but the chart did not, so the two views of the same plan disagreed. `SoilDot` in `src/components/plan-chart.tsx` |
 
 ## Agent's
 
