@@ -3,6 +3,7 @@
 // The 7-day plan as a chart (Y26): the soil water at the end of each day, the full bucket, the
 // trigger it must not fall below, and the water the plan gives, all in mm (O131).
 // A day that ends below the trigger gets an amber point, as the table's bar turns amber (O142).
+// The tooltip lists the values highest first, the same top-to-bottom order as the chart (O143).
 // A client component because Recharts draws in the browser.
 
 import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
@@ -41,6 +42,13 @@ function SoilDot({ cx, cy, index, payload }: DotProps) {
 }
 
 
+type TooltipItem = { value?: unknown };
+
+/** The tooltip's rows, highest value first, so they read in the chart's top-to-bottom order. */
+function byValueHighFirst<T extends TooltipItem>(items: readonly T[] = []): T[] {
+  return [...items].sort((a, b) => Number(b.value) - Number(a.value));
+}
+
 /** Soil water as a line (amber points below the trigger), the full bucket as a dotted line, the
  * trigger as a dashed line, and the water given as bars, all in mm. */
 export function PlanChart({ days }: { days: PlanDay[] }) {
@@ -58,7 +66,9 @@ export function PlanChart({ days }: { days: PlanDay[] }) {
           <CartesianGrid vertical={false} />
           <XAxis dataKey="label" tickLine={false} axisLine={false} />
           <YAxis tickLine={false} axisLine={false} domain={[0, axis.top]} ticks={axis.ticks} unit=" mm" />
-          <ChartTooltip content={<ChartTooltipContent />} />
+          <ChartTooltip content={({ active, label, payload }) => (
+              <ChartTooltipContent active={active} label={label} payload={byValueHighFirst(payload)} />
+            )} />
           <ChartLegend content={<ChartLegendContent />} />
           <Bar dataKey="water" fill="var(--color-water)" radius={4} maxBarSize={28} isAnimationActive={false} />
           <Line dataKey="soil" stroke="var(--color-soil)" strokeWidth={3} dot={<SoilDot />} isAnimationActive={false} />
