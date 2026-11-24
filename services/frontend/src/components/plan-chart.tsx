@@ -2,6 +2,7 @@
 
 // The 7-day plan as a chart (Y26): the soil water at the end of each day, the full bucket, the
 // trigger it must not fall below, and the water the plan gives, all in mm (O131).
+// A day that ends below the trigger gets an amber point, as the table's bar turns amber (O142).
 // A client component because Recharts draws in the browser.
 
 import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
@@ -26,12 +27,22 @@ function chartRows(days: PlanDay[]) {
     full: day.bucket_capacity_mm,
     trigger: day.trigger_mm,
     water: day.irrigation_mm,
+    below: day.bucket_end_mm < day.trigger_mm,
   }));
 }
 
+type DotProps = { cx?: number; cy?: number; index?: number; payload?: { below: boolean } };
 
-/** Soil water as a line, the full bucket as a dotted line, the trigger as a dashed line, and the
- * water given as bars, all in mm. */
+/** The soil line's point for one day: amber when the day ends below the trigger, blue otherwise. */
+function SoilDot({ cx, cy, index, payload }: DotProps) {
+  if (cx === undefined || cy === undefined) return null;
+  const color = payload?.below ? "var(--low)" : "var(--color-soil)";
+  return <circle key={index} cx={cx} cy={cy} r={payload?.below ? 4 : 3} fill="var(--background)" stroke={color} strokeWidth={3} />;
+}
+
+
+/** Soil water as a line (amber points below the trigger), the full bucket as a dotted line, the
+ * trigger as a dashed line, and the water given as bars, all in mm. */
 export function PlanChart({ days }: { days: PlanDay[] }) {
   const anyStale = days.some((day) => day.stale);
   const axis = mmAxis(Math.max(...days.map((day) => day.bucket_capacity_mm)));
@@ -50,11 +61,12 @@ export function PlanChart({ days }: { days: PlanDay[] }) {
           <ChartTooltip content={<ChartTooltipContent />} />
           <ChartLegend content={<ChartLegendContent />} />
           <Bar dataKey="water" fill="var(--color-water)" radius={4} maxBarSize={28} isAnimationActive={false} />
-          <Line dataKey="soil" stroke="var(--color-soil)" strokeWidth={3} dot={{ r: 3 }} isAnimationActive={false} />
+          <Line dataKey="soil" stroke="var(--color-soil)" strokeWidth={3} dot={<SoilDot />} isAnimationActive={false} />
           <Line dataKey="full" stroke="var(--color-full)" strokeWidth={1.5} strokeDasharray="1 3" dot={false} isAnimationActive={false} />
           <Line dataKey="trigger" stroke="var(--color-trigger)" strokeWidth={1.5} strokeDasharray="5 4" dot={false} isAnimationActive={false} />
         </ComposedChart>
       </ChartContainer>
+      <p className="mt-2 text-xs text-muted-foreground">An amber point is a day that ends below the trigger.</p>
     </div>
   );
 }
