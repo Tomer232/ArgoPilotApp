@@ -57,4 +57,16 @@ describe("tilesAround", () => {
     const tiles = tilesAround(85, 0, 640, 600);
     expect(tiles.every((tile) => !tile.url.includes("/-"))).toBe(true);
   });
+
+  it("leaves out rows past the bottom of the world", () => {
+    // The registry allows lat -90; the map clamps it to the bottom edge, so half the box is
+    // past the world. At zoom 15 the rows go from 0 to 2^15 - 1 = 32767, and none beyond.
+    const rows = tilesAround(-90, 0, 640, 600).map((tile) => Number(tile.url.split("/").at(-1)!.replace(".png", "")));
+    expect(rows.length).toBeGreaterThan(0);
+    expect(Math.max(...rows)).toBe(2 ** MAP_ZOOM - 1);
+  });
+
+  it("gives the same map at longitude 180 and -180 (the same meridian)", () => {
+    expect(tilesAround(31.25, 180, 640, 160)).toEqual(tilesAround(31.25, -180, 640, 160));
+  });
 });

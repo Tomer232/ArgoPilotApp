@@ -85,3 +85,12 @@ def test_failed_seed_leaves_no_tables_on_postgres(db_path, monkeypatch):
         seed.seed_database(engine)
     assert inspect(engine).get_table_names() == []
     engine.dispose()
+
+
+@pytest.mark.parametrize("plot", seed.SEED_ROWS["plots"], ids=lambda plot: plot["name"])
+def test_seed_plots_fit_the_realistic_ranges(plot):
+    """O132: every demo plot is inside the ranges the API now accepts (area 1-1,000,000 m2,
+    rows 0.1-10 m, emitters 0.1-5 m), so a fresh seed never holds a plot the API would refuse."""
+    assert 1 <= plot["area_m2"] <= 1_000_000
+    assert 0.1 <= plot["row_spacing_m"] <= 10
+    assert 0.1 <= plot["emitter_spacing_m"] <= 5

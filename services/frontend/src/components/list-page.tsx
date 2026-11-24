@@ -11,7 +11,5 @@ export function ListPage({ title, subtitle, children }: { title: string; subtitl
   );
 }
 
-/** "1 plot", "2 plots": a count with its word, in the right number. */
-export function plural(count: number, word: string): string {
-  return `${count} ${word}${count === 1 ? "" : "s"}`;
-}
+// plural lives in lib/format.ts (with its tests); the list pages import it from here.
+export { plural } from "@/lib/format";

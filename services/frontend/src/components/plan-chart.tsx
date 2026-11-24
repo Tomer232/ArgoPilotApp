@@ -7,6 +7,7 @@
 import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
 import { StaleLabel } from "@/components/stale-label";
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { mmAxis } from "@/lib/chart-axis";
 import { formatWeekday } from "@/lib/format";
 import type { PlanDay } from "@/lib/planner";
 
@@ -28,15 +29,12 @@ function chartRows(days: PlanDay[]) {
   }));
 }
 
-/** The top of the mm axis: the largest bucket in the plan, rounded up to a multiple of 20 so the ticks are round. */
-function axisTop(days: PlanDay[]): number {
-  return Math.ceil(Math.max(...days.map((day) => day.bucket_capacity_mm)) / 20) * 20;
-}
 
 /** Soil water as a line, the full bucket as a dotted line, the trigger as a dashed line, and the
  * water given as bars, all in mm. */
 export function PlanChart({ days }: { days: PlanDay[] }) {
   const anyStale = days.some((day) => day.stale);
+  const axis = mmAxis(Math.max(...days.map((day) => day.bucket_capacity_mm)));
   return (
     <div className="px-4 pt-2 pb-4 sm:px-5">
       {anyStale && (
@@ -48,7 +46,7 @@ export function PlanChart({ days }: { days: PlanDay[] }) {
         <ComposedChart data={chartRows(days)} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid vertical={false} />
           <XAxis dataKey="label" tickLine={false} axisLine={false} />
-          <YAxis tickLine={false} axisLine={false} domain={[0, axisTop(days)]} unit=" mm" />
+          <YAxis tickLine={false} axisLine={false} domain={[0, axis.top]} ticks={axis.ticks} unit=" mm" />
           <ChartTooltip content={<ChartTooltipContent />} />
           <ChartLegend content={<ChartLegendContent />} />
           <Bar dataKey="water" fill="var(--color-water)" radius={4} maxBarSize={28} isAnimationActive={false} />

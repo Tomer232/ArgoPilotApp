@@ -104,3 +104,17 @@ Each entry: what it is, why we made it, where it lives, and how to run it.
 - **Why:** deploying by hand has several gates that are easy to skip, and production differs from `next dev` (O116); the account is shared, so both skills touch only our instance, by id (DECISIONS Y33, Y34, O117-O121, A71, A72).
 - **Where:** `.claude/skills/deploy/`, `.claude/skills/qa-live/`, `.claude/skills/test/scripts/run-all.sh`.
 - **Run:** ask Claude Code "/deploy" or "/qa-live"; the tests alone: `bash .claude/skills/test/scripts/run-all.sh` from the repo root.
+
+## `interview-prep` skill (course)
+
+- **What:** a project skill that checks a task is really finished, drafts the story from the repo, interviews the owner, then writes an English slide deck and a Hebrew study guide for the task's interview on an `interview/<task>` branch.
+- **Why:** the owner is interviewed on every task and must explain every part; the deck and guide are built from the repo so every claim points to its source.
+- **Where:** `.claude/skills/interview-prep/` (`SKILL.md`, `references/deck-template.html`).
+- **Run:** ask Claude Code "/interview-prep".
+
+## e2e test suite (P2)
+
+- **What:** five tests that run against the real, running services: a new plot gets a 7-day plan, its page shows it, an unknown plot page is a real 404, the planner's 404, and the registry refusing an unrealistic plot. They create only `e2e-` rows and delete them.
+- **Why:** each service's own suite fakes the others, so nothing checked that the four really work together.
+- **Where:** `tests/e2e/` (`pyproject.toml`, `conftest.py`, `test_plot_flow.py`).
+- **Run:** start the stack (`bash .claude/skills/run-stack/scripts/stack.sh start`), then `cd tests/e2e && uv run pytest`; it skips itself when the stack is down.

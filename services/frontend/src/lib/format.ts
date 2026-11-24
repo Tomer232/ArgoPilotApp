@@ -74,3 +74,17 @@ export function formatDate(isoDate: string): string {
     timeZone: "UTC",
   });
 }
+
+/** "1 plot", "2 plots": a count with its word, in the right number. */
+export function plural(count: number, word: string): string {
+  return `${count} ${word}${count === 1 ? "" : "s"}`;
+}
+
+/**
+ * A service's words as the end of our sentence: one full stop, never two (QA-2, 2026-11-24).
+ * "Database unavailable" and "Database unavailable." both become "Database unavailable.".
+ */
+export function asSentence(text: string): string {
+  const trimmed = text.trim();
+  return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+}

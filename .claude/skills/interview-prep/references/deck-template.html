@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgroPilot TASK - interview</title>
+<!--
+  The AgroPilot interview deck. Copy this file to docs/interview/<task>/slides.html and fill it.
+
+  The rules:
+  - Change the content, never the CSS: every task's deck must look the same.
+  - Each slide is one <section class="slide ...">. The examples below show every layout once;
+    copy the one you need, delete the ones you don't, keep the order SKILL.md gives.
+  - Colours come from the frontend (services/frontend/src/app/globals.css), each with one meaning:
+    brand green = AgroPilot itself, water blue = irrigation, leaf green = fine / required,
+    amber = add-on, alarm red = a problem.
+  - No external files except screenshots/*.png next to this file. No fonts, no scripts from the web.
+  - Keys: right/left arrow, space, PageDown/PageUp to move, Home/End, F for full screen.
+-->
+<style>
+  :root {
+    --page: #ececee;
+    --surface: #f7f7f8;
+    --card: #ffffff;
+    --ink: #18181b;
+    --muted: #71717a;
+    --border: #e6e6e9;
+    --brand: #1f7a4d;
+    --water: #2f6fde;
+    --water-soft: #e8eefb;
+    --leaf: #23784f;
+    --leaf-soft: #e3f4ec;
+    --soil: #a9c8f5;
+    --addon: #b3601f;
+    --addon-soft: #fcefe3;
+    --alarm: #c0353a;
+    --alarm-soft: #fde8e8;
+    --radius: 14px;
+    --font: "Geist", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: "Geist Mono", "Cascadia Code", Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--page); color: var(--ink); font-family: var(--font); }
+  body { overflow: hidden; }
+
+  /* The stage: a fixed 1280x720 slide, scaled to fit the window. */
+  #deck { position: absolute; left: 50%; top: 50%; width: 1280px; height: 720px; transform-origin: center; }
+  .slide {
+    position: absolute; inset: 0; display: none; flex-direction: column;
+    background: var(--surface); border-radius: 20px; padding: 56px 72px 64px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 12px 40px rgba(0,0,0,.08);
+  }
+  .slide.active { display: flex; animation: enter 260ms cubic-bezier(0.23, 1, 0.32, 1); }
+  @keyframes enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* Header shared by every slide except the title. */
+  .kicker { font-size: 15px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--brand); }
+  h1 { font-size: 64px; line-height: 1.05; font-weight: 700; letter-spacing: -.02em; }
+  h2 { font-size: 44px; line-height: 1.1; font-weight: 700; letter-spacing: -.015em; margin-top: 6px; }
+  .lead { font-size: 24px; color: var(--muted); margin-top: 12px; max-width: 900px; }
+  .body { flex: 1; display: flex; gap: 32px; margin-top: 36px; min-height: 0; }
+
+  /* Footer: brand mark and slide number. */
+  .foot { position: absolute; left: 72px; right: 72px; bottom: 24px; display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); }
+  .mark { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--ink); }
+  .mark i { width: 14px; height: 14px; border-radius: 4px; background: var(--brand); display: inline-block; }
+
+  /* Pills: the meaning tags. */
+  .pill { display: inline-block; font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; letter-spacing: .02em; }
+  .pill.required { background: var(--leaf-soft); color: var(--leaf); }
+  .pill.addon { background: var(--addon-soft); color: var(--addon); }
+  .pill.business { background: var(--water-soft); color: var(--water); }
+  .pill.tech { background: #f1f1f3; color: var(--ink); }
+  .ref { font-size: 13px; color: var(--muted); font-family: var(--mono); }
+
+  /* Cards. */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; }
+  .card h3 { font-size: 14px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .card p { font-size: 22px; line-height: 1.3; }
+  .card.problem { border-left: 5px solid var(--alarm); }
+  .card.solution { border-left: 5px solid var(--leaf); }
+  .card.why { border-left: 5px solid var(--water); }
+
+  /* Lists: short phrases, never sentences. */
+  ul.points { list-style: none; display: flex; flex-direction: column; gap: 16px; }
+  ul.points li { font-size: 26px; line-height: 1.3; padding-left: 28px; position: relative; }
+  ul.points li::before { content: ""; position: absolute; left: 0; top: 12px; width: 12px; height: 12px; border-radius: 3px; background: var(--brand); }
+
+  /* Big numbers. */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .stat .n { font-size: 64px; font-weight: 700; letter-spacing: -.02em; line-height: 1; }
+  .stat .l { font-size: 17px; color: var(--muted); margin-top: 8px; }
+
+  /* Bars: one row per item, width in % set inline. */
+  .bars { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+  .bar { display: grid; grid-template-columns: 220px 1fr 70px; align-items: center; gap: 16px; font-size: 19px; }
+  .bar .track { height: 26px; background: #f1f1f3; border-radius: 8px; overflow: hidden; }
+  .bar .fill { height: 100%; background: var(--water); border-radius: 8px; }
+  .bar .fill.leaf { background: var(--leaf); }
+  .bar .fill.addon { background: var(--addon); }
+  .bar .v { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* The split bar: required vs add-on, as one line. */
+  .split { display: flex; height: 40px; border-radius: 10px; overflow: hidden; font-size: 16px; font-weight: 600; color: #fff; }
+  .split > div { display: flex; align-items: center; padding: 0 14px; }
+
+  /* Diagrams: inline SVG with these classes. */
+  svg.diagram { width: 100%; height: 100%; }
+  svg .node rect { fill: var(--card); stroke: var(--border); stroke-width: 1.5; }
+  svg .node.brand rect { fill: var(--brand); stroke: var(--brand); }
+  svg .node.brand text, svg .node.brand text.sub { fill: #fff; }
+  svg .node.water rect { fill: var(--water-soft); stroke: var(--water); }
+  svg .node.addon rect { fill: var(--addon-soft); stroke: var(--addon); stroke-dasharray: 6 4; }
+  svg .node.external rect { fill: #f1f1f3; stroke: var(--muted); stroke-dasharray: 4 4; }
+  svg .node text { font-family: var(--font); font-size: 20px; font-weight: 600; fill: var(--ink); text-anchor: middle; }
+  svg .node text.sub { font-size: 14px; font-weight: 500; fill: var(--muted); }
+  svg .edge { stroke: var(--muted); stroke-width: 2; fill: none; marker-end: url(#arrow); }
+  svg .edge.water { stroke: var(--water); marker-end: url(#arrow-water); }
+  svg .label { font-family: var(--font); font-size: 14px; fill: var(--muted); text-anchor: middle; }
+  svg .step circle { fill: var(--water); }
+  svg .step text { font-family: var(--font); font-size: 15px; font-weight: 700; fill: #fff; text-anchor: middle; }
+
+  /* Screenshot frame. */
+  .shot { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--card); box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+  .shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+
+  /* Layout: title. */
+  .slide.title { justify-content: center; background: var(--brand); color: #fff; }
+  .slide.title .kicker { color: rgba(255,255,255,.75); }
+  .slide.title h1 { margin-top: 14px; font-size: 80px; }
+  .slide.title .lead { color: rgba(255,255,255,.85); }
+  .slide.title .foot, .slide.title .foot .mark { color: rgba(255,255,255,.8); }
+  .slide.title .mark i { background: #fff; }
+
+  /* Layout: part (one per service/area). Visual left, story right, key test across the bottom. */
+  .part .visual { flex: 1.15; display: flex; min-width: 0; }
+  .part .story { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+  .part .story .card { padding: 14px 20px; }
+  .part .story .card p { font-size: 20px; }
+  .test { margin-top: 18px; display: flex; align-items: center; gap: 14px; font-size: 18px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; }
+  .test b { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--leaf); }
+  .test code { font-family: var(--mono); font-size: 15px; background: #f1f1f3; padding: 2px 8px; border-radius: 6px; }
+
+  /* Layout: cards grid (add-ons, skills). */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-content: start; width: 100%; }
+  .grid .card h4 { font-size: 22px; margin-bottom: 6px; }
+  .grid .card p { font-size: 17px; color: var(--muted); }
+  .grid .card .pill { margin-top: 10px; }
+
+  /* Progress line at the very bottom of the window. */
+  #progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--brand); transition: width 200ms; }
+</style>
+</head>
+<body>
+<div id="deck">
+
+  <!-- LAYOUT: title. The task, one line on AgroPilot, the date. -->
+  <section class="slide title">
+    <div class="kicker">OzVeruach26 - Task P2</div>
+    <h1>AgroPilot</h1>
+    <p class="lead">Tells a grower when to water each plot, and how much.</p>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span>YYYY-MM-DD</span></div>
+  </section>
+
+  <!-- LAYOUT: points. "What we were asked": the business problem in the lead, 3-4 phrases. -->
+  <section class="slide">
+    <div class="kicker">The ask</div>
+    <h2>One-sentence business problem</h2>
+    <p class="lead">Who the user is and what they need.</p>
+    <div class="body">
+      <ul class="points">
+        <li>Short phrase</li>
+        <li>Short phrase</li>
+        <li>Short phrase</li>
+      </ul>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- LAYOUT: numbers. "What we built": 4 big numbers and the required vs add-on split.
+       Split widths are % of items; label each side with its count. -->
+  <section class="slide">
+    <div class="kicker">What we built</div>
+    <h2>Headline in a few words</h2>
+    <div class="body" style="flex-direction: column; gap: 48px;">
+      <div class="stats">
+        <div class="stat"><div class="n">3</div><div class="l">new services</div></div>
+        <div class="stat"><div class="n">0</div><div class="l">endpoints</div></div>
+        <div class="stat"><div class="n">0</div><div class="l">tests</div></div>
+        <div class="stat"><div class="n">0</div><div class="l">decisions</div></div>
+      </div>
+      <div>
+        <div class="split">
+          <div style="width: 75%; background: var(--leaf);">Required - 0</div>
+          <div style="width: 25%; background: var(--addon);">Add-on - 0</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- LAYOUT: diagram. Architecture or the end-to-end flow. Draw on a 1136x480 viewBox.
+       Nodes: <g class="node [brand|water|addon|external]"> with a rect (rx 12) and text.
+       Edges: <path class="edge"> (or "edge water" for the irrigation path). Steps: <g class="step">. -->
+  <section class="slide">
+    <div class="kicker">Architecture</div>
+    <h2>Headline in a few words</h2>
+    <div class="body">
+      <svg class="diagram" viewBox="0 0 1136 480" role="img" aria-label="Architecture">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#71717a"/></marker>
+          <marker id="arrow-water" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2f6fde"/></marker>
+        </defs>
+        <g class="node brand"><rect x="20" y="200" width="200" height="84" rx="12"/><text x="120" y="238">frontend</text><text class="sub" x="120" y="262">Next.js - 3000</text></g>
+        <g class="node"><rect x="440" y="200" width="220" height="84" rx="12"/><text x="550" y="238">service</text><text class="sub" x="550" y="262">FastAPI - 8000</text></g>
+        <g class="node external"><rect x="880" y="200" width="220" height="84" rx="12"/><text x="990" y="238">external</text><text class="sub" x="990" y="262">provider</text></g>
+        <path class="edge" d="M220,242 L440,242"/>
+        <path class="edge water" d="M660,242 L880,242"/>
+        <text class="label" x="330" y="230">GET /v1/...</text>
+        <g class="step"><circle cx="330" cy="268" r="14"/><text x="330" y="273">1</text></g>
+      </svg>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- LAYOUT: part. One per service/area. The pill says Required or Add-on.
+       Left: the visual (an <svg class="diagram">, bars, or a .shot screenshot).
+       Right: problem, solution, why (with a Business or Tech pill and the decision id).
+       Bottom: the key test. -->
+  <section class="slide part">
+    <div class="kicker">Part name <span class="pill required">Required</span></div>
+    <h2>What it does, in a few words</h2>
+    <div class="body">
+      <div class="visual">
+        <div class="shot" style="width: 100%;"><img src="screenshots/example.png" alt="The plot page"></div>
+      </div>
+      <div class="story">
+        <div class="card problem"><h3>Problem</h3><p>Short phrase</p></div>
+        <div class="card solution"><h3>Solution</h3><p>Short phrase</p></div>
+        <div class="card why"><h3>Why <span class="pill business">Business</span> <span class="ref">O99</span></h3><p>Short phrase</p></div>
+      </div>
+    </div>
+    <div class="test"><b>Key test</b><code>tests/test_file.py::test_name</code><span>what it proves</span></div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- LAYOUT: bars. Tests per suite (or any count/size). Width = value / max * 100%. -->
+  <section class="slide">
+    <div class="kicker">Tests</div>
+    <h2>Headline in a few words</h2>
+    <div class="body" style="flex-direction: column;">
+      <div class="bars">
+        <div class="bar"><span>registry-service</span><div class="track"><div class="fill leaf" style="width: 100%;"></div></div><span class="v">0</span></div>
+        <div class="bar"><span>planner-service</span><div class="track"><div class="fill" style="width: 50%;"></div></div><span class="v">0</span></div>
+      </div>
+    </div>
+    <div class="test"><b>The one test</b><code>tests/test_file.py::test_name</code><span>what it proves</span></div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- LAYOUT: grid. Add-ons (pill = Business/Tech) or skills (pill = when it ran). Up to 6 cards. -->
+  <section class="slide">
+    <div class="kicker">Skills we used</div>
+    <h2>Headline in a few words</h2>
+    <div class="body">
+      <div class="grid">
+        <div class="card"><h4>skill-name</h4><p>What it gave, in a phrase</p><span class="pill tech">when it ran</span></div>
+        <div class="card"><h4>skill-name</h4><p>What it gave, in a phrase</p><span class="pill tech">when it ran</span></div>
+        <div class="card"><h4>skill-name</h4><p>What it gave, in a phrase</p><span class="pill tech">when it ran</span></div>
+      </div>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+  <!-- LAYOUT: end. The live links and "Questions". -->
+  <section class="slide title">
+    <div class="kicker">Live now</div>
+    <h1>Questions</h1>
+    <p class="lead">localhost:3000 - the grower's page</p>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+</div>
+<div id="progress"></div>
+<script>
+  /* Navigation: one active slide, its number in the address (#3), keys and clicks to move. */
+  const slides = Array.from(document.querySelectorAll(".slide"));
+  const deck = document.getElementById("deck");
+  const progress = document.getElementById("progress");
+  let current = 0;
+
+  /** Show slide i (clamped), update the number, the progress line and the address. */
+  function show(i) {
+    current = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, k) => s.classList.toggle("active", k === current));
+    progress.style.width = ((current + 1) / slides.length) * 100 + "%";
+    history.replaceState(null, "", "#" + (current + 1));
+  }
+
+  /** Scale the 1280x720 stage to fit the window, keeping its shape. */
+  function fit() {
+    const scale = Math.min(window.innerWidth / 1300, window.innerHeight / 740);
+    deck.style.transform = "translate(-50%, -50%) scale(" + scale + ")";
+  }
+
+  /** Write "n / total" into every slide footer. */
+  function number() {
+    slides.forEach((s, k) => s.querySelectorAll(".foot .n").forEach(n => n.textContent = (k + 1) + " / " + slides.length));
+  }
+
+  document.addEventListener("keydown", e => {
+    if (["ArrowRight", "PageDown", " "].includes(e.key)) show(current + 1);
+    else if (["ArrowLeft", "PageUp"].includes(e.key)) show(current - 1);
+    else if (e.key === "Home") show(0);
+    else if (e.key === "End") show(slides.length - 1);
+    else if (e.key === "f" || e.key === "F") document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+    else return;
+    e.preventDefault();
+  });
+  document.addEventListener("click", e => show(current + (e.clientX > window.innerWidth / 2 ? 1 : -1)));
+  window.addEventListener("resize", fit);
+
+  number();
+  fit();
+  show((parseInt(location.hash.slice(1), 10) || 1) - 1);
+</script>
+</body>
+</html>
