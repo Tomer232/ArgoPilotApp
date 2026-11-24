@@ -76,6 +76,7 @@
     <li><a href="#numbers">מספרים ומקורות</a></li>
     <li><a href="#questions">שאלות צפויות</a></li>
     <li><a href="#demo">הדגמה חיה</a></li>
+    <li><a href="#review">שאלות הסקירה</a></li>
   </ol>
 </nav>
 
@@ -84,8 +85,9 @@
   <ul>
     <li>פותחים את <code>docs/interview/p2/slides.html</code> בדפדפן. <b>F</b> למסך מלא, חצים או רווח כדי לזוז, <b>Home</b> חוזר להתחלה. מספר השקף נשמר בכתובת (<code>#5</code>).</li>
     <li>14 שקפים, בערך 15 דקות דיבור: דקה לכל שקף, ושתיים לכל אחד מחמשת שקפי החלקים (5-9).</li>
+    <li>שקף 14 הוא שקף גיבוי, לפני "Questions" (15, האחרון): מה קורה כשמשהו נופל. לא מציגים אותו מעצמנו, רק אם שואלים על כישלונות (פרק <a href="#review">15</a>). בהצגה הרגילה מדלגים עליו: <b>End</b> קופץ ל-Questions, וחץ שמאלה חוזר אליו כשצריך.</li>
     <li>השקפים הם עוגן, לא טקסט לקריאה. כל ההסבר נמצא כאן.</li>
-    <li>לפני הראיון: להפעיל את המכונה ב-AWS ולהריץ <code>/deploy</code> (הוא מדפיס את כתובת ה-IP החדשה, O115), ולעדכן את כללי הפורטים 22 ו-8000 לכתובת שלך (Y32). את הכתובת להגיד בעל פה בשקף 14, או לעדכן אותה בשקף.</li>
+    <li>לפני הראיון: להפעיל את המכונה ב-AWS ולהריץ <code>/deploy</code> (הוא מדפיס את כתובת ה-IP החדשה, O115), ולעדכן את כללי הפורטים 22 ו-8000 לכתובת שלך (Y32). את הכתובת להגיד בעל פה בשקף 15, או לעדכן אותה בשקף.</li>
   </ul>
 </section>
 
@@ -147,7 +149,20 @@
     <li>שורת הסטטוס: האתר בודק שכל שירות למעלה.</li>
   </ol>
 
-  <h3>שקף 14 - חי</h3>
+  <h3>שקף 14 - מה אם משהו נשבר? <span class="tag tech">גיבוי</span></h3>
+  <div class="box say">רק אם שואלים. אותה ארכיטקטורה כמו בשקף 13, בלי הדף. בצעד הראשון הכל עובד: שאלות בכחול, תשובות בכתום. <b>Break something</b> (או חץ ימינה) הופך את השקף לאדום ושובר דבר אחד בכל צעד. בכרטיס מימין, מלמעלה למטה: <b>The problem</b> (מה נשבר, במשפט אחד), <b>What happens</b> (שלושה צעדים ממוספרים) ו-<b>The grower sees</b>. בשרטוט: השירות השבור מקבל X אדום, החצים האדומים מראים לאן השגיאה חוזרת, ומימין רואים בדיוק מה המגדל רואה (הטקסטים מהקוד האמיתי). <b>Back</b> חוזר.</div>
+  <ol>
+    <li>הכל עובד: "Water for 24 h", "All systems normal".</li>
+    <li>Open-Meteo נופל, יש תחזית שמורה: 3 ניסיונות, ואז התחזית האחרונה עם <code>stale: true</code> (חצים כתומים-חומים, לא אדומים: התשובה נכונה, רק ישנה). המגדל רואה את התוכנית ו-"From an older weather update".</li>
+    <li>Open-Meteo נופל, אין תחזית שמורה: weather מחזיר 503, ה-planner מחזיר 503 עם שם ה-weather. "All systems normal" נשאר ירוק, כי השירותים שלנו למעלה. רק הספק למטה.</li>
+    <li>registry למטה: ה-planner לא מקבל תשובה תוך 2 שניות, 503 עם שם ה-registry, ושורת הסטטוס: "registry-service down".</li>
+    <li>המסד של ה-registry למטה: ה-registry מחזיר 503 "Database unavailable", וה-planner מעביר את הסיבה הלאה. ה-/health של ה-registry בודק גם את המסד (O126), לכן שורת הסטטוס אדומה.</li>
+    <li>ה-registry משנה <code>lat</code> ל-<code>latitude</code>: ה-registry עונה 200, אבל הבדיקה הקפדנית של ה-planner נכשלת (<code>RegistryPlot</code> ב-<code>upstream.py</code>), ולכן 503 "answered with data the planner can't use". אף פעם לא ניחוש.</li>
+    <li>planner למטה: הקריאה של האתר נכשלת, "planner-service is not reachable", ושורת הסטטוס אדומה.</li>
+  </ol>
+  <div class="box watch">המשפט שלמטה בשקף הוא הכלל שמאחורי הכל: "Never a plan of zeros". או תחזית ישנה שמסומנת כישנה, או 503 שאומר איזה שירות נפל.</div>
+
+  <h3>שקף 15 - חי</h3>
   <div class="box say">"זו המערכת שרצה עכשיו. תנסו חלקה, תשנו את רמת האדמה, תפתחו חלקה שלא קיימת."</div>
 </section>
 
@@ -377,7 +392,8 @@
     <li>ה-weather עונה מהמטמון של התא אם התחזית טרייה. אחרת הוא שואל את Open-Meteo, ואם זה נכשל, מחזיר תחזית stale.</li>
     <li>ה-engine מחשב, והדף מציג קודם את היום ואחר כך 7 ימים. ה-registry נקרא גם לסרגל הצד ולשורת הסטטוס.</li>
   </ol>
-  <p>מה קורה כשמשהו נופל: weather למטה עם תחזית במטמון נותן <code>stale</code>, ובלעדיה ה-planner מחזיר 503 עם שם השירות, והדף מציג את ההודעה. registry למטה: אותו דבר, ושורת הסטטוס מראה <bdi class="en">"Registry down"</bdi>.</p>
+  <p>מה קורה כשמשהו נופל: weather למטה עם תחזית במטמון נותן <code>stale</code>, ובלעדיה ה-planner מחזיר 503 עם שם השירות, והדף מציג את ההודעה. registry למטה: אותו דבר, ושורת הסטטוס מראה <bdi class="en">"registry-service down"</bdi>. כל מקרה בנפרד: שקף 14.</p>
+  <div class="box words"><b>איפה כישלונות מופיעים בשקפים:</b> שקף 6 (weather: "provider fails 3 times", תחזית ישנה, 503), שקף 11 (הכרטיסים של planner ו-weather: "services failing", "provider failures"), שקף 13 צעד 2 (חלקה לא קיימת: 404), ושקף 14, הגיבוי, שמראה כל כישלון מקצה לקצה.</div>
 </section>
 
 <section id="numbers">
@@ -455,7 +471,80 @@
     <li>חלקה לא קיימת: <code>/plots/00000000-0000-0000-0000-000000000000</code> מחזירה 404.</li>
     <li>אם יש זמן: <code>http://&lt;ip&gt;:8000/docs</code>, ושם <code>POST /v1/plots</code> עם <code>area_m2: 0.5</code> מחזיר 422 (O132).</li>
   </ol>
-  <div class="box watch">לא לעצור שירותים בשרת החי באמצע הראיון. אם רוצים להראות כישלון, לעשות את זה מקומית עם <code>stack.sh stop weather</code>.</div>
+  <div class="box watch">לא לעצור שירותים בשרת החי באמצע הראיון. אם רוצים להראות כישלון, לעשות את זה מקומית עם <code>stack.sh stop weather</code>, או להראות את שקף 14.</div>
+</section>
+
+<section id="review">
+  <h2>15. שאלות הסקירה</h2>
+  <p class="muted">תשע השאלות מרשימת הסקירה של הקורס. הן לחשיבה ולהכנה, לא דרישה, ואולי לא ישאלו אותן בכלל. לכל אחת: המשפט להגיד (באנגלית, כמו בשקפים), ואז הפרטים אם ממשיכים לשאול.</p>
+
+  <details><summary>1. איזה מידע רגיש יש, ואיך מגנים עליו?</summary>
+  <div class="box say"><bdi class="en">"The only secrets are the database password and the .env settings, and the API has no login. The password is generated on the server and never printed, the .env files are out of git, the browser never sees an internal address, and only port 3000 is open to everyone, with the API and SSH open only to my IP."</bdi></div>
+  <ul>
+    <li>סיסמת המסד: נוצרת על השרת עם <code>openssl rand</code>, נכתבת ל-<code>.env</code> של ה-registry בהרשאה 600, ואף פעם לא מודפסת (A69). הסוכן לא קורא קבצי <code>.env</code> (AGENTS.md).</li>
+    <li><code>.env</code> ב-<code>.gitignore</code>. רק <code>.env.example</code> נכנס ל-git.</li>
+    <li>רק שרת Next.js קורא לשירותים. כתובות פנימיות לא מגיעות לדפדפן.</li>
+    <li>Firewall: 3000 לכולם. 22 ו-8000 רק ל-IP שלך (Y32). 8001 ו-8002 על <code>127.0.0.1</code> (O114). PostgreSQL רק מתוך השרת.</li>
+    <li>משתמש <code>agropilot</code> בלי shell, עם <code>NoNewPrivileges</code> ו-<code>ProtectSystem=full</code> (Y31, A68).</li>
+  </ul>
+  <div class="box watch">חולשה להודות בה: אין HTTPS ואין התחברות. מי שיודע את הכתובת רואה את כל החלקות והקואורדינטות שלהן ב-3000. השלב הבא: HTTPS והתחברות.</div></details>
+
+  <details><summary>2. הזרימה של המשתמש, מהדפדפן לשירותים ובחזרה</summary>
+  <div class="box say"><bdi class="en">"The grower opens the overview, clicks a plot, says how the soil feels, and the Next.js server builds the page: today's answer first, then the 7-day plan, with every choice kept in the address."</bdi></div>
+  <p>הבחירות (רמת אדמה, סף, שעת התחלה, תצוגה) נשמרות בכתובת (A63), כך שרענון או קישור ששולחים מראים את אותה תוכנית. להראות בשקף 13.</p></details>
+
+  <details><summary>3. הזרימה של המערכת, כולל מה קורה בשגיאה</summary>
+  <div class="box say"><bdi class="en">"The Next.js server checks the plot in the registry, calls the planner, and the planner reads the registry and the weather service. If anything fails, the planner returns 503 naming the service and the page shows that message, so the grower never gets a plan of zeros."</bdi></div>
+  <p>הדרך התקינה: פרק <a href="#flow">11</a> ושקף 13. הכישלונות, אחד אחד: שקף 14 ופרק <a href="#talk">2</a> (שקף 14).</p></details>
+
+  <details><summary>4. למה צריך שירות מזג אוויר, ולא לקרוא ל-Open-Meteo מה-frontend? איך בדקתם אותו?</summary>
+  <div class="box say"><bdi class="en">"It caches one forecast per 0.1° area for 3 hours and shares it between all plots and growers, falls back to a forecast marked stale when Open-Meteo is down, and the planner needs it on the server anyway. We tested it with a fake Open-Meteo and a fake clock."</bdi></div>
+  <ul>
+    <li>מטמון משותף: דפדפן לא יכול לחלוק מטמון עם דפדפנים אחרים.</li>
+    <li>טיפול בכישלון במקום אחד: ניסיונות חוזרים, stale, בדיקה קפדנית של מה שהספק שולח (שדה חסר, null, שלילי, יחידות).</li>
+    <li>התוכנית מחושבת בשרת, אז הדפדפן שמביא מזג אוויר לא היה עוזר ל-planner.</li>
+    <li>החלפת ספק: רק ה-weather מכיר את הפורמט של Open-Meteo.</li>
+    <li>76 בדיקות עם <code>httpx.MockTransport</code> ושעון מדומה. הבדיקה המרכזית: <code>test_provider_down_serves_last_forecast_as_stale</code>. NFR נמדד בנפרד: p95 5.7ms.</li>
+  </ul></details>
+
+  <details><summary>5. מקרי קצה: ה-registry למטה? משנה פורמט, <code>latitude</code> במקום <code>lat</code>?</summary>
+  <div class="box say"><bdi class="en">"The planner checks every registry answer against a strict model, so a down registry or a renamed field gives 503 'registry-service answered with data the planner can't use' instead of a wrong plan."</bdi></div>
+  <ul>
+    <li><code>RegistryPlot</code> ב-<code>services/planner-service/upstream.py</code> מחייב <code>lat</code> בין -90 ל-90, עם טיפוסים מדויקים (<code>"1000"</code> כטקסט נדחה). שדה חסר: <code>ValidationError</code>, ואז 503.</li>
+    <li>ההוכחה: הטבלה <code>FAILURES</code> ב-<code>tests/test_plan.py</code>: שדה חסר, טקסט במקום מספר, תאריך לא חוקי, <code>lat</code> מחוץ לטווח, null, לא JSON ועוד. אין בדיקה בשם "latitude", אבל "missing field" הוא אותו מנגנון.</li>
+    <li>שדות נוספים מתעלמים מהם, כך שה-registry יכול להוסיף שדה בלי לשבור את ה-planner.</li>
+    <li>להראות בשקף 14: Failure 3 (registry למטה) ו-Failure 5 (latitude).</li>
+  </ul></details>
+
+  <details><summary>6. איך בדקתם את ה-planner, שתלוי בשני שירותים?</summary>
+  <div class="box say"><bdi class="en">"We checked the calculation against 5 cases I calculated by hand, replaced the registry and weather service with fakes to cause every failure on purpose, and checked the real connection with 5 tests on the running system."</bdi></div>
+  <p>שלוש שכבות: ה-engine לבד (חמשת המקרים), השירות עם תשובות מדומות לכל כתובת (<code>httpx.MockTransport</code>), ו-e2e על המערכת האמיתית (<code>test_a_new_plot_gets_a_seven_day_plan</code>). למה מדומים: מהיר, בלי רשת, ואפשר לייצר כל כישלון בכוונה.</p></details>
+
+  <details><summary>7. ביצועים: יש צוואר בקבוק? איך יודעים?</summary>
+  <div class="box say"><bdi class="en">"Our services answer in under 6 ms at p95, so the bottleneck is Open-Meteo on a cache miss. QA showed the overview going from 0.9 s to 7.6 s while Open-Meteo was down."</bdi></div>
+  <ul>
+    <li>נמדד: registry p95 5.8ms, weather טרי 5.7ms, על EC2 2.4-4.4ms.</li>
+    <li>קריאה שלא נמצאת במטמון מחכה ל-Open-Meteo. כשהספק למטה: עד כ-10 שניות (3 ניסיונות של 3 שניות, ועוד הפסקות).</li>
+    <li>הסקירה קוראת ל-planner פעם לכל חלקה, במקביל (<code>Promise.all</code> ב-<code>src/app/page.tsx</code>). זה גדל עם מספר החלקות.</li>
+    <li>QA-7 (O141): 0.9 שניות רגיל, 7.6 שניות כשהספק למטה, כי כל בקשה לתא stale מנסה שוב את הספק. לא תוקן: אין NFR על זמן דף, והתשובות נכונות ומסומנות. התיקון: backoff ב-weather.</li>
+  </ul></details>
+
+  <details><summary>8. איך התמודדתם עם ה-rate limit של Open-Meteo?</summary>
+  <div class="box say"><bdi class="en">"The cache means one call per 0.1° area every 3 hours, with a lock so requests arriving together make one call. We don't handle a 429 on its own: it's retried like any other failure, and backing off would be the next fix."</bdi></div>
+  <ul>
+    <li>קריאה אחת לתא כל 3 שעות, לא משנה כמה חלקות או משתמשים יש בו. שולפים 8 ימים פעם אחת, ו-<code>days</code> רק חותך.</li>
+    <li>נעילה לכל תא (O75): 10 בקשות במקביל לאותו תא עושות קריאה אחת.</li>
+    <li>החשבון: 8 קריאות ביום לתא. אם המגבלה החינמית היא כ-10,000 ביום, זה כ-1,250 תאים שונים. לבדוק את המספר העדכני באתר של Open-Meteo לפני הראיון.</li>
+  </ul>
+  <div class="box watch">חולשה להודות בה: 429 (יותר מדי בקשות) מטופל כמו כל כישלון: ניסיונות חוזרים, ואז stale. הניסיונות מוסיפים קריאות לספק שכבר מסרב. זה אותו פער כמו O141. התיקון: לקרוא את <code>Retry-After</code> ולחכות.</div></details>
+
+  <details><summary>9. איך אימתתם את ה-FR וה-NFR? איך יודעים שבניתם נכון?</summary>
+  <div class="box say"><bdi class="en">"The requirements skill checked every FR and NFR with evidence (37 met), we measured the NFRs with load scripts, and we have 876 tests plus QA runs locally and on EC2 that found 34 issues, each with a status."</bdi></div>
+  <ul>
+    <li>FR: <code>docs/requirements/2026-11-24-p2.html</code>: 37 met, 2 partly, 2 can't tell, כל אחד עם ראיה.</li>
+    <li>NFR: סקריפטי מדידה (פרק <a href="#questions">13</a>, "איך מדדתם את ה-NFR?"), אותה סוויטה על SQLite ועל PostgreSQL (NFR-2.1), 375 פיקסלים ב-Chrome.</li>
+    <li>"בנינו נכון": 876 בדיקות, חמשת המקרים שחושבו ביד, 5 בדיקות e2e. "בנינו את הדבר הנכון": QA כבודק עוין, כמגדל מבולבל וכרשת לא יציבה, מקומית ועל EC2.</li>
+  </ul></details>
 </section>
 
 </main>

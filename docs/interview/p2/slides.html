@@ -177,6 +177,62 @@
   .flow-buttons .flow-next { background: var(--water); border-color: var(--water); color: #fff; }
   .flow-buttons button:disabled { opacity: .4; cursor: default; }
 </style>
+<style>
+  /* P2 addition, on the owner's request: the backup "When something breaks" slide (slide 14).
+     Step 1 is the calm system; "Break something" turns the slide red and walks the failures. */
+  .breaks { transition: background 300ms; }
+  .breaks.bad { background: #fbeeee; }
+  .breaks .kicker, .breaks h2 { transition: color 300ms; }
+  .breaks.bad .kicker, .breaks.bad h2 { color: var(--alarm); }
+  .brk-body { gap: 28px; align-items: flex-start; margin-top: 20px; }
+  .brk-left { display: flex; flex-direction: column; gap: 8px; flex: none; }
+  svg.brk-arch { width: 600px; height: auto; flex: none; }
+  .brk-arch .node text { font-size: 16px; }
+  .brk-arch .bnode rect { transition: fill 300ms, stroke 300ms; }
+  .brk-arch .bnode.broken rect { fill: var(--alarm-soft); stroke: var(--alarm); stroke-width: 3; stroke-dasharray: none; }
+  .brk-arch .bnode.broken text { fill: var(--alarm); }
+  .brk-arch .bx { stroke: var(--alarm); stroke-width: 5; stroke-linecap: round; opacity: 0; transition: opacity 200ms; }
+  .brk-arch .bedge { stroke-width: 3; fill: none; opacity: 0; transition: opacity 200ms; }
+  .brk-arch .bedge.q { stroke: var(--water); }
+  .brk-arch .bedge.a { stroke: #f0954a; }
+  .brk-arch .bedge.warn { stroke: var(--addon); }
+  .brk-arch .bedge.err { stroke: var(--alarm); stroke-width: 4; }
+  .brk-arch .blabel { font: 600 13px var(--font); opacity: 0; transition: opacity 200ms; }
+  .brk-arch .blabel.warn { fill: var(--addon); }
+  .brk-arch .blabel.err { fill: var(--alarm); }
+  .brk-arch .on { opacity: 1; }
+  .brk-side { flex: 1; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .brk-caption { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 20px; }
+  .brk-num { margin-bottom: 8px; font-size: 14px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--water); }
+  .breaks.bad .brk-num { color: var(--alarm); }
+  .brk-step { display: none; }
+  .brk-step.on { display: block; }
+  .brk-step h3 { font-size: 23px; line-height: 1.2; margin: 2px 0 12px; }
+  .breaks.bad .brk-step h3 { color: var(--alarm); }
+  .brk-label { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .brk-step ol { margin: 0 0 12px; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; }
+  .brk-step li { font-size: 17px; line-height: 1.3; }
+  .brk-step li::marker { font-weight: 700; color: var(--muted); }
+  .breaks.bad .brk-step li::marker { color: var(--alarm); }
+  .gs { border-radius: 10px; padding: 10px 14px; }
+  .gs.plan { background: var(--water-soft); border: 1px solid var(--water); }
+  .gs.plan b { display: block; font-size: 22px; color: var(--water); }
+  .gs.plan span { font-size: 15px; color: var(--ink); }
+  .gs.plan .old { display: block; margin-top: 4px; font-size: 14px; font-weight: 600; color: var(--addon); }
+  .gs.alert { background: var(--alarm-soft); border: 1px solid rgba(192,53,58,.3); }
+  .gs.alert b { display: block; font-size: 17px; color: var(--alarm); }
+  .gs.alert span { font-size: 15px; color: var(--ink); }
+  .gs-status { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; font-weight: 600; color: var(--muted); }
+  .gs-status i { width: 9px; height: 9px; border-radius: 50%; background: var(--leaf); display: inline-block; }
+  .gs-status.down { color: var(--alarm); }
+  .gs-status.down i { background: var(--alarm); }
+  .brk-rule { text-align: center; font-size: 17px; font-weight: 600; color: var(--alarm); opacity: 0; transition: opacity 300ms; }
+  .breaks.bad .brk-rule { opacity: 1; }
+  .brk-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
+  .brk-buttons button { font: 600 15px var(--font); padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--ink); cursor: pointer; }
+  .brk-buttons .brk-next { background: var(--alarm); border-color: var(--alarm); color: #fff; }
+  .brk-buttons button:disabled { opacity: .4; cursor: default; }
+</style>
 </head>
 <body>
 <div id="deck">
@@ -589,11 +645,159 @@
     <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
   </section>
 
-  <!-- 14. Live -->
+  <!-- 14. Backup: when something breaks. Shown only if asked. Step 1 is the calm system;
+       "Break something" turns the slide red and walks one failure per step: what breaks
+       (red X), where the error travels (red arrows) and what the grower sees. -->
+  <section class="slide breaks" data-steps="7">
+    <div class="kicker">Backup - failures</div>
+    <h2>What if something breaks?</h2>
+    <div class="body brk-body">
+      <div class="brk-left">
+      <svg class="diagram brk-arch" viewBox="0 0 650 420" role="img" aria-label="The architecture; the broken service is red with an X, red arrows show where the error travels back to the grower">
+        <defs>
+          <marker id="arrow-bq" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2f6fde"/></marker>
+          <marker id="arrow-ba" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f0954a"/></marker>
+          <marker id="arrow-bw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b3601f"/></marker>
+          <marker id="arrow-be" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c0353a"/></marker>
+        </defs>
+        <!-- Questions (blue) -->
+        <path class="bedge q" data-on="1 2 3 4 5 6 7" style="marker-end:url(#arrow-bq)" d="M110,203 L158,203"/>
+        <path class="bedge q" data-on="1 4 5" style="marker-end:url(#arrow-bq)" d="M268,176 L356,98"/>
+        <path class="bedge q" data-on="1 2 3 4 5 6 7" style="marker-end:url(#arrow-bq)" d="M268,244 L354,334"/>
+        <path class="bedge q" data-on="1 2 3 4 5 6" style="marker-end:url(#arrow-bq)" d="M418,340 L418,104"/>
+        <path class="bedge q" data-on="1 2 3 5 6" style="marker-end:url(#arrow-bq)" d="M490,63 L528,63"/>
+        <path class="bedge q" data-on="1 2 3" style="marker-end:url(#arrow-bq)" d="M490,363 L528,363"/>
+        <path class="bedge q" data-on="2 3" style="marker-end:url(#arrow-bq)" d="M578,340 L578,254"/>
+        <!-- Answers (orange) -->
+        <path class="bedge a" data-on="1" style="marker-end:url(#arrow-ba)" d="M160,217 L112,217"/>
+        <path class="bedge a" data-on="1" style="marker-end:url(#arrow-ba)" d="M368,104 L280,184"/>
+        <path class="bedge a" data-on="1" style="marker-end:url(#arrow-ba)" d="M364,344 L278,252"/>
+        <path class="bedge a" data-on="1 2 3" style="marker-end:url(#arrow-ba)" d="M432,102 L432,338"/>
+        <path class="bedge a" data-on="1 2 3 6" style="marker-end:url(#arrow-ba)" d="M530,77 L492,77"/>
+        <path class="bedge a" data-on="1" style="marker-end:url(#arrow-ba)" d="M530,377 L492,377"/>
+        <!-- Old forecast (amber) -->
+        <path class="bedge warn" data-on="2" style="marker-end:url(#arrow-bw)" d="M530,377 L492,377"/>
+        <path class="bedge warn" data-on="2" style="marker-end:url(#arrow-bw)" d="M364,344 L278,252"/>
+        <path class="bedge warn" data-on="2" style="marker-end:url(#arrow-bw)" d="M160,217 L112,217"/>
+        <!-- Errors (red) -->
+        <path class="bedge err" data-on="3 4 5 6 7" style="marker-end:url(#arrow-be)" d="M160,217 L112,217"/>
+        <path class="bedge err" data-on="5" style="marker-end:url(#arrow-be)" d="M368,104 L280,184"/>
+        <path class="bedge err" data-on="3 4 5 6" style="marker-end:url(#arrow-be)" d="M364,344 L278,252"/>
+        <path class="bedge err" data-on="5 6" style="marker-end:url(#arrow-be)" d="M432,102 L432,338"/>
+        <path class="bedge err" data-on="3" style="marker-end:url(#arrow-be)" d="M530,377 L492,377"/>
+        <!-- Services -->
+        <g class="bnode node external"><rect x="0" y="180" width="110" height="60" rx="10"/><text x="55" y="216">Browser</text></g>
+        <g class="bnode node brand"><rect x="160" y="180" width="120" height="60" rx="10"/><text x="220" y="216">frontend</text></g>
+        <g class="bnode node" data-broken="4"><rect x="360" y="40" width="130" height="60" rx="10"/><text x="425" y="76">registry</text></g>
+        <g class="bnode node external" data-broken="5"><rect x="530" y="40" width="110" height="60" rx="10"/><text x="585" y="76">database</text></g>
+        <g class="bnode node water" data-broken="7"><rect x="360" y="340" width="130" height="60" rx="10"/><text x="425" y="376">planner</text></g>
+        <g class="bnode node water"><rect x="530" y="340" width="110" height="60" rx="10"/><text x="585" y="376">weather</text></g>
+        <g class="bnode node external" data-broken="2 3"><rect x="530" y="190" width="110" height="60" rx="10"/><text x="585" y="226">Open-Meteo</text></g>
+        <!-- The X on a broken service -->
+        <g class="bx" data-on="4"><line x1="474" y1="34" x2="496" y2="56"/><line x1="496" y1="34" x2="474" y2="56"/></g>
+        <g class="bx" data-on="5"><line x1="624" y1="34" x2="646" y2="56"/><line x1="646" y1="34" x2="624" y2="56"/></g>
+        <g class="bx" data-on="7"><line x1="474" y1="334" x2="496" y2="356"/><line x1="496" y1="334" x2="474" y2="356"/></g>
+        <g class="bx" data-on="2 3"><line x1="624" y1="184" x2="646" y2="206"/><line x1="646" y1="184" x2="624" y2="206"/></g>
+        <!-- Labels -->
+        <text class="blabel err" data-on="2 3" x="570" y="292" style="text-anchor:end">3 tries, no answer</text>
+        <text class="blabel warn" data-on="2" x="510" y="416" style="text-anchor:middle">stale: true</text>
+        <text class="blabel warn" data-on="2" x="300" y="306" style="text-anchor:end">plan, marked old</text>
+        <text class="blabel warn" data-on="2" x="135" y="262" style="text-anchor:middle">old-forecast note</text>
+        <text class="blabel err" data-on="3" x="510" y="416" style="text-anchor:middle">503</text>
+        <text class="blabel err" data-on="3" x="300" y="306" style="text-anchor:end">503, names weather</text>
+        <text class="blabel err" data-on="4" x="440" y="146" style="text-anchor:start">no answer in 2 s</text>
+        <text class="blabel err" data-on="4 5" x="300" y="306" style="text-anchor:end">503, names registry</text>
+        <text class="blabel err" data-on="4" x="300" y="130" style="text-anchor:end">no answer</text>
+        <text class="blabel err" data-on="5" x="585" y="26" style="text-anchor:middle">no answer</text>
+        <text class="blabel err" data-on="5" x="440" y="146" style="text-anchor:start">503 Database unavailable</text>
+        <text class="blabel err" data-on="5" x="300" y="130" style="text-anchor:end">/health: down</text>
+        <text class="blabel err" data-on="6" x="440" y="138" style="text-anchor:start">"latitude", no "lat"</text>
+        <text class="blabel err" data-on="6" x="440" y="156" style="text-anchor:start">strict check fails</text>
+        <text class="blabel err" data-on="6" x="300" y="306" style="text-anchor:end">503, names registry</text>
+        <text class="blabel err" data-on="7" x="300" y="306" style="text-anchor:end">no answer</text>
+        <text class="blabel err" data-on="3 4 5 6 7" x="135" y="262" style="text-anchor:middle">error message</text>
+      </svg>
+        <div class="brk-rule">Never a plan of zeros: an old forecast marked old, or a 503 that names the service</div>
+      </div>
+      <div class="brk-side">
+        <div class="brk-caption">
+          <div class="brk-num"><span class="brk-i">All up</span></div>
+          <div class="brk-step" data-on="1">
+            <div class="brk-label">Now</div>
+            <h3>Nothing is broken</h3>
+            <div class="brk-label">What happens</div>
+            <ol><li>The website asks the planner for a plan</li><li>The planner reads the registry and the weather service</li><li>The plan comes back to the page</li></ol>
+            <div class="brk-label">The grower sees</div>
+            <div class="gs plan"><b>Water for 24 h</b><span>40,000 L on the plot</span></div>
+            <div class="gs-status"><i></i>All systems normal</div>
+          </div>
+          <div class="brk-step" data-on="2">
+            <div class="brk-label">The problem</div>
+            <h3>Open-Meteo (the weather provider) is down, but weather saved a forecast earlier</h3>
+            <div class="brk-label">What happens</div>
+            <ol><li>weather asks Open-Meteo 3 times: no answer</li><li>weather sends its last forecast, marked stale (up to 24 h old)</li><li>The planner still makes the plan, and marks those days</li></ol>
+            <div class="brk-label">The grower sees</div>
+            <div class="gs plan"><b>Water for 24 h</b><span>40,000 L on the plot</span><span class="old">From an older weather update</span></div>
+            <div class="gs-status"><i></i>All systems normal</div>
+          </div>
+          <div class="brk-step" data-on="3">
+            <div class="brk-label">The problem</div>
+            <h3>Open-Meteo (the weather provider) is down, and weather has no saved forecast</h3>
+            <div class="brk-label">What happens</div>
+            <ol><li>weather asks Open-Meteo 3 times: no answer</li><li>weather answers 503: no forecast to give</li><li>The planner answers 503, naming weather-service. No made-up numbers</li></ol>
+            <div class="brk-label">The grower sees</div>
+            <div class="gs alert"><b>The plan can't be calculated right now</b><span>weather-service: No forecast available: the weather provider is not answering.</span></div>
+            <div class="gs-status"><i></i>All systems normal</div>
+          </div>
+          <div class="brk-step" data-on="4">
+            <div class="brk-label">The problem</div>
+            <h3>The registry service is down</h3>
+            <div class="brk-label">What happens</div>
+            <ol><li>The planner asks the registry for the plot: no answer in 2 s</li><li>The planner answers 503, naming registry-service</li><li>The status line checks each /health: registry is down</li></ol>
+            <div class="brk-label">The grower sees</div>
+            <div class="gs alert"><b>The plan can't be calculated right now</b><span>registry-service is not reachable.</span></div>
+            <div class="gs-status down"><i></i>registry-service down</div>
+          </div>
+          <div class="brk-step" data-on="5">
+            <div class="brk-label">The problem</div>
+            <h3>The registry is up, but its database is down</h3>
+            <div class="brk-label">What happens</div>
+            <ol><li>The registry can't reach PostgreSQL: 503 Database unavailable</li><li>The planner answers 503 and passes that reason on</li><li>The registry's /health checks the database too: shown down</li></ol>
+            <div class="brk-label">The grower sees</div>
+            <div class="gs alert"><b>The plan can't be calculated right now</b><span>registry-service: Database unavailable.</span></div>
+            <div class="gs-status down"><i></i>registry-service down</div>
+          </div>
+          <div class="brk-step" data-on="6">
+            <div class="brk-label">The problem</div>
+            <h3>The registry changes its answer: "latitude" instead of "lat"</h3>
+            <div class="brk-label">What happens</div>
+            <ol><li>The registry answers 200, but the plot has no "lat"</li><li>The planner checks every answer with a strict model: it fails</li><li>The planner answers 503 instead of guessing where the plot is</li></ol>
+            <div class="brk-label">The grower sees</div>
+            <div class="gs alert"><b>The plan can't be calculated right now</b><span>registry-service answered with data the planner can't use.</span></div>
+            <div class="gs-status"><i></i>All systems normal</div>
+          </div>
+          <div class="brk-step" data-on="7">
+            <div class="brk-label">The problem</div>
+            <h3>The planner service is down</h3>
+            <div class="brk-label">What happens</div>
+            <ol><li>The website asks the planner for the plan: no answer</li><li>The website shows the error, naming planner-service</li><li>The status line checks each /health: planner is down</li></ol>
+            <div class="brk-label">The grower sees</div>
+            <div class="gs alert"><b>The plan can't be calculated right now</b><span>planner-service is not reachable.</span></div>
+            <div class="gs-status down"><i></i>planner-service down</div>
+          </div>
+          <div class="brk-buttons"><button type="button" class="brk-back">Back</button><button type="button" class="brk-next">Break something</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
+  </section>
+
+
+  <!-- 15. Live (last slide) -->
   <section class="slide title">
     <div class="kicker">Live now</div>
     <h1>Questions</h1>
-    <p class="lead">http://&lt;EC2 public IP&gt;:3000 - the grower's page</p>
+    <p class="lead">http://100.53.209.1:3000 - the grower's page</p>
     <div class="foot"><span class="mark"><i></i>AgroPilot</span><span class="n"></span></div>
   </section>
 
@@ -675,6 +879,47 @@
   flow.querySelector(".flow-next").addEventListener("click", e => { e.stopPropagation(); showStep(flowStep + 1); });
   flow.querySelector(".flow-back").addEventListener("click", e => { e.stopPropagation(); showStep(flowStep - 1); });
   showStep(1);
+</script>
+<script>
+  /* P2 addition, on the owner's request: steps inside the backup "When something breaks" slide.
+     Step 1 is the calm system; from step 2 the slide turns red and each step breaks one thing.
+     Next/right arrow and Back/left arrow move one step; past the ends they change slide. */
+  const breaks = document.querySelector(".slide.breaks");
+  const breakSteps = Number(breaks.dataset.steps);
+  let breakStep = 1;
+
+  /** True when `el` lists step k in the given data attribute ("2 3" lists steps 2 and 3). */
+  function listsStep(el, attr, k) {
+    return el.dataset[attr].split(" ").includes(String(k));
+  }
+
+  /** Show step k: arrows, labels, the broken service, the caption, and the red mood after step 1. */
+  function showBreak(k) {
+    breakStep = Math.max(1, Math.min(breakSteps, k));
+    breaks.querySelectorAll("[data-on]").forEach(el => el.classList.toggle("on", listsStep(el, "on", breakStep)));
+    breaks.querySelectorAll("[data-broken]").forEach(el => el.classList.toggle("broken", listsStep(el, "broken", breakStep)));
+    breaks.classList.toggle("bad", breakStep > 1);
+    breaks.querySelector(".brk-i").textContent = breakStep === 1 ? "All up" : "Failure " + (breakStep - 1) + " / " + (breakSteps - 1);
+    breaks.querySelector(".brk-next").textContent = breakStep === 1 ? "Break something" : "Next failure";
+    breaks.querySelector(".brk-back").disabled = breakStep === 1;
+    breaks.querySelector(".brk-next").disabled = breakStep === breakSteps;
+  }
+
+  /** On this slide, the arrow keys move a step first; the deck's own keys work otherwise. */
+  window.addEventListener("keydown", e => {
+    if (!breaks.classList.contains("active")) return;
+    const forward = ["ArrowRight", "PageDown", " "].includes(e.key);
+    const back = ["ArrowLeft", "PageUp"].includes(e.key);
+    if ((forward && breakStep < breakSteps) || (back && breakStep > 1)) {
+      showBreak(breakStep + (forward ? 1 : -1));
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  breaks.querySelector(".brk-next").addEventListener("click", e => { e.stopPropagation(); showBreak(breakStep + 1); });
+  breaks.querySelector(".brk-back").addEventListener("click", e => { e.stopPropagation(); showBreak(breakStep - 1); });
+  showBreak(1);
 </script>
 </body>
 </html>
