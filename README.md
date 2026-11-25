@@ -113,6 +113,8 @@ bash .claude/skills/test/scripts/run-all.sh    # every suite, lint and the front
 
 No test calls a real external service.
 
+CI runs the four suites above on every pull request into `main`. `tests/e2e` needs the live stack, so it does not run in CI.
+
 ### Performance
 
 Measured at 10 requests/s, one worker, p95 latency:
