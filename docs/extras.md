@@ -118,3 +118,17 @@ Each entry: what it is, why we made it, where it lives, and how to run it.
 - **Why:** each service's own suite fakes the others, so nothing checked that the four really work together.
 - **Where:** `tests/e2e/` (`pyproject.toml`, `conftest.py`, `test_plot_flow.py`).
 - **Run:** start the stack (`bash .claude/skills/run-stack/scripts/stack.sh start`), then `cd tests/e2e && uv run pytest`; it skips itself when the stack is down.
+
+## P2 interview material (course)
+
+- **What:** the slide deck, the Hebrew study guide, the notes and the screenshots used to prepare for the P2 interview.
+- **Why:** made with the `interview-prep` skill; kept so the owner can go back over what was explained (plan decision D1: merged in its own PR).
+- **Where:** `docs/interview/p2/` (`slides.html`, `study-guide.html`, `notes.txt`, `screenshots/`).
+- **Run:** open the HTML files in a browser.
+
+## Plans up to P3 (course)
+
+- **What:** the step-by-step plan for closing P2 and everything before P3 (S1-S9: CI, `main` protection, coverage, audit, deploy on merge, Docker PostgreSQL), and the detailed plan for the deploy pipeline (S8b).
+- **Why:** the owner decides every step before it is built; builder agents work from these files and the owner approves each step.
+- **Where:** `docs/superpowers/plans/2026-11-25-up-to-p3.md`, `docs/superpowers/plans/2026-11-25-s8b-cd.md`.
+- **Run:** nothing to run; read them.
