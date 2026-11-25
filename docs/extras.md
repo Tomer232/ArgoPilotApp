@@ -100,8 +100,8 @@ Each entry: what it is, why we made it, where it lives, and how to run it.
 
 ## `deploy` and `qa-live` skills, shared test runner (AWS)
 
-- **What:** `deploy` checks that `main` is merged and tested, then puts it on our EC2 instance with `deploy/update.sh` over SSH; `qa-live` tries to break the deployed system (API, pages, ports, service account, crashes, database outage, load, reboot), puts everything back and reports to `docs/qa/<date>-live.md`. `run-all.sh` runs every test suite and is shared by `deploy` and `submit-task`.
-- **Why:** deploying by hand has several gates that are easy to skip, and production differs from `next dev` (O116); the account is shared, so both skills touch only our instance, by id (DECISIONS Y33, Y34, O117-O121, A71, A72).
+- **What:** `deploy` checks that `main` is merged and tested, then puts it on our EC2 instance with `deploy/update.sh` over SSH; `qa-live` tries to break the deployed system (API, pages, ports, service account, a small load) without stopping anything (Y38), deletes its own test rows and reports to `docs/qa/<date>-live.md`. `run-all.sh` runs every test suite and is shared by `deploy` and `submit-task`.
+- **Why:** deploying by hand has several gates that are easy to skip, and production differs from `next dev` (O116); the account is shared, so both skills touch only our instance, by id (DECISIONS Y34, Y38, O117-O121, A71, A72).
 - **Where:** `.claude/skills/deploy/`, `.claude/skills/qa-live/`, `.claude/skills/test/scripts/run-all.sh`.
 - **Run:** ask Claude Code "/deploy" or "/qa-live"; the tests alone: `bash .claude/skills/test/scripts/run-all.sh` from the repo root.
 

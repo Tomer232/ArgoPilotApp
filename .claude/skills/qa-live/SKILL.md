@@ -1,15 +1,15 @@
 ---
 name: qa-live
-description: QA the deployed AgroPilot on our EC2 instance (i-02119bbbf95e78e0c) after a deploy - try to break the live API, website, service-to-service calls and the server itself (exposed ports, service account, secrets, crashes, restarts, a database outage, load, a reboot), then put everything back as it was and report every gap with steps to reproduce in docs/qa/. Fixes nothing and touches no other AWS resource. Use whenever the user says "/qa-live", "QA the deploy", "QA production", "try to break the server", "check the live site", "is the deploy OK", or right after /deploy, even if they only say "test it on AWS".
+description: QA the deployed AgroPilot on our EC2 instance (i-02119bbbf95e78e0c) after a deploy - try to break the live API, website, service-to-service calls and the server itself (exposed ports, service account, secrets, a small load), without stopping anything, then delete its own test rows and report every gap with steps to reproduce in docs/qa/. Fixes nothing and touches no other AWS resource. Use whenever the user says "/qa-live", "QA the deploy", "QA production", "try to break the server", "check the live site", "is the deploy OK", or right after /deploy, even if they only say "test it on AWS".
 context: fork
 agent: general-purpose
 ---
 
 # qa-live
 
-The deploy is "done", and your job is to prove it isn't. This is the `qa` skill's mindset (hostile tester, confused grower, flaky network) pointed at the real server, plus what only a deploy can get wrong: what's open to the internet, who the processes run as, where the secrets are, and whether the system survives crashes, outages and a reboot.
+The deploy is "done", and your job is to prove it isn't. This is the `qa` skill's mindset (hostile tester, confused grower, flaky network) pointed at the real server, plus what only a deploy can get wrong: what's open to the internet, who the processes run as, where the secrets are,.
 
-The owner chose that nothing is off limits on **our** instance: real writes, floods, stopping services, stopping PostgreSQL, a reboot. In return, two promises: you never touch anything else in the AWS account, and at the end the system is back exactly as you found it (step 6). You report; you don't fix.
+The owner chose **safe only** (Y38): read anything, write only your own `QA-<date>-` rows, and one small flood per target. Never stop, kill or restart a service or PostgreSQL, never change a unit's config, never reboot. Attacks that need one of those go under "Not checked" with the reason "safe only (Y38)". Two more promises: you never touch anything else in the AWS account, and at the end your rows are gone and the seed rows are unchanged (step 6). You report; you don't fix.
 
 ## The shared account (read first)
 
@@ -56,32 +56,29 @@ From this machine, which is the owner's laptop and so is allowed on 8000 and 22 
 Work through the `qa` skill's step 3 (read `.claude/skills/qa/SKILL.md`): the API, between-services, frontend and UX attack lists, against `http://<ip>:3000` and `http://<ip>:8000`. Differences on the live server:
 
 - **Weather and planner are not public.** Reach them through an SSH tunnel: `ssh -i ~/.ssh/tomer-us-east-1.pem -N -L 18001:127.0.0.1:8001 -L 18002:127.0.0.1:8002 ubuntu@<ip> &`, save its PID, and use `http://127.0.0.1:18001` and `:18002`. Kill it by PID at the end.
-- **Stopping a service** is `ssh <ip> 'sudo systemctl stop agropilot-<service>'` and `start` afterwards, instead of `stack.sh`. After each stop: use the frontend and the planner, check the messages say clearly what is down, then start it and check everything recovers without anything else being restarted.
-- **The stale forecast** test needs the weather unit's settings changed; on the live server, do it with a systemd drop-in only (`sudo systemctl edit` is interactive, so write `/etc/systemd/system/agropilot-weather.service.d/qa.conf` with `[Service]` `Environment=...`, `daemon-reload`, restart), and remove the drop-in, `daemon-reload` and restart in step 6. The proxy it needs runs on the server in that case; if this gets too fiddly, list it under "Not checked" rather than half-doing it.
+- **Skip** every `qa` attack that stops or restarts a service or changes its settings (a dead service, the stale forecast): list each under "Not checked", "safe only (Y38)".
 - **Weather provider:** keep requests that need new forecast locations under about 20 per run; Open-Meteo is shared by everyone.
 
 Then the server itself:
 
 - **Accounts and files.** `ps -o user=,cmd= -C uvicorn -C node` (or `systemctl show -p User agropilot-*`): every service runs as `agropilot`, none as root or ubuntu (Y31). `stat -c '%a %U %n'` on the four `.env`/`.env.local` files: mode 600, owner `agropilot`. `getent passwd agropilot`: no login shell. Does any file under `/opt/agropilot/app` belong to root or allow world writes?
 - **What listens where.** `sudo ss -ltnp`: 8001, 8002 and 5432 on 127.0.0.1 only; nothing unexpected on `0.0.0.0`.
-- **Crash recovery.** `sudo systemctl kill -s KILL agropilot-<service>` for each service in turn: does `Restart=on-failure` bring it back within seconds (`systemctl is-active`, and the app works again)? Kill the same one five times quickly: does systemd give up (start limit), and what does the grower see then?
-- **Database outage.** `sudo systemctl stop postgresql`: the registry must answer 503 problem+json with `Retry-After` (not 500, not hang), the frontend must say so plainly. `sudo systemctl start postgresql`: everything recovers without restarting the registry.
+- **Restart settings, read only.** `systemctl show -p Restart,RestartUSec agropilot-*` and `systemctl is-enabled agropilot-* postgresql`: every unit restarts on failure and starts at boot. Crash recovery, a database outage and a reboot are not tried (Y38): list them under "Not checked".
 - **Load (keep it small: the course pays for the instance).** One short flood per target, no more: 100 requests, 10 at a time, against the overview page, a plot page and `GET /v1/plots` (`yes <url> | head -100 | xargs -P 10 -n 1 curl -s -o /dev/null -w '%{http_code} %{time_total}\n'`). Never repeat a flood, never loop it, never more than a minute of load in total. Record the status mix and the slowest times. For the NFR latency numbers, measure on the server instead (`ssh <ip>` with a `curl` loop at 10 requests per second against `127.0.0.1`): from the laptop each request carries ~180 ms of round trip to us-east-1. Watch memory on the server (`free -m`) during it. Plot pages call the planner, which calls weather: pick plots whose forecast is already cached.
-- **Reboot.** Last of the attacks: `ssh <ip> 'sudo reboot'`, wait for SSH to come back (the public IP stays the same on a reboot), then: all four units `active` without anyone starting them, the app answers, the data is still there. Note how long it took.
 - **Logs.** `journalctl -u 'agropilot-*' --since '<start time>' -p warning --no-pager`: any traceback or error you didn't cause on purpose is a finding.
 
 ## 5. Severity
 
 As in the `qa` skill (critical: wrong advice, data loss, security hole; high: requirement broken, crash/500, dead end, impossible number; medium: wrong code or message, confusing screen, decision not followed; low: polish), plus:
 
-- **critical:** a secret readable or printed anywhere, a service running as root, a port open to the world that should not be, data lost after a crash or reboot.
-- **high:** a service that does not come back by itself after a crash, a database outage or a reboot; a production status code different from what the decisions promise.
+- **critical:** a secret readable or printed anywhere, a service running as root, a port open to the world that should not be, data lost or changed.
+- **high:** a unit not set to restart on failure or not enabled at boot; a production status code different from what the decisions promise.
 
 ## 6. Put everything back (always, even after a failure halfway)
 
 Go through this list and record each line's result in the report under "Restored":
 
-1. Every unit you stopped is started again; any drop-in you wrote is removed, followed by `daemon-reload` and a restart. `systemctl is-active` and `is-enabled` are `active`/`enabled` for all four and for `postgresql`. If a unit hit its start limit, `sudo systemctl reset-failed agropilot-<service>` and start it.
+1. `systemctl is-active` and `is-enabled` are `active`/`enabled` for all four units and for `postgresql`. You stopped nothing, so anything else is a finding; tell the owner and don't start it yourself.
 2. Every `QA-<date>-` row is deleted (plots before farms). List by name through the API to check none are left.
 3. The seed rows are unchanged: fetch the same lists as in step 2 and compare with `before.json` (ignoring nothing).
 4. The SSH tunnel and any helper process you started are stopped, by PID. Never `pkill -f` a pattern.
