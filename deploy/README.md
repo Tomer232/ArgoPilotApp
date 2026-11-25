@@ -25,9 +25,9 @@ The whole system runs on one EC2 instance in us-east-1, from the course tutorial
 | Units | `deploy/systemd/agropilot-{registry,weather,planner,frontend}.service` |
 | Settings | each service's `.env` (frontend `.env.local`), mode 600, from `.env.example`; the registry's has the generated database password (A69) |
 
-## First-time setup (already done, 2026-11-22)
+## First-time setup (done by hand on 2026-11-22; `setup.sh` now does it)
 
-Run on the instance as `ubuntu`. `as` is `sudo -u agropilot -H env HOME=/opt/agropilot`.
+`setup.sh` does steps 1-4, 7 and 8 and is safe to run on every deploy (it checks each step first); `update.sh` runs it. The steps stay here as the explanation. By hand, run on the instance as `ubuntu`. `as` is `sudo -u agropilot -H env HOME=/opt/agropilot`.
 
 1. Packages: `sudo apt install -y postgresql sqlite3 git curl xz-utils`; Node.js 22 LTS from the nodejs.org tarball into `/usr/local` (check it with `SHASUMS256.txt`); uv with `curl -LsSf https://astral.sh/uv/install.sh | sudo env UV_INSTALL_DIR=/usr/local/bin UV_NO_MODIFY_PATH=1 sh`.
 2. Account: `sudo useradd --system --create-home --home-dir /opt/agropilot --shell /usr/sbin/nologin agropilot`.
@@ -40,12 +40,40 @@ Run on the instance as `ubuntu`. `as` is `sudo -u agropilot -H env HOME=/opt/agr
 
 ## Deploy a new version of main
 
-```bash
-ssh -i ~/.ssh/tomer-us-east-1.pem ubuntu@<public-ip>
-sudo bash /opt/agropilot/app/deploy/update.sh
+Merging a pull request into `main` deploys it: the `deploy` workflow (`.github/workflows/deploy.yaml`) runs on every push to `main`.
+
+```
+merge PR into main
+  -> GitHub Actions "deploy" (runner)
+       1. checkout the merged commit
+       2. AWS: describe the instance by id; start it if stopped; wait for running; read its public IP
+       3. AWS: open port 22 for the runner's IP /32 (description github-deploy-<run id>), keep the rule id
+       4. wait for SSH (ssh-keyscan, retry)
+       5. scp deploy/setup.sh and deploy/update.sh to /tmp/agropilot-deploy/
+       6. ssh: pipe DB_PASSWORD into  sudo bash /tmp/agropilot-deploy/update.sh <sha>
+            update.sh: read the password from stdin -> setup.sh (idempotent) -> git reset to the sha
+                       -> write the 4 settings files -> dependencies -> build -> restart -> health checks
+                       -> check the live commit equals the sha
+       7. always (also on failure or cancel): revoke the port 22 rule by its id
 ```
 
-It pulls `main`, installs the locked dependencies, rebuilds the frontend, restarts the four units and checks each one answers 200.
+The port 22 rule for the runner exists only during a run. The workflow never stops the instance.
+
+Names set in the repository settings (values are never written here):
+
+| Kind | Name | Holds |
+| --- | --- | --- |
+| Secret | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | key of the IAM user `tomer.k-github-deploy` (describe and start our instance, open and close rules on our security group, nothing else) |
+| Secret | `EC2_SSH_KEY` | the `.pem` for user `ubuntu` |
+| Secret | `DB_PASSWORD` | the password of the PostgreSQL role `registry`; `setup.sh` sets the role's password to it on every run |
+| Variable | `EC2_INSTANCE_ID`, `EC2_SG_ID`, `AWS_REGION` | the instance, its security group, `us-east-1` |
+
+- **Deploy:** merge the pull request.
+- **Deploy by hand, without a merge:** Actions tab, workflow `deploy`, "Run workflow" (or `gh workflow run deploy.yaml --ref main`).
+- **Roll back:** re-run an older successful `deploy` run (`gh run rerun <run id>`). Only commits that already contain this `update.sh` and `setup.sh` can be rolled back to, because the scripts come from the commit being deployed.
+- **Emergency, GitHub Actions down:** on the server, `sudo sed -n 's#^DATABASE_URL=.*://[^:]*:\([^@]*\)@.*#\1#p' /opt/agropilot/app/services/registry-service/.env | sudo bash /opt/agropilot/app/deploy/update.sh <sha>` (the password never leaves the server).
+
+`update.sh` resets the code to the commit, writes the four settings files from scratch, installs the locked dependencies, rebuilds the frontend, restarts the four units, waits until each answers 200 (up to about a minute) and checks that the live commit is the one it was given.
 
 ## Operate
 

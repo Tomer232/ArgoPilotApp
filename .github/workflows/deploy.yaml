@@ -1,0 +1,97 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Two deploys never run at the same time: they would fight over the instance
+# and the port 22 rule.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_DEFAULT_REGION: ${{ vars.AWS_REGION }}
+  EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+  EC2_SG_ID: ${{ vars.EC2_SG_ID }}
+
+jobs:
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Find the instance and start it if stopped
+        run: |
+          state="$(aws ec2 describe-instances --instance-ids "$EC2_INSTANCE_ID" \
+            --query 'Reservations[0].Instances[0].State.Name' --output text)"
+          echo "Instance state: $state"
+          case "$state" in
+            stopped) aws ec2 start-instances --instance-ids "$EC2_INSTANCE_ID" > /dev/null ;;
+            pending | running) ;;
+            *) echo "Instance is $state, not deploying."; exit 1 ;;
+          esac
+          aws ec2 wait instance-running --instance-ids "$EC2_INSTANCE_ID"
+          host="$(aws ec2 describe-instances --instance-ids "$EC2_INSTANCE_ID" \
+            --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)"
+          echo "EC2_HOST=$host" >> "$GITHUB_ENV"
+
+      - name: Open SSH for this runner
+        run: |
+          runner_ip="$(curl -fsS https://checkip.amazonaws.com | tr -d '[:space:]')"
+          rule_id="$(aws ec2 authorize-security-group-ingress --group-id "$EC2_SG_ID" \
+            --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=$runner_ip/32,Description=github-deploy-$GITHUB_RUN_ID}]" \
+            --query 'SecurityGroupRules[0].SecurityGroupRuleId' --output text)"
+          echo "SSH_RULE_ID=$rule_id" >> "$GITHUB_ENV"
+
+      - name: Prepare the SSH key and wait for the server
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/deploy.pem
+          chmod 600 ~/.ssh/deploy.pem
+          for attempt in $(seq 1 24); do
+            if ssh-keyscan -T 5 "$EC2_HOST" > ~/.ssh/known_hosts 2> /dev/null && [ -s ~/.ssh/known_hosts ]; then
+              echo "SSH is up."
+              exit 0
+            fi
+            echo "Waiting for SSH ($attempt/24)"
+            sleep 5
+          done
+          echo "SSH did not come up in 2 minutes."
+          exit 1
+
+      - name: Deploy this commit
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          ssh_options=(-i ~/.ssh/deploy.pem -o BatchMode=yes)
+          ssh "${ssh_options[@]}" "ubuntu@$EC2_HOST" 'mkdir -p /tmp/agropilot-deploy'
+          scp "${ssh_options[@]}" deploy/setup.sh deploy/update.sh "ubuntu@$EC2_HOST:/tmp/agropilot-deploy/"
+          printf '%s' "$DB_PASSWORD" | ssh "${ssh_options[@]}" "ubuntu@$EC2_HOST" \
+            "sudo bash /tmp/agropilot-deploy/update.sh '$GITHUB_SHA'"
+
+      - name: Close SSH
+        if: always() && env.SSH_RULE_ID != ''
+        run: |
+          aws ec2 revoke-security-group-ingress --group-id "$EC2_SG_ID" \
+            --security-group-rule-ids "$SSH_RULE_ID"
+
+      - name: Summary
+        run: |
+          {
+            echo "Deployed commit \`$GITHUB_SHA\`"
+            echo
+            echo "Live: http://$EC2_HOST:3000"
+          } >> "$GITHUB_STEP_SUMMARY"
