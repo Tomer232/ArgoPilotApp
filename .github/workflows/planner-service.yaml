@@ -30,3 +30,19 @@ jobs:
         with:
           name: planner-service-coverage
           path: services/planner-service/htmlcov/
+
+  planner-audit:
+    name: planner-audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/planner-service
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.3.3
+
+      - name: Audit dependencies
+        run: uv audit --locked --preview-features audit-command

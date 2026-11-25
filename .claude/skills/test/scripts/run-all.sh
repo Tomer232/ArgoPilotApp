@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Run every test suite in the repo and print one line per suite.
 #   bash .claude/skills/test/scripts/run-all.sh
-# Suites: registry, weather and planner (pytest), frontend (vitest, lint, build).
+# Suites: registry, weather and planner (pytest), frontend (vitest, lint, build),
+# then a dependency audit for each of the four services (uv audit, npm audit).
 # Each suite's full output goes to $LOG_DIR/<suite>.log (default /tmp/agropilot-tests).
 # Exit code 0 only when every suite passed. Used by the deploy and submit-task skills.
 
@@ -43,5 +44,11 @@ if frontend_running; then
 else
   run_suite frontend-build services/frontend npm run build
 fi
+
+# Dependency audits, as in CI: uv audit checks uv.lock; npm audit gates on high and critical in production.
+run_suite registry-audit services/registry-service uv audit --locked --preview-features audit-command
+run_suite weather-audit  services/weather-service  uv audit --locked --preview-features audit-command
+run_suite planner-audit  services/planner-service  uv audit --locked --preview-features audit-command
+run_suite frontend-audit services/frontend npm audit --omit=dev --audit-level=high
 
 exit "$FAILED"
