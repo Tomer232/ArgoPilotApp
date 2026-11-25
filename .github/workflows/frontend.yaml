@@ -36,7 +36,14 @@ jobs:
         run: npm run lint
 
       - name: Run tests
-        run: npm test
+        run: npm run coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: frontend-coverage
+          path: services/frontend/coverage/
 
       - name: Build
         run: npm run build

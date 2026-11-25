@@ -33,7 +33,7 @@ mkdir -p "$LOG_DIR"
 run_suite registry services/registry-service uv run pytest -q --cov
 run_suite weather  services/weather-service  uv run pytest -q --cov
 run_suite planner  services/planner-service  uv run pytest -q --cov
-run_suite frontend-test services/frontend npm test
+run_suite frontend-test services/frontend npm run coverage
 run_suite frontend-lint services/frontend npm run lint
 
 # npm run build rewrites .next, which breaks a running dev server.
