@@ -71,7 +71,7 @@ Names set in the repository settings (values are never written here):
 - **Deploy:** merge the pull request.
 - **Deploy by hand, without a merge:** Actions tab, workflow `deploy`, "Run workflow" (or `gh workflow run deploy.yaml --ref main`).
 - **Roll back:** re-run an older successful `deploy` run (`gh run rerun <run id>`). Only commits that already contain this `update.sh` and `setup.sh` can be rolled back to, because the scripts come from the commit being deployed.
-- **Emergency, GitHub Actions down:** on the server, `sudo sed -n 's#^DATABASE_URL=.*://[^:]*:\([^@]*\)@.*#\1#p' /opt/agropilot/app/services/registry-service/.env | sudo bash /opt/agropilot/app/deploy/update.sh <sha>` (the password never leaves the server).
+- **Emergency, GitHub Actions down:** on the server, `sudo cp /opt/agropilot/app/deploy/setup.sh /opt/agropilot/app/deploy/update.sh /tmp/ && sudo sed -n 's#^DATABASE_URL=.*://[^:]*:\([^@]*\)@.*#\1#p' /opt/agropilot/app/services/registry-service/.env | sudo bash /tmp/update.sh <sha>` (the password never leaves the server; the scripts run from `/tmp` because `update.sh` resets the clone).
 
 `update.sh` resets the code to the commit, writes the four settings files from scratch, installs the locked dependencies, rebuilds the frontend, restarts the four units, waits until each answers 200 (up to about a minute) and checks that the live commit is the one it was given.
 

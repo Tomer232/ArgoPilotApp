@@ -71,7 +71,7 @@ The public IP is new on every start; say so.
 
 Merging into `main` deploys by itself: the `deploy` workflow (`.github/workflows/deploy.yaml`) runs on every push to `main`. It copies `deploy/setup.sh` and `deploy/update.sh` from the runner's checkout of the merged commit to the server and runs them over SSH, with the database password piped on stdin.
 
-1. Merge the PR once its required checks pass (the owner merges; Claude never does).
+1. Merge the PR once its required checks pass, only after the owner says so.
 2. Watch the run: `gh.exe run watch $(gh.exe run list --workflow deploy.yaml --limit 1 --json databaseId --jq '.[0].databaseId') --exit-status`.
 3. Deploy without a merge (for example after the course stopped and restarted the instance): `gh.exe workflow run deploy.yaml --ref main`, then watch it as above.
 4. Roll back: re-run an older successful `deploy` run, `gh.exe run rerun <run id>`. It works only for commits that already contain these scripts.
@@ -80,10 +80,10 @@ If a run fails, read its log (`gh.exe run view <run id> --log-failed`), quote th
 
 ### Emergency fallback (only if GitHub Actions is down)
 
-Run it on the server, so the password never leaves it. SSH in (the owner opens port 22 to their IP first), then:
+Run it on the server, so the password never leaves it. The scripts are copied to `/tmp` first, because `update.sh` resets the clone it would otherwise be running from. SSH in (the owner opens port 22 to their IP first), then:
 
 ```bash
-sudo sed -n 's#^DATABASE_URL=.*://[^:]*:\([^@]*\)@.*#\1#p' /opt/agropilot/app/services/registry-service/.env | sudo bash /opt/agropilot/app/deploy/update.sh <sha>
+sudo cp /opt/agropilot/app/deploy/setup.sh /opt/agropilot/app/deploy/update.sh /tmp/ && sudo sed -n 's#^DATABASE_URL=.*://[^:]*:\([^@]*\)@.*#\1#p' /opt/agropilot/app/services/registry-service/.env | sudo bash /tmp/update.sh <sha>
 ```
 
 ## 5. Check
