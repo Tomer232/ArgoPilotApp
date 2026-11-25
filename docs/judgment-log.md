@@ -92,3 +92,23 @@ The frontend redesign added list pages for farms, plots, crops, soils and emitte
 - **Agent suggested:** delete all three: they are out of spec, and the home summary calls the planner once per plot on every load.
 - **I decided:** keep them and record them as deviations (Y20-Y22, `docs/extras.md`).
 - **Why:** the grower should see the whole registry from the app, and that is what a good product looks like at this stage. The lecturer said we may add functionality as we see fit and need. Stepping out of the given requirements is fine, just not too far.
+
+## 12. The forecast time in the phone's own time zone (P2)
+
+Today's card says when the forecast was fetched. The server works in UTC, and the grower's phone may be in another zone.
+
+- **Agent suggested:** show the forecast's age ("from 3 h ago"), worked out on the server, so no time zone is needed.
+- **I decided:** show the clock time in the phone's own time zone ("Forecast from 18 Nov, 13:40") (Y28).
+- **Why:** it just makes sense.
+
+## 13. Deploy may start a stopped instance (AWS)
+
+- **Agent suggested:** when the instance is stopped, `deploy` stops and asks me.
+- **I decided:** `deploy` starts it, by id only (Y34).
+- **Why:** deploying is the whole point of the skill; starting our own instance by id touches nothing else in the account.
+
+## 14. "Unlimited" CPU credits on the instance (AWS)
+
+- **Agent suggested:** switch to "standard": no extra charge ever, the CPU slows down instead.
+- **I decided:** keep "unlimited" (Y35).
+- **Why:** this is the course's decision.
