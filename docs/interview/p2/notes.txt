@@ -1,0 +1,27 @@
+Owner's notes from the study-guide review (2026-11-24).
+
+1. Plan chart: on a watering day, show the soil level before watering in the tooltip.
+   DONE 2026-11-24: O144, PR #17 (b9ef19e), deployed on EC2.
+   REVERTED 2026-11-24: the owner did not like it; PR #18 (776ba2b), deployed on EC2.
+
+   Problem: the chart draws the soil level at the end of each day, after watering. On a
+   watering day the dip below the trigger is never drawn, so the line looks as if it filled
+   while it was still above the trigger.
+
+   Example (North block, Soil today = Wet, trigger Custom 95% = 116.38 mm):
+   Fri ends at 116.73 mm (above the trigger). Without water, Sat would end at about 114.8 mm
+   (below the trigger), so the plan waters 4 h 37 min back to 122.5 mm. The chart shows
+   Fri 116.73 -> Sat 122.5 and never shows the 114.8.
+
+   Chosen fix (option 2): keep the chart as it is; on watering days, add a line to the
+   tooltip: "Without water: 114.8 mm". Rejected: option 1, a second "before watering"
+   point on the line.
+
+   The calculation is correct (skill step 8 checks the trigger against the level the day
+   would end at without water); this is a display change only.
+
+2. Live /farms page showed a leftover QA farm ("QA-2026-11-22-3-farm", 10 plots).
+   DONE 2026-11-24: the 10 plots and the farm were deleted through the live API; the live
+   registry now has 3 farms and 6 plots (the seed plus Negev demo farm).
+   Still open (not fixed): the 11-22 /qa-live run did not clean up after itself, and a very
+   long plot name with no spaces (the Hebrew QA name) made the /farms table scroll sideways.

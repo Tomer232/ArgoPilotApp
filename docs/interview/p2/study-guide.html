@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgroPilot P2 - מדריך לראיון</title>
+<!--
+  מדריך הלמידה לראיון על P2. נכתב מתוך הריפו: כל מספר והחלטה מצביעים על המקום שלהם.
+  עברית מימין לשמאל; קוד, שמות קבצים ומספרי החלטות משמאל לימין.
+-->
+<style>
+  :root {
+    --page: #ececee; --surface: #f7f7f8; --card: #ffffff; --ink: #18181b; --muted: #71717a;
+    --border: #e6e6e9; --brand: #1f7a4d; --water: #2f6fde; --water-soft: #e8eefb;
+    --leaf: #23784f; --leaf-soft: #e3f4ec; --addon: #b3601f; --addon-soft: #fcefe3;
+    --alarm: #c0353a; --alarm-soft: #fde8e8;
+    --font: "Segoe UI", "Arial", system-ui, sans-serif; --mono: "Cascadia Code", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font-family: var(--font); font-size: 17px; line-height: 1.65; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 20px 80px; }
+  header.top { background: var(--brand); color: #fff; border-radius: 18px; padding: 28px 32px; }
+  header.top h1 { margin: 0; font-size: 34px; }
+  header.top p { margin: 6px 0 0; opacity: .9; }
+  nav.toc { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 24px; margin: 20px 0; }
+  nav.toc ol { margin: 0; padding-inline-start: 22px; columns: 2; }
+  section { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px 28px; margin: 18px 0; }
+  h2 { margin: 0 0 12px; font-size: 26px; color: var(--brand); }
+  h3 { margin: 22px 0 8px; font-size: 20px; }
+  h4 { margin: 16px 0 6px; font-size: 17px; color: var(--muted); }
+  code, .ltr { font-family: var(--mono); font-size: 14px; direction: ltr; unicode-bidi: isolate; background: #f1f1f3; padding: 1px 6px; border-radius: 5px; }
+  pre { direction: ltr; text-align: left; background: #f1f1f3; border-radius: 10px; padding: 12px 16px; overflow-x: auto; font-family: var(--mono); font-size: 14px; line-height: 1.5; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 15px; }
+  th, td { border-bottom: 1px solid var(--border); padding: 7px 8px; text-align: start; vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  .box { border-radius: 10px; padding: 10px 16px; margin: 10px 0; }
+  .say { background: var(--leaf-soft); border-inline-start: 5px solid var(--leaf); }
+  .words { background: var(--water-soft); border-inline-start: 5px solid var(--water); }
+  .watch { background: var(--alarm-soft); border-inline-start: 5px solid var(--alarm); }
+  .addon { background: var(--addon-soft); border-inline-start: 5px solid var(--addon); }
+  .tag { display: inline-block; font-size: 13px; font-weight: 600; padding: 1px 9px; border-radius: 999px; }
+  .tag.business { background: var(--water-soft); color: var(--water); }
+  .tag.tech { background: #f1f1f3; color: var(--ink); }
+  .tag.req { background: var(--leaf-soft); color: var(--leaf); }
+  .tag.add { background: var(--addon-soft); color: var(--addon); }
+  details { border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; margin: 8px 0; background: var(--surface); }
+  summary { cursor: pointer; font-weight: 600; }
+  img.shot { width: 100%; border: 1px solid var(--border); border-radius: 10px; margin: 8px 0; }
+  .muted { color: var(--muted); font-size: 15px; }
+  header.top .ltr { background: rgba(255,255,255,.18); color: #fff; }
+  bdi.en { direction: ltr; unicode-bidi: isolate; font-style: italic; }
+  @media (max-width: 640px) { nav.toc ol { columns: 1; } section { padding: 18px; } }
+</style>
+</head>
+<body>
+<main>
+
+<header class="top">
+  <h1>AgroPilot P2 - מדריך לראיון</h1>
+  <p>מה להגיד על כל שקף, כל חלק לעומק, המספרים ומקורם, והשאלות שעלולות לעלות. נכון ל-2026-11-24, main ב-<span class="ltr">a391d8d</span>.</p>
+</header>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#how">איך להציג</a></li>
+    <li><a href="#talk">מה להגיד בכל שקף</a></li>
+    <li><a href="#registry">registry-service לעומק</a></li>
+    <li><a href="#weather">weather-service לעומק</a></li>
+    <li><a href="#planner">planner-service לעומק</a></li>
+    <li><a href="#frontend">frontend לעומק</a></li>
+    <li><a href="#aws">AWS לעומק</a></li>
+    <li><a href="#addons">התוספות</a></li>
+    <li><a href="#tests">הבדיקות</a></li>
+    <li><a href="#skills">הסקילים</a></li>
+    <li><a href="#flow">הזרימה מקצה לקצה</a></li>
+    <li><a href="#numbers">מספרים ומקורות</a></li>
+    <li><a href="#questions">שאלות צפויות</a></li>
+    <li><a href="#demo">הדגמה חיה</a></li>
+    <li><a href="#review">שאלות הסקירה</a></li>
+  </ol>
+</nav>
+
+<section id="how">
+  <h2>1. איך להציג</h2>
+  <ul>
+    <li>פותחים את <code>docs/interview/p2/slides.html</code> בדפדפן. <b>F</b> למסך מלא, חצים או רווח כדי לזוז, <b>Home</b> חוזר להתחלה. מספר השקף נשמר בכתובת (<code>#5</code>).</li>
+    <li>15 שקפים, בערך 15 דקות דיבור: דקה לכל שקף, ושתיים לכל אחד מחמשת שקפי החלקים (5-8 ו-AWS ב-11).</li>
+    <li>שקף 10 הוא שקף גיבוי, אחרי "הכל ביחד" (9): מה קורה כשמשהו נופל. לא מציגים אותו מעצמנו, רק אם שואלים על כישלונות (פרק <a href="#review">15</a>). בהצגה הרגילה מדלגים עליו: חץ ימינה פעם אחת נוספת עובר ממנו ל-AWS (11). אחריו תוספות (12), בדיקות (13), סקילים (14) ו-"Questions" (15, האחרון).</li>
+    <li>השקפים הם עוגן, לא טקסט לקריאה. כל ההסבר נמצא כאן.</li>
+    <li>לפני הראיון: להפעיל את המכונה ב-AWS ולהריץ <code>/deploy</code> (הוא מדפיס את כתובת ה-IP החדשה, O115), ולעדכן את כללי הפורטים 22 ו-8000 לכתובת שלך (Y32). את הכתובת להגיד בעל פה בשקף 15, או לעדכן אותה בשקף.</li>
+  </ul>
+</section>
+
+<section id="talk">
+  <h2>2. מה להגיד בכל שקף</h2>
+
+  <h3>שקף 1 - פתיחה</h3>
+  <div class="box say">"AgroPilot אומר למגדל מתי להשקות כל חלקה וכמה זמן. ב-P1 בנינו את ה-registry. ב-P2 הוספנו את מה שעונה על השאלה עצמה."</div>
+
+  <h3>שקף 2 - מה ביקשו</h3>
+  <div class="box say">השאלה בכותרת היא גרסה קצרה של המשפט הראשון של <code>tasks/p2.md</code>: <bdi class="en">"Should I water this plot today, and for how many minutes?"</bdi>. המשתמש: מגדל עם טפטוף, שבודק כל בוקר חלקה אחרי חלקה. ארבע הדרישות: להעביר את ה-registry ל-PostgreSQL, שירות מזג אוויר, שירות תכנון, ומסך.</div>
+  <div class="box words"><b>ET0, אם שואלים:</b> כמה מים שדה של דשא סטנדרטי מאבד ביום, באידוי ובדיות, במ"מ. זה מספר של מזג האוויר, לא של הגידול. הגידול צריך ET0 &times; Kc, מקדם לפי הגידול והשלב.</div>
+
+  <h3>שקף 3 - מה בנינו</h3>
+  <div class="box say">שלושה שירותים חדשים (weather, planner, frontend), 876 בדיקות, 141 החלטות רשומות מאז P1, ו-34 ממצאי QA שלכולם יש סטטוס. בפס: 41 שורות דרישה מול 30 תוספות, וכל התוספות רשומות (דף הדרישות של 2026-11-24).</div>
+  <div class="box watch">אם שואלים "למה 30 תוספות כשהמשימה אומרת לבנות רק מה שכתוב": המרצה אמר שמותר להוסיף פונקציונליות כשצריך, ובלבד שלא יוצאים רחוק מדי (judgment log 11, Y27). כל תוספת רשומה ב-<code>DECISIONS.md</code> וב-<code>docs/extras.md</code>.</div>
+
+  <h3>שקף 4 - ארכיטקטורה</h3>
+  <div class="box say">ארבעה שירותים, HTTP בלבד, אף שירות לא מייבא קוד של אחר. הדפדפן לא קורא לאף שירות: רק השרת של Next.js קורא, עם <code>no-store</code> (<code>src/lib/http.ts</code>). ה-planner הוא היחיד שמדבר עם שני שירותים, וכל הקריאות שלו נמצאות בקובץ אחד, <code>upstream.py</code>.</div>
+
+  <h3>שקף 5 - registry</h3>
+  <div class="box say">"העברנו את ה-registry ל-PostgreSQL בלי לשנות קוד, רק <code>DATABASE_URL</code>. ההפתעה הייתה ש-PostgreSQL באמת מקבילי: farm יכול להימחק בין הבדיקה שהוא קיים לבין הכתיבה של ה-plot, והלקוח היה מקבל 409 שגוי 'השם תפוס'. הפתרון: נועלים את שורת ה-farm עד סוף הכתיבה. מחיקה שמגיעה באמצע מחכה, ואז מקבלת את ה-409 הנכון, 'Farm still has plots'."</div>
+
+  <h3>שקף 6 - weather</h3>
+  <div class="box say">"המשימה אומרת שהבאג הכי גרוע במערכת הוא תחזית של אפסים, כי היא נראית כמו 'לא צריך מים' (FR-2.8). לכן: שלושה ניסיונות מול Open-Meteo, ואם נכשל, התחזית האחרונה מסומנת כישנה (<code>stale: true</code>), עד 24 שעות. אחרי זה 503 (Unavailable), אף פעם לא מספר שהמציאו."</div>
+  <div class="box words"><b>כמה מדויק המיקום, ולמה:</b> המשימה (FR-2.5) אומרת ששתי נקודות באותו ריבוע של 0.1&deg; חולקות תחזית אחת. 0.1&deg; זה בערך 11 ק"מ צפון-דרום, וכ-9.5 ק"מ מזרח-מערב אצלנו. מעגלים למטה: 31.25 ו-31.29 נופלים שניהם ב-31.2, ו-34.79 ו-34.71 נופלים שניהם ב-34.7. שואלים את הספק פעם אחת, על מרכז הריבוע, ושומרים את התשובה בזיכרון. במשך 3 שעות היא "טרייה" ומשרתים ממנה בלי לפנות לספק. מזג האוויר לא משתנה בין שני שדות במרחק של כמה ק"מ, וכך חוסכים קריאות לספק.</div>
+
+  <h3>שקף 7 - planner</h3>
+  <div class="box say">"ה-planner הוא חישוב FAO-56: דלי של מים באדמה. הבעיה: אין לו היסטוריה, אז הוא לא יודע כמה מלא הדלי הבוקר. הוא הניח 'מלא', ולכן בנובמבר כמעט כל חלקה הראתה 'לא להשקות' שבוע שלם. הפתרון שלי: המגדל לוחץ חופן אדמה ובוחר תיאור, לפי סוג הקרקע, מתוך מדריך ה-USDA, ואנחנו ממירים את זה לרמה (<code>start_pct</code>). בתרשים: North block היום, אדמה 'Dry', כלומר 12.5%, הוא מקבל 40 מ"מ ב-24 שעות."</div>
+  <div class="box words"><b>מאיפה הרמות:</b> USDA NRCS Program Aid 1619, "Estimating Soil Moisture by Feel and Appearance" (1998), המדריך של משרד החקלאות האמריקאי. רשימה נפרדת לכל סוג קרקע (חול, loam, clay loam), חמש רמות, וכל אחת שולחת את אמצע הטווח שלה.<br><b>ואם המגדל לא יכול לגעת באדמה:</b> לא בוחרים כלום, והתוכנית מניחה שהאדמה מלאה, כמו FAO בלי מדידה. הדף אומר זאת: "No soil level chosen: the plan assumes the soil is at field capacity." מי שיש לו מספר ממד לחות יכול להקליד אחוז מדויק (שדה "Soil water %"). הסיכון הכן: הנחת "מלא" על אדמה יבשה תדחה את ההשקיה הראשונה, וזו בדיוק הבעיה שהבחירה פותרת.</div>
+
+  <h3>שקף 8 - frontend</h3>
+  <div class="box say">"התשובה של היום קודם וגדולה, אחר כך השבוע. ה-planner נותן דקות לכל יום, לא שעה, אבל מגדל צריך שעון. לכן המגדל בוחר באיזו שעה מתחילים, השקיה ארוכה ממשיכה אחרי חצות ליום הבא, וקו אדום מסמן את השעה עכשיו, כדי לראות אם שעת ההתחלה כבר עברה. בצילום: ריצה של 24 שעות מ-06:00 עד 06:00 למחרת, עם הערה שהיא נספרת כמים של היום."</div>
+
+  <h3>שקף 9 - הכל ביחד</h3>
+  <div class="box say">שקף אינטראקטיבי: משמאל דף החלקה, מימין הארכיטקטורה. <b>Next step</b> או חץ ימינה מתקדמים צעד, <b>Back</b> או חץ שמאלה חוזרים. בכל צעד מסומן החלק בדף והשירותים שהוא בא מהם. אחרי הצעד האחרון, החץ עובר לשקף הבא. שמונה הצעדים:</div>
+  <ol>
+    <li>המגדל פותח את North block: דפדפן ו-frontend.</li>
+    <li>האתר שואל את ה-registry אם החלקה קיימת, ומה שמה, הגידול והקרקע (כותרת הדף). חלקה לא קיימת: 404 (Not Found).</li>
+    <li>המגדל בוחר שהאדמה יבשה, והאתר מבקש תוכנית מה-planner.</li>
+    <li>ה-planner קורא מה-registry את החלקה, הגידול, הקרקע וקו הטפטוף.</li>
+    <li>ה-planner שואל את ה-weather: עותק שמור, או קריאה חדשה ל-Open-Meteo ("Forecast from").</li>
+    <li>התשובה של היום: להשקות 24 שעות, 40,000 ליטר.</li>
+    <li>השבוע: מתי כל השקיה מתחילה ונגמרת.</li>
+    <li>שורת הסטטוס: האתר בודק שכל שירות למעלה.</li>
+  </ol>
+
+  <h3>שקף 10 - מה אם משהו נשבר? <span class="tag tech">גיבוי</span></h3>
+  <div class="box say">רק אם שואלים. אותה ארכיטקטורה כמו בשקף 9, בלי הדף. בצעד הראשון הכל עובד: שאלות בכחול, תשובות בכתום. <b>Break something</b> (או חץ ימינה) הופך את השקף לאדום ושובר דבר אחד בכל צעד. בכרטיס מימין, מלמעלה למטה: <b>The problem</b> (מה נשבר, במשפט אחד), <b>What happens</b> (שלושה צעדים ממוספרים) ו-<b>The grower sees</b>. בשרטוט: השירות השבור מקבל X אדום, החצים האדומים מראים לאן השגיאה חוזרת, ומימין רואים בדיוק מה המגדל רואה (הטקסטים מהקוד האמיתי). <b>Back</b> חוזר.</div>
+  <ol>
+    <li>הכל עובד: "Water for 24 h", "All systems normal".</li>
+    <li>Open-Meteo נופל, יש תחזית שמורה: 3 ניסיונות, ואז התחזית האחרונה עם <code>stale: true</code> (חצים כתומים-חומים, לא אדומים: התשובה נכונה, רק ישנה). המגדל רואה את התוכנית ו-"From an older weather update".</li>
+    <li>Open-Meteo נופל, אין תחזית שמורה: weather מחזיר 503, ה-planner מחזיר 503 עם שם ה-weather. "All systems normal" נשאר ירוק, כי השירותים שלנו למעלה. רק הספק למטה.</li>
+    <li>registry למטה: ה-planner לא מקבל תשובה תוך 2 שניות, 503 עם שם ה-registry, ושורת הסטטוס: "registry-service down".</li>
+    <li>המסד של ה-registry למטה: ה-registry מחזיר 503 "Database unavailable", וה-planner מעביר את הסיבה הלאה. ה-/health של ה-registry בודק גם את המסד (O126), לכן שורת הסטטוס אדומה.</li>
+    <li>ה-registry משנה <code>lat</code> ל-<code>latitude</code>: ה-registry עונה 200, אבל הבדיקה הקפדנית של ה-planner נכשלת (<code>RegistryPlot</code> ב-<code>upstream.py</code>), ולכן 503 "answered with data the planner can't use". אף פעם לא ניחוש.</li>
+    <li>planner למטה: הקריאה של האתר נכשלת, "planner-service is not reachable", ושורת הסטטוס אדומה.</li>
+  </ol>
+  <div class="box watch">המשפט שלמטה בשקף הוא הכלל שמאחורי הכל: "Never a plan of zeros". או תחזית ישנה שמסומנת כישנה, או 503 שאומר איזה שירות נפל.</div>
+
+  <h3>שקף 11 - AWS <span class="tag add">תוספת</span></h3>
+  <div class="box say">הפירוט המלא בפרק <a href="#aws">7</a>. "מלמעלה, הדרך מהקוד אצלי למערכת חיה. קודם git רגיל: commit, push, pull request, merge ל-main. משם <code>/deploy</code>, ובו כל צעד הוא שער שעוצר בכישלון הראשון. בודק ש-main אצלי שווה ל-GitHub, מריץ את כל הבדיקות, מדליק את השרת אם הוא כבוי, מריץ <code>update.sh</code> ב-SSH, ובודק שארבעת השירותים עונים. רק אז המערכת חיה.<br>למטה, איפה היא יושבת: שרת EC2 אחד ב-AWS, מאחורי firewall עם שלוש דלתות. 3000 פתוחה לכולם, כך שהמגדל נכנס מכל דפדפן. 8000 (ה-API) ו-SSH פתוחות רק ל-IP שלי. בתוך השרת, המערכת רצה תחת משתמש <code>agropilot</code> שאי אפשר להתחבר אליו, וכל שירות קם לבד אם הוא נופל. השרת מושך את הקוד מ-GitHub בעצמו."</div>
+  <div class="box watch">אם שואלים "זה CI/CD?": אין שרת CI כמו GitHub Actions. ה-pipeline הוא הסקיל <code>/deploy</code> שרץ מהמחשב שלי, עם שערים קבועים. זה עונה על אותה שאלה, "רק קוד ממוזג ובדוק עולה", אבל ההפעלה ידנית. השלב הבא הטבעי: להריץ את אותם צעדים ב-GitHub Actions על כל merge.</div>
+  <div class="box words">באג שמצאנו בפריסה הראשונה, אם שואלים: חלקה לא קיימת החזירה 200 (OK) בשרת ו-404 (Not Found) במחשב, כי ה-build של production שונה מ-<code>next dev</code>. התיקון בפרק 7.</div>
+
+  <h3>שקף 12 - תוספות</h3>
+  <div class="box say">"כרטיסי חלקה עם מפה אמיתית, דפי רשימה, גרף, ובחירת סף. כולן רשומות כהחלטות שלי. ההחלטה מתי מותר לצאת מהדרישות היא Y27: פיצ'רים קטנים שהמוצר צריך, כן. שינוי צורת המוצר או שמירת state אצל הלקוח, לא."</div>
+
+  <h3>שקף 13 - בדיקות</h3>
+  <div class="box say">"876 בדיקות. כל שירות נבדק לבד, כשמי שהוא תלוי בו מוחלף בגרסה מדומה שאנחנו שולטים בה, וכך אפשר לבדוק גם כישלונות: ספק שנופל, תשובה שבורה, שירות איטי. אחר כך חמש בדיקות על המערכת האמיתית, כל ארבעת השירותים יחד." לעבור על הכרטיסים: מה כל אחד בודק (השורה הראשונה) ואיך (התגית). הפירוט בפרק <a href="#tests">9</a>.</div>
+
+  <h3>שקף 14 - סקילים</h3>
+  <div class="box say">"הסוכן עבד מכללים כתובים. <code>irrigation-calc-reference</code> הוא המפרט של ה-engine, עם המקרים שחישבתי ביד. Superpowers כתב את התכנון והתוכנית למעבר ל-PostgreSQL. השאר הם סקילים שבנינו בעצמנו כדי להריץ, לבדוק, לשבור ולפרסם."</div>
+
+  <h3>שקף 15 - חי</h3>
+  <div class="box say">"זו המערכת שרצה עכשיו. תנסו חלקה, תשנו את רמת האדמה, תפתחו חלקה שלא קיימת."</div>
+</section>
+
+<section id="registry">
+  <h2>3. registry-service לעומק <span class="tag req">נדרש</span></h2>
+  <p>דרישות: FR-2.1 (PostgreSQL ב-production, SQLite מקומית), FR-2.2 (פקודה אחת שיוצרת טבלאות ו-15 שורות seed), NFR-2.1 (מעבר בקונפיגורציה בלבד), NFR-2.2 (p95 &le; 100ms ב-10 בקשות לשנייה, על PostgreSQL).</p>
+
+  <h3>מה עשינו</h3>
+  <ul>
+    <li>SQLAlchemy Core, בלי ORM (<code>tables.py</code>). מנוע אחד שנבנה מ-<code>DATABASE_URL</code> (<code>db.py</code> <code>make_engine</code>).</li>
+    <li>פקודת seed אחת לשני המסדים: <code>uv run python seed.py</code>. היא מסרבת אם טבלה כלשהי כבר קיימת (O61), והכל בטרנזקציה אחת (O66). בדיקה משווה כל שורה ל-SQL המקורי (O67).</li>
+    <li>הבדיקות רצות על SQLite כברירת מחדל (O60). עם <code>TEST_DATABASE_URL</code> כל הסוויטה רצה על PostgreSQL (O65), על מסד <code>registry_test</code> בלבד.</li>
+    <li>ב-PostgreSQL: שאילתה של יותר מ-5 שניות נעצרת, וחיבור מוותר אחרי 3 שניות. שניהם כתובים ב-URL, כך שמסד תקוע הופך ל-503 תוך שניות (O64).</li>
+    <li>שמות של 1-200 תווים, בלי NUL (O62), כי PostgreSQL לא יכול לשמור NUL, ולאינדקס ייחודי יש גבול של כ-2.7KB.</li>
+  </ul>
+
+  <h3>הבעיה המרכזית: farm שנמחק באמצע כתיבת plot (O63)</h3>
+  <p>ב-<code>plots.py</code>, <code>check_references</code> בודקת שה-farm, ה-crop, ה-soil וה-emitter קיימים, ואז מגיע ה-INSERT. ב-PostgreSQL, בקשה מקבילה יכלה למחוק את ה-farm בין שני הצעדים. ה-foreign key היה נכשל, והשגיאה הייתה מתפרשת כ-<bdi class="en">"name taken"</bdi>, 409 שגוי.</p>
+  <p>הפתרון: <code>SELECT ... FOR SHARE</code> על שורת ה-farm. <b>למה השם:</b> זה השם ש-PostgreSQL נותן לנעילה הזו. "share" כי היא משותפת: כמה בקשות יכולות להחזיק אותה יחד, למשל כמה plots שנשמרים לאותו farm במקביל, ואף אחת לא חוסמת את השנייה. היא חוסמת רק מי שרוצה לשנות או למחוק את השורה, עד שכולן מסיימות. בשקף קוראים לה פשוט "lock". הנעילה מחזיקה עד סוף הטרנזקציה. מחיקה מקבילה מחכה, ואחרי שה-plot נכתב היא מקבלת 409 <bdi class="en">"Farm still has plots"</bdi>, התשובה הנכונה.</p>
+  <div class="box watch">כנות: ב-SQLite הנעילה לא קיימת, והבדיקה וה-INSERT שם לא באותה טרנזקציה, כך שה-409 השגוי עדיין יכול לקרות. זה מקובל עלינו כי SQLite הוא לעבודה מקומית בלבד. זה כתוב ב-docstring של <code>check_references</code> וב-O63.</div>
+
+  <h3>למה <span class="tag tech">Tech</span></h3>
+  <p>אותו API חייב לענות אותו דבר על שני המסדים (NFR-2.1). 409 שגוי שולח את הלקוח לשנות שם, כשהבעיה בכלל אחרת.</p>
+
+  <h3>בדיקת המפתח</h3>
+  <p><code>tests/test_matrix.py::test_plot_write_locks_its_farm</code> (<code>@postgres_only</code>). חיבור אחד מריץ <code>check_references</code> ומשאיר את הטרנזקציה פתוחה. חיבור שני מנסה למחוק את ה-farm עם <code>lock_timeout = '200ms'</code>, והבדיקה מצפה ל-<code>OperationalError</code> על נעילה. כלומר: המחיקה באמת חיכתה.</p>
+  <p class="muted">היא רצה רק עם <code>TEST_DATABASE_URL</code>, ובריצה הרגילה על SQLite היא בין ה-2 שמדולגות. הבדיקה המשלימה, שרצה תמיד: <code>test_delete_farm_while_plots_are_added</code>. היא שולחת מחיקה ו-14 כתיבות במקביל, ומוודאת שלא נשאר plot בלי farm.</p>
+
+  <h3>המספרים</h3>
+  <ul>
+    <li>NFR-2.2: p95 הגרוע ביותר 5.8ms על PostgreSQL 18, 3,000 בקשות, 0 שגיאות (README של ה-registry, "Latency"). על שרת ה-EC2: <code>GET /v1/plots</code> p95 4.2ms, לפי id 4.4ms (<code>docs/qa/2026-11-22-live-2.md</code>).</li>
+    <li>NFR-2.1: אותה סוויטה עוברת על שני המסדים. בזמן ה-PR: 448 על SQLite, 433 על PostgreSQL (מה שבודק קובץ SQLite שבור מדולג שם).</li>
+  </ul>
+</section>
+
+<section id="weather">
+  <h2>4. weather-service לעומק <span class="tag req">נדרש</span></h2>
+  <p><code>GET /v1/forecast?lat=&amp;lon=&amp;days=</code>, פורט 8001. מחזיר לכל יום את התאריך, ET0 (כמה מים "צורך" דשא סטנדרטי) וגשם. FR-2.3 עד FR-2.8, NFR-2.3.</p>
+
+  <h3>איך זה עובד</h3>
+  <ul>
+    <li><b>תא רשת:</b> lat/lon מעוגלים למטה ל-0.1°, כך ש-31.25 ו-31.29 נופלים שניהם בתא 31.2. הספק נשאל פעם אחת לתא, במרכז שלו, וכל התחזית נשמרת בזיכרון. <code>days</code> רק חותך אותה (O71). lat 90 ו-lon 180 שייכים לתא שמתחתם (A59).</li>
+    <li><b>טריות:</b> 3 שעות (FR-2.5). בזמן הזה אין קריאה לספק. נעילה לכל תא, כך ששתי בקשות מקבילות לאותו תא עושות קריאה אחת (O75).</li>
+    <li><b>כישלון:</b> timeout של 3 שניות לכל ניסיון, 3 ניסיונות עם 0.5 שנייה ביניהם, בערך 10 שניות במקרה הגרוע (O73). אחר כך התחזית האחרונה עם <code>stale: true</code>, לכל היותר 24 שעות אחרי שנשלפה. שולפים 8 ימים כדי שתחזית בת 24 שעות עדיין תכסה 7 ימים מהיום (O72). בלי תחזית קודמת: 503 <code>UNAVAILABLE</code> עם <code>Retry-After</code> (FR-2.7).</li>
+    <li><b>מה נחשב כישלון:</b> סטטוס שגיאה, גוף שאינו JSON, שדה חסר, <code>null</code>, ערך שלילי, רשימות באורכים שונים (O74). וגם יחידות שאינן <code>mm</code>, תאריכים שאינם 8 ימים רצופים, NaN, Infinity או <code>true</code> (A58).</li>
+    <li><b>גשם</b> = <code>precipitation_sum</code> ולא <code>rain_sum</code>, כי מקלחות ושלג מגיעים לאדמה. ספירה חסרה של גשם פירושה השקיית יתר (O69).</li>
+    <li><b>תאריך:</b> לפי השעון המקומי של הנקודה (<code>timezone=auto</code>), אחרת בישראל התוכנית הייתה מראה את אתמול עד 02:00 (O70).</li>
+  </ul>
+
+  <h3>למה <span class="tag business">Business</span></h3>
+  <div class="box words">מהמשימה (FR-2.8): <bdi class="en">"A forecast of zeros looks like 'no water needed'. That is the worst possible bug in this system."</bdi> ומ-O69: <bdi class="en">"undercounting rain means over-watering"</bdi>.</div>
+
+  <h3>בדיקת המפתח</h3>
+  <p><code>tests/test_forecast.py::test_provider_down_serves_last_forecast_as_stale</code>: בקשה ראשונה ממלאת את המטמון ב-06:00. אחר כך השעון המזויף זז 5 שעות קדימה והספק "נופל". התשובה: <code>stale: true</code>, <code>fetched_at</code> נשאר 06:00, והיום הראשון עדיין 2026-11-16. כלומר: מספרים ישנים, מסומנים בכנות.</p>
+
+  <h3>המספרים</h3>
+  <p>NFR-2.3: תחזית טרייה p95 5.7ms, 600 בקשות, 0 שגיאות (README). על EC2: p95 2.4ms. 76 בדיקות.</p>
+</section>
+
+<section id="planner">
+  <h2>5. planner-service לעומק <span class="tag req">נדרש</span></h2>
+  <p><code>GET /v1/plots/{id}/plan?days=&amp;start_pct=&amp;trigger_pct=</code>, פורט 8002. FR-2.9 עד FR-2.14. ה-engine (<code>engine.py</code>) נכתב מהסקיל <code>irrigation-calc-reference</code>, ו-<code>upstream.py</code> הוא הקוד היחיד שקורא לשירותים אחרים.</p>
+
+  <h3>הנוסחאות, צעד אחר צעד (FAO-56)</h3>
+  <ol>
+    <li><b>יום בעונה:</b> i = ימים מאז השתילה + 1 (A60).</li>
+    <li><b>Kc לפי שלב</b> (טבלאות 11/12): עגבנייה 30/40/45/30 ימים, Kc 0.6/1.15/0.80. פלפל 30/35/40/20, Kc 0.6/1.05/0.90. בשלב ההתפתחות יש עלייה ליניארית. אחרי העונה Kc נשאר בערך הסופי, והיום מסומן <code>after-season</code> (O80).</li>
+    <li><b>עומק שורש:</b> Zr = 0.2 + (Zr_full &minus; 0.2) &times; min(i / (L1+L2), 1), עגבנייה 0.7 מ', פלפל 0.5 מ' (O77).</li>
+    <li><b>הדלי:</b> TAW = מים זמינים במ"מ למטר &times; Zr. הסף = TAW &times; (1 &minus; trigger_pct/100), ברירת מחדל חצי.</li>
+    <li><b>צריכה:</b> need = Kc &times; ET0 (Kc יחיד, O81).</li>
+    <li><b>גשם:</b> נספר במלואו, חוץ מיום שבו הוא מתחת ל-0.2 &times; ET0, ואז נספר כ-0 (O81, A60).</li>
+    <li><b>Dr בסוף היום:</b> min(TAW, max(0, Dr + need &minus; rain)). מה שמעל "מלא" מתנקז, והדלי לא יורד מתחת לריק (FAO Eq. 86, O99).</li>
+    <li><b>השקיה:</b> אם הדלי היה מסיים את היום מתחת לסף, ממלאים אותו באותו יום, עד מה שהטפטוף נותן ב-24 שעות (O90).</li>
+    <li><b>ליטרים ודקות:</b> ליטרים = מ"מ &times; שטח. טפטפות = שטח / (מרווח שורות &times; מרווח טפטפות). דקות = ליטרים / (טפטפות &times; ספיקה) &times; 60, מעוגל <b>למעלה</b>, כי עיגול למעלה אף פעם לא משקה פחות מדי (O82).</li>
+  </ol>
+
+  <h4>דוגמה מלאה: מקרה 1 (חישבתי ביד, <code>references/cases.md</code>)</h4>
+  <p>עגבנייה על חול, 2026-04-14: TAW 42.69, חצי 21.34. הדלי היה מסיים ב-42.69 &minus; 25.04 = 17.65, מתחת לחצי, ולכן ממלאים 25.04 מ"מ. זה 25,037.5 ליטר. 1,666.67 טפטפות &times; 1.0 ל"ש = 1,666.67 ל"ש, ו-25,037.5 / 1,666.67 &times; 60 = 901.35, מעוגל ל-<b>902 דקות</b>.</p>
+
+  <h3>הבעיה המרכזית: כמה מלא הדלי הבוקר (Y14, O87, O88)</h3>
+  <p>ה-planner לא שומר כלום (אין לו מסד). בהתחלה הוא הניח שהדלי מלא כל פעם (O76, ברירת המחדל של FAO כשאין מדידה). התוצאה: בנובמבר כמעט כל החלקות הראו <bdi class="en">"No irrigation"</bdi> שבעה ימים, גם על אדמה יבשה.</p>
+  <p>הפתרון: המגדל עונה בכל ביקור בדף החלקה. השאלה היא על מה שהוא רואה ומרגיש, לפי סוג הקרקע, מתוך USDA NRCS Program Aid 1619 (<bdi class="en">"feel and appearance"</bdi>): חמש שורות לכל קרקע, וכל אחת שולחת את אמצע הטווח שלה, 12.5 / 37.5 / 62.5 / 87.5 / 100 (<code>src/lib/soil-feel.ts</code>). ה-planner מקבל <code>start_pct</code> (0-100, ברירת מחדל 100), ו-Dr בהתחלה = TAW של היום הראשון &times; (1 &minus; start_pct/100). שום דבר לא נשמר.</p>
+  <div class="box words"><b>במילים שלך</b> (judgment log 7): <bdi class="en">"the plan should start from the real field, and the words should be ones a grower can check by hand."</bdi> וגם: <bdi class="en">"full, half, empty talks about our bucket, and a grower looks at soil."</bdi></div>
+
+  <h4>התרשים בשקף 7: North block, 2026-11-24 (מה-API החי)</h4>
+  <p>TAW 122.5 מ"מ (loam 175 &times; 0.7 מ'), סף 61.25. 'Dry', כלומר 12.5%, נותן התחלה של 15.31 מ"מ. הצורך באותו יום 2.05. הטפטוף: 1.0 / (1.5 &times; 0.4) = 1.67 מ"מ לשעה, כלומר 40 מ"מ ב-24 שעות, ולכן היום <code>capped</code>, 1440 דקות ו-40,000 ליטר. סוף היום: 122.5 &minus; (107.19 + 2.05) + 40 = 53.26 מ"מ, 43%.</p>
+  <div class="box watch">המספרים תלויים בתחזית של אותו יום (ET0 2.56). אם התרשים לא יתאים ביום הראיון, זה בגלל התחזית, וזה בסדר להגיד.</div>
+
+  <h3>עוד החלטות שלך שכדאי להכיר</h3>
+  <ul>
+    <li><b>תקרה של 24 שעות (O90, judgment log 9):</b> מילוי דלי יבש היה מבקש 2024 דקות (34 שעות) ביום אחד. הסוכן הציע תקרה מעשית ב-<code>.env</code>, למשל 12 שעות. אתה בחרת 24: <bdi class="en">"24 h is the system's real limit. Any smaller number would be a guess."</bdi> יום שבו הבקשה <b>גדולה</b> מהתקרה מסומן <code>capped</code>. שווה בדיוק לתקרה אינו capped (A62).</li>
+    <li><b>סף 1-99% (Y15, judgment log 10):</b> <bdi class="en">"the grower knows the field; the page should advise, not refuse."</bdi> מחוץ ל-30-70% מופיעה אזהרה וערך הגידול (עגבנייה 60%, פלפל 70%).</li>
+    <li><b>בלי מקורות ישראליים (O89, judgment log 8):</b> הם מכסים רק גידולים מוגנים וחודש שתילה אחד.</li>
+  </ul>
+
+  <h3>שגיאות</h3>
+  <p>חלקה לא ידועה: 404 <code>NOT_FOUND</code>. registry או weather למטה, איטיים או מחזירים משהו לא צפוי: 503 <code>UPSTREAM_UNAVAILABLE</code>, וה-detail אומר איזה שירות (FR-2.14, O84). ה-timeout: registry 2 שניות, weather 12 שניות, כי weather בעצמו עלול לחכות כ-10 שניות לפני שהוא מחזיר תחזית stale. הסיבה של השירות למטה מועברת הלאה, חתוכה ל-200 תווים (O127, O136). כל תשובה מלמעלה נבדקת בקפידה לפני שימוש (A61). לעולם לא תוכנית של אפסים.</p>
+
+  <h3>בדיקת המפתח</h3>
+  <p><code>tests/test_engine.py::test_case_3_north_block_after_its_season</code>: North block עם התחזית האמיתית של 2026-11-16. כל שבע השורות שוות בדיוק לטבלה שחישבתי ביד (122.50 / 61.25, Dr מ-2.22 עד 15.61). העיגול הוא חצי למעלה, עם <code>Decimal</code> (A60), כי <code>round</code> של Python נותן 27.06 במקום 27.07.</p>
+</section>
+
+<section id="frontend">
+  <h2>6. frontend לעומק <span class="tag req">נדרש</span></h2>
+  <p>Next.js 16, Tailwind 4, shadcn/ui, פורט 3000. FR-2.15 עד FR-2.19, NFR-2.8.</p>
+  <img class="shot" src="screenshots/plot-page.png" alt="דף החלקה: להשקות 24 שעות, עמודת האדמה וציר הזמן">
+
+  <h3>מה יש בדף</h3>
+  <ul>
+    <li><b>/</b>: כל חווה עם החלקות שלה, כל חלקה מקשרת ל-<code>/plots/{id}</code> (FR-2.15). מאז Y36 אלה כרטיסים עם התשובה של היום.</li>
+    <li><b>/plots/{id}</b>: <bdi class="en">"Water for 24 h"</bdi> או <bdi class="en">"No irrigation today"</bdi>, גדול ובהתחלה. אחר כך 7 ימים בציר זמן ובטבלה, או בגרף (FR-2.16, Y26).</li>
+    <li><b>stale</b> מוצג ליד המספרים שהוא משפיע עליהם: בכרטיס היום, בטבלה, בציר, בגרף ובכרטיסים (FR-2.17).</li>
+    <li><b>שגיאה מה-planner</b>: הודעה במילים של השירות, למשל <bdi class="en">"registry-service: Database unavailable."</bdi> (FR-2.18, <code>problem-notice.tsx</code>).</li>
+    <li><b>שורת סטטוס</b> משלושת ה-<code>/health</code> (FR-2.19). מאז O126, ה-<code>/health</code> של ה-registry בודק גם את המסד.</li>
+    <li>הבחירות של המגדל (רמת אדמה, סף, שעת התחלה, תצוגה) נשמרות <b>בכתובת</b>, לא ב-state ולא במסד (A63, <code>plan-query.ts</code>).</li>
+  </ul>
+
+  <h3>הבעיה המרכזית: ימים מול שעון (Y16, Y18, Y19, A63, O104)</h3>
+  <p>ה-planner מחזיר דקות לכל יום, לא שעה. FR-2.16 מאפשר "טבלה או ציר זמן", ובחרת ציר.</p>
+  <ul>
+    <li>המגדל בוחר שעת התחלה, ברירת מחדל 06:00 (Y16).</li>
+    <li>ריצה שעוברת חצות ממשיכה ליום הבא, עם הערה: <bdi class="en">"Ends tomorrow; the plan counts it as today's water."</bdi> (Y19).</li>
+    <li>אם הריצה של אתמול עוד רצה, הריצה הבאה מתחילה כשהיא נגמרת. הציר נעצר ביום האחרון של התוכנית (A63).</li>
+    <li>קו "now" ו-<bdi class="en">"Start time passed: run the full time from now"</bdi> כששעת ההתחלה כבר עברה, לפי השעון של הטלפון (Y18).</li>
+    <li>התוויות מתרחקות זו מזו לפי הרוחב האמיתי בפיקסלים (O104).</li>
+  </ul>
+  <p>כל הלוגיקה נמצאת ב-<code>src/lib/timeline.ts</code>, כדי שאפשר יהיה לבדוק אותה (O95).</p>
+  <div class="box words"><b>הסיבה שלך</b> (Y16): FR-2.16 allows <bdi class="en">"a table or a timeline"</bdi>. The planner knows days, not hours, so the start time is the grower's.</div>
+
+  <h3>בדיקת המפתח</h3>
+  <p><code>src/lib/timeline.test.ts</code>, <bdi class="en">"lets a run pass midnight into the next day"</bdi>: התחלה ב-22:00 (1320 דקות) ועוד 180 דקות נגמרת ב-1500, כלומר 01:00 ביום השני. יש גם בדיקת גבול: 23:59 ועוד 2 דקות.</p>
+
+  <h3>עוד דברים ששואלים</h3>
+  <ul>
+    <li><b>404 אמיתי:</b> <code>src/proxy.ts</code> שואל את ה-registry לפני שהדף מתחיל להיטען, כי דף שמתחיל לזרום יכול לענות רק 200 (O98, O116). אם ה-registry לא עונה, הדף נטען ומציג את השגיאה שלו (A66).</li>
+    <li><b>375 פיקסלים:</b> נבדק ב-Chrome ב-2026-11-18 (O107). הכרטיסים נוספו אחר כך ועוד לא נבדקו בדפדפן. לבדוק לפני הראיון עם device toolbar.</li>
+    <li><b>ליטרים:</b> ספרה אחת אחרי הנקודה מתחת ל-10 ליטר, ליטרים שלמים מ-10 (O113).</li>
+  </ul>
+</section>
+
+<section id="aws">
+  <h2>7. AWS לעומק <span class="tag add">תוספת</span></h2>
+  <p>המדריך של הקורס פורס רק את ה-registry. אנחנו פרסנו את כל ארבעת השירותים (Y29), על <code>i-02119bbbf95e78e0c</code>, t3.medium, Ubuntu 24.04, us-east-1. הפירוט ב-<code>deploy/README.md</code>.</p>
+  <div class="box words"><b>הסיבה שלך</b> (Y29): <bdi class="en">"The grower should be able to open the real app from a URL."</bdi></div>
+  <ul>
+    <li><b>PostgreSQL על המכונה</b>, לא SQLite כמו במדריך (Y30). אותו <code>DATABASE_URL</code>, בלי שינוי קוד.</li>
+    <li><b>חשבון <code>agropilot</code></b>: חשבון מערכת בלי shell, שמחזיק רק את <code>/opt/agropilot</code> (Y31). ביקשת שם שאומר מה הוא.</li>
+    <li><b>פורטים:</b> 3000 פתוח לכולם. 22 ו-8000 רק ל-IP שלך (Y32), כי ל-API אין התחברות וכל אחד יכול היה לכתוב או למחוק. 8001 ו-8002 על 127.0.0.1, כי רק שרת Next.js קורא להם (O114).</li>
+    <li><b>systemd:</b> ארבע יחידות <code>agropilot-*.service</code> עם <code>Restart=on-failure</code>, <code>NoNewPrivileges</code>, <code>ProtectSystem=full</code> (A68). סיסמת המסד נוצרת על המכונה ואף פעם לא מודפסת (A69).</li>
+    <li><b>פריסה:</b> <code>deploy/update.sh</code>, דרך הסקיל <code>deploy</code>: בודק ש-main ממוזג ונבדק, ואז SSH (O118-O121).</li>
+    <li><b>העלות:</b> כ-1$ ליום כשהמכונה רצה. היא כבויה כשלא משתמשים, ה-IP משתנה בכל הפעלה, ואין Elastic IP (O115, O123).</li>
+  </ul>
+  <h3>הבעיה: production אינו dev (O116)</h3>
+  <p>בפריסה הראשונה, חלקה לא קיימת החזירה 200 ב-EC2, אף שב-<code>next dev</code> היא החזירה 404. ה-build של production עושה prerender לדף <code>/plot-not-found</code>, וה-<code>status</code> של rewrite הולך לאיבוד. התיקון: rewrite לכתובת שאין לה דף, כך ש-Next.js מגיש את <code>not-found.tsx</code> הגלובלי עם 404 אמיתי.</p>
+  <p>בדיקה: <code>tests/e2e/test_plot_flow.py::test_an_unknown_plot_page_is_a_real_404</code>, ו-qa-live בדק את זה על השרת.</p>
+</section>
+
+<section id="addons">
+  <h2>8. התוספות</h2>
+  <p>30 שורות ב-<bdi class="en">"Out of spec"</bdi> בדף הדרישות, כולן רשומות. הכלל: Y27. פיצ'רים פונקציונליים קטנים שהמוצר צריך, כן. שינוי צורת המוצר או state אצל הלקוח, לא.</p>
+  <img class="shot" src="screenshots/overview.png" alt="דף הסקירה: כרטיסי חלקה עם מפות">
+  <table>
+    <tr><th>תוספת</th><th>החלטה</th><th>למה</th></tr>
+    <tr><td>כרטיסי חלקה עם מפת OpenStreetMap אמיתית</td><td>Y36, Y37, O134</td><td><span class="tag business">Business</span> Y36: <bdi class="en">"The owner wanted each plot as a card with a map instead of the long rows."</bdi> עוצב קודם על קנבס ונבנה רק אחרי אישור</td></tr>
+    <tr><td>חמישה דפי רשימה, מחליף חלקות, הסקירה מתכננת כל חלקה</td><td>Y20-Y22</td><td><span class="tag business">Business</span> judgment log 11: <bdi class="en">"the grower should see the whole registry from the app"</bdi></td></tr>
+    <tr><td>מתג טבלה / גרף</td><td>Y26, O138</td><td><span class="tag business">Business</span> Y26: רצית גם גרף, ליד הטבלה. הבחירה נשמרת בכתובת</td></tr>
+    <tr><td>סף 1-99%, רמת אדמה לפי תחושה</td><td>Y14, Y15</td><td><span class="tag business">Business</span></td></tr>
+    <tr><td>כפתור "Now", קו עכשיו, הערת חצות</td><td>Y18, Y19, Y23</td><td><span class="tag business">Business</span></td></tr>
+    <tr><td><code>/docs</code> חזר ל-registry ול-planner</td><td>Y13</td><td><span class="tag tech">Tech</span> כדי שהסוכן יקרא את ה-API האמיתי (judgment log 6)</td></tr>
+    <tr><td>AWS, סקילים, e2e</td><td>Y29-Y35, O117-O124</td><td><span class="tag tech">Tech</span></td></tr>
+  </table>
+</section>
+
+<section id="tests">
+  <h2>9. הבדיקות</h2>
+  <table>
+    <tr><th>סוויטה</th><th>מספר</th><th>איך מריצים</th></tr>
+    <tr><td>registry</td><td>483</td><td><code>uv run pytest</code>, על SQLite, כ-15 שניות</td></tr>
+    <tr><td>frontend (<code>src/lib</code>)</td><td>169</td><td><code>npm test</code> (Vitest 4)</td></tr>
+    <tr><td>planner</td><td>143</td><td><code>uv run pytest</code></td></tr>
+    <tr><td>weather</td><td>76</td><td><code>uv run pytest</code></td></tr>
+    <tr><td>e2e</td><td>5</td><td><code>cd tests/e2e &amp;&amp; uv run pytest</code>, על המערכת הרצה</td></tr>
+  </table>
+  <h3>מה כל סוויטה בודקת, ואיך (שקף 13)</h3>
+  <table>
+    <tr><th>סוויטה</th><th>מה</th><th>איך</th></tr>
+    <tr><td>registry, 483</td><td>כל endpoint, קלט רע בכל שדה (מטריצה), מסד חסר, פגום, נעול או לקריאה בלבד, ובקשות במקביל</td><td>עותק טרי של מסד ה-seed לכל בדיקה (SQLite). עם <code>TEST_DATABASE_URL</code> אותה סוויטה על PostgreSQL</td></tr>
+    <tr><td>planner, 143</td><td>החישוב מול חמשת המקרים שחישבת ביד, שדות התשובה, שגיאות, ו-registry או weather שנופלים, איטיים או מחזירים זבל</td><td>registry ו-weather מדומים (<code>httpx.MockTransport</code>), עם תשובה מוכנה לכל כתובת</td></tr>
+    <tr><td>weather, 76</td><td>שני מקומות באותו ריבוע, שימוש חוזר 3 שעות, ספק שנופל או שולח נתונים שבורים, תחזית ישנה, 503</td><td>Open-Meteo מדומה ושעון מדומה (<code>scene.later(hours=5)</code>), כך שלא מחכים 3 שעות באמת</td></tr>
+    <tr><td>האתר, 169</td><td>ציר הזמן, חצות, אזורי זמן, עיצוב מספרים, אריחי המפה, רמות האדמה, הכותרת של הסקירה</td><td>Vitest על פונקציות טהורות ב-<code>src/lib</code>, בלי דפדפן. תאריכים נבדקים גם ב-UTC+14 וב-UTC-12</td></tr>
+    <tr><td>הכל יחד, 5</td><td>חלקה חדשה עוברת את ארבעת השירותים, הדף שלה מוצג, חלקה לא קיימת 404, וה-registry מסרב לחלקה לא הגיונית</td><td>על המערכת שרצה באמת. יוצרים רק שורות <code>e2e-</code> ומוחקים אותן</td></tr>
+  </table>
+  <p class="muted">למה לא לקרוא לשירותים האמיתיים בבדיקות של שירות: כך הבדיקה מהירה, לא תלויה ברשת, ואפשר לייצר בכוונה כל כישלון. החיבור האמיתי נבדק ב-e2e.</p>
+  <p class="muted">נספרו ב-2026-11-24 עם <code>--collect-only</code>. מתוך 483 של ה-registry, 2 מדולגות על SQLite (בדיקות PostgreSQL בלבד). הכל ביחד: <code>bash .claude/skills/test/scripts/run-all.sh</code>.</p>
+  <ul>
+    <li><b>שום בדיקה לא קוראת לשירות אמיתי:</b> <code>httpx.MockTransport</code> מחליף את Open-Meteo, את ה-registry ואת ה-weather.</li>
+    <li><b>מטריצת השבירה</b> (<code>test_matrix.py</code>): כל שדה מול כל ערך רע, מסדים שבורים, נעולים ופגומים, ומקביליות.</li>
+    <li><b>e2e</b> יוצר רק שורות <code>e2e-</code> ומוחק אותן בסוף, כי הוא רץ על המסד האמיתי.</li>
+    <li><b>הבדיקה האחת:</b> <code>test_a_new_plot_gets_a_seven_day_plan</code>. יוצרים חלקה ב-registry, ה-planner קורא אותה ואת התחזית, ומחזיר 7 ימים לפי הסדר.</li>
+  </ul>
+</section>
+
+<section id="skills">
+  <h2>10. הסקילים</h2>
+  <table>
+    <tr><th>סקיל</th><th>מה הוא נתן ב-P2</th></tr>
+    <tr><td><code>irrigation-calc-reference</code></td><td>כל נוסחה של ה-planner, עם חמשת המקרים שחישבת ביד. זה המפרט של ה-engine (FR-2.11, O85).</td></tr>
+    <tr><td>Superpowers</td><td>מסמך התכנון והתוכנית למעבר ל-PostgreSQL, כפי שהמשימה דורשת (<code>docs/superpowers/</code>).</td></tr>
+    <tr><td><code>research</code></td><td>מחקר FAO-56 ומחקר תחושת האדמה (<code>services/planner-service/docs/research/</code>).</td></tr>
+    <tr><td><code>registry-api</code>, <code>frontend-design</code></td><td>המוסכמות של ה-registry, והמראה של ה-frontend.</td></tr>
+    <tr><td><code>run-stack</code>, <code>deploy</code></td><td>מפעיל את ארבעת השירותים בפקודה אחת, מקומית או על EC2.</td></tr>
+    <tr><td><code>test</code></td><td>כותב בדיקות לכל חלק ומעדכן את <code>docs/test-plan.md</code>.</td></tr>
+    <tr><td><code>qa</code>, <code>qa-live</code></td><td>מנסה לשבור, מקומית ועל השרת: 34 ממצאים ב-5 דוחות, ולכולם סטטוס.</td></tr>
+    <tr><td><code>requirements</code>, <code>submit-task</code></td><td>בדיקת כל FR/NFR עם ראיות, וגוף ה-PR.</td></tr>
+  </table>
+  <p>מה השתנה ב-<code>irrigation-calc-reference</code> במהלך המשימה: נוספו רמת ההתחלה, הסף והתקרה של 24 שעות (Y14, Y15, O90). מקרה 4 חושב מחדש ומקרה 5 נוסף. אחרי QA-1, הדלי חסום ב-TAW (FAO Eq. 86, O99).</p>
+</section>
+
+<section id="flow">
+  <h2>11. הזרימה מקצה לקצה (שקף 9)</h2>
+  <ol>
+    <li>הדפדפן מבקש <code>/plots/{id}</code> מהשרת של Next.js.</li>
+    <li><code>proxy.ts</code> שואל את ה-registry <code>GET /v1/plots/{id}</code>. 404 שם הופך לדף 404 אמיתי.</li>
+    <li>הדף (בשרת) קורא ל-planner <code>GET /v1/plots/{id}/plan?start_pct=...</code> עם הבחירות מהכתובת.</li>
+    <li>ה-planner קורא מה-registry את החלקה, ה-crop, ה-soil וה-emitter, ובודק כל שדה (A61).</li>
+    <li>ה-planner קורא ל-weather <code>GET /v1/forecast?lat&amp;lon&amp;days</code>.</li>
+    <li>ה-weather עונה מהמטמון של התא אם התחזית טרייה. אחרת הוא שואל את Open-Meteo, ואם זה נכשל, מחזיר תחזית stale.</li>
+    <li>ה-engine מחשב, והדף מציג קודם את היום ואחר כך 7 ימים. ה-registry נקרא גם לסרגל הצד ולשורת הסטטוס.</li>
+  </ol>
+  <p>מה קורה כשמשהו נופל: weather למטה עם תחזית במטמון נותן <code>stale</code>, ובלעדיה ה-planner מחזיר 503 עם שם השירות, והדף מציג את ההודעה. registry למטה: אותו דבר, ושורת הסטטוס מראה <bdi class="en">"registry-service down"</bdi>. כל מקרה בנפרד: שקף 10.</p>
+  <div class="box words"><b>איפה כישלונות מופיעים בשקפים:</b> שקף 6 (weather: "provider fails 3 times", תחזית ישנה, 503), שקף 13 (הכרטיסים של planner ו-weather: "services failing", "provider failures"), שקף 9 צעד 2 (חלקה לא קיימת: 404), ושקף 10, הגיבוי, שמראה כל כישלון מקצה לקצה.</div>
+</section>
+
+<section id="numbers">
+  <h2>12. מספרים ומקורות</h2>
+  <table>
+    <tr><th>מספר</th><th>מקור</th></tr>
+    <tr><td>876 בדיקות (483 / 169 / 143 / 76 / 5)</td><td><code>--collect-only</code> ו-<code>npm test</code>, 2026-11-24</td></tr>
+    <tr><td>141 החלטות מאז P1</td><td><code>DECISIONS.md</code>: A46-A72, O53-O141, Y13-Y37</td></tr>
+    <tr><td>34 ממצאי QA, לכולם סטטוס</td><td><code>docs/qa/</code>: 8 + 11 + 6 + 2 + 7</td></tr>
+    <tr><td>41 דרישות, 30 תוספות; 37 met, 2 partly, 0 not met, 2 can't tell</td><td><code>docs/requirements/2026-11-24-p2.html</code></td></tr>
+    <tr><td>p95 5.8ms (registry, PostgreSQL), 5.7ms (weather)</td><td>README של כל שירות, "Latency"</td></tr>
+    <tr><td>p95 4.2 / 4.4 / 2.4ms על EC2</td><td><code>docs/qa/2026-11-22-live-2.md</code></td></tr>
+    <tr><td>902 דקות, 25,037.5 ליטר</td><td>מקרה 1, <code>cases.md</code></td></tr>
+    <tr><td>40 מ"מ, 40,000 ליטר, 53.26 מ"מ (North block היום)</td><td>ה-planner החי, 2026-11-24, <code>start_pct=12.5</code></td></tr>
+    <tr><td>3 שעות טריות, 24 שעות stale, 3 ניסיונות</td><td>FR-2.5, O72, O73</td></tr>
+  </table>
+  <p class="muted">שני ה-partly: דפים מחוץ למפרט (כולם רשומים), ו-<code>proxy.ts</code> שקורא ל-registry מחוץ ל-<code>src/lib</code> (O98, A66). שני ה-can't tell: 375 פיקסלים אחרי הכרטיסים, ושם המסד ב-<code>.env</code>.</p>
+</section>
+
+<section id="questions">
+  <h2>13. שאלות צפויות</h2>
+
+  <details><summary>למה 503 ולא 500 כשהמסד שבור?</summary>
+  <p>הבקשה של הלקוח תקינה, והתקלה היא אצלנו. 503 הוא קוד השרת היחיד שהמפרט מתיר, והוא בא עם <code>Retry-After</code>. גם נתון שמור שלא עובר את מודל התשובה הוא 503 (judgment log 4).</p></details>
+
+  <details><summary>למה <code>FOR SHARE</code> ולא <code>FOR UPDATE</code> או SERIALIZABLE?</summary>
+  <p>מה שרשום (O63, <code>check_references</code>): הנעילה גורמת למחיקה מקבילה לחכות, ואז לקבל את ה-409 הנכון. crops, soils ו-emitters אי אפשר למחוק דרך ה-API, ולכן הם לא צריכים נעילה.</p><p class="muted">ההשוואה ל-FOR UPDATE ול-SERIALIZABLE לא רשומה כהחלטה. אם שואלים, זה הנימוק הטכני: <code>FOR SHARE</code> חוסם רק מחיקה או עדכון של ה-farm, כך שכמה כתיבות plot לאותו farm לא חוסמות זו את זו. SERIALIZABLE היה מכריח לנסות שוב על כל התנגשות.</p></details>
+
+  <details><summary>למה לא לשמור את רמת הדלי במסד?</summary>
+  <p>רמת האדמה היום היא תשובה של היום. ערך שמור מתיישן בזמן שהגידול שותה (O87, אפשרות A מתוך שלוש). זה נשאר רעיון לעתיד, יחד עם מדידה אמיתית.</p></details>
+
+  <details><summary>מה אם המגדל לא בוחר רמת אדמה?</summary>
+  <p>ברירת המחדל היא 100 (מלא), כמו FAO בלי מדידה. הדף אומר זאת במפורש: <bdi class="en">"No soil level chosen: the plan assumes the soil is at field capacity."</bdi></p></details>
+
+  <details><summary>למה תקרה של 24 שעות ולא פחות?</summary>
+  <p>במילים שלך: <bdi class="en">"24 h is the system's real limit. Any smaller number would be a guess."</bdi> מה שנשאר עובר לימים הבאים, ורמת המים, לא התאריך, מחליטה (O90).</p></details>
+
+  <details><summary>איך יודעים שהחישוב נכון?</summary>
+  <p>חישבתי חמישה מקרים ביד, והם הבדיקות של ה-engine. המקרים מכסים שורשים שגדלים, עליית Kc, השקיה, גשם שממלא ומתנקז, גשם קטן מדי, אחרי העונה, התקרה, וסף של 60%. מקרה 3 רץ גם דרך ה-API (<code>test_case_3_through_the_api</code>).</p></details>
+
+  <details><summary>מה קורה כש-Open-Meteo נופל?</summary>
+  <p>3 ניסיונות. אחר כך התחזית האחרונה עם <code>stale: true</code>, עד 24 שעות, וה-planner מסמן כל יום כזה כ-stale (FR-2.13). הדף מציג <bdi class="en">"From an older weather update"</bdi> ליד המספרים. בלי תחזית במטמון: 503. QA-7 (O141) מצא שבזמן כזה הסקירה איטית, כ-7.6 שניות. לא תיקנו, כי אין NFR על זמן דף, והתשובות עדיין נכונות.</p></details>
+
+  <details><summary>למה הדפדפן לא קורא לשירותים ישירות?</summary>
+  <p>ככה המשימה מבקשת. גם planner ו-weather לא פתוחים לאינטרנט ב-AWS (O114), ושום כתובת פנימית לא מגיעה ללקוח.</p></details>
+
+  <details><summary>מה ההבדל בין SQLite ל-PostgreSQL שנתקלתם בו?</summary>
+  <p>NUL בטקסט ומגבלת אינדקס (O62), מקביליות אמיתית (O63), ו-timeouts (O64). אותה סוויטה רצה על שניהם (O65).</p></details>
+
+  <details><summary>איך מדדתם את ה-NFR?</summary>
+  <p>סקריפטים ב-<code>services/*/scripts/</code>: 10 בקשות לשנייה, 30 שניות לכל endpoint, בלוח זמנים קבוע שלא מחכה לתשובות, כדי שתשובה איטית לא תסתיר את עצמה, ו-10 בקשות חימום. הסקריפטים מסומנים NOT A REQUIREMENT (Y12).</p></details>
+
+  <details><summary>למה 8000 פתוח רק לך?</summary>
+  <p>ל-API אין התחברות, אז כל אחד יכול לכתוב ולמחוק (Y32). הבדיקות של המדריך עדיין עובדות מהמחשב שלך.</p></details>
+
+  <details><summary>מה הייתם עושים הלאה?</summary>
+  <ul>
+    <li>"היום" לפי אזור הזמן של החלקה עצמה (judgment log 3, 5).</li>
+    <li>Pagination ל-<code>GET /v1/plots</code>: מתועד, לא מתוקן, כי זה מחוץ למפרט (judgment log 2).</li>
+    <li>רמת אדמה שמורה או מדידה.</li>
+    <li>backoff ב-weather כשהספק למטה (O141).</li>
+  </ul></details>
+
+  <details><summary>איפה הסוכן הציע משהו ואתה החלטת אחרת?</summary>
+  <p><code>docs/judgment-log.md</code>, 11 רשומות. החשובות ל-P2: <code>/docs</code> חוזר (6), רמת אדמה לפי תחושה (7), בלי מקורות ישראליים (8), תקרה של 24 שעות (9), סף 1-99% (10), שמירת הדפים הנוספים (11). גם Y34 ו-Y35 ב-AWS: הסוכן הציע לעצור ולשאול, ולעבור למצב CPU "standard".</p></details>
+</section>
+
+<section id="demo">
+  <h2>14. הדגמה חיה</h2>
+  <ol>
+    <li>הסקירה: הכרטיסים, <bdi class="en">"N of M plots need water today"</bdi>.</li>
+    <li>North block: לבחור Soil today = Dry. מופיע <bdi class="en">"Water for 24 h"</bdi>, 40,000 L, וציר שעובר חצות.</li>
+    <li>לשנות את הסף ל-Tomato (60%) ואת שעת ההתחלה, ולהראות שהכל נשאר בכתובת.</li>
+    <li>Chart: הדלי, הסף, המים שניתנו, בציר עם צעדים עגולים (O138).</li>
+    <li>חלקה לא קיימת: <code>/plots/00000000-0000-0000-0000-000000000000</code> מחזירה 404.</li>
+    <li>אם יש זמן: <code>http://&lt;ip&gt;:8000/docs</code>, ושם <code>POST /v1/plots</code> עם <code>area_m2: 0.5</code> מחזיר 422 (O132).</li>
+  </ol>
+  <div class="box watch">לא לעצור שירותים בשרת החי באמצע הראיון. אם רוצים להראות כישלון, לעשות את זה מקומית עם <code>stack.sh stop weather</code>, או להראות את שקף 10.</div>
+</section>
+
+<section id="review">
+  <h2>15. שאלות הסקירה</h2>
+  <p class="muted">תשע השאלות מרשימת הסקירה של הקורס. הן לחשיבה ולהכנה, לא דרישה, ואולי לא ישאלו אותן בכלל. לכל אחת: המשפט להגיד (באנגלית, כמו בשקפים), ואז הפרטים אם ממשיכים לשאול.</p>
+
+  <details><summary>1. איזה מידע רגיש יש, ואיך מגנים עליו?</summary>
+  <div class="box say"><bdi class="en">"The only secrets are the database password and the .env settings, and the API has no login. The password is generated on the server and never printed, the .env files are out of git, the browser never sees an internal address, and only port 3000 is open to everyone, with the API and SSH open only to my IP."</bdi></div>
+  <ul>
+    <li>סיסמת המסד: נוצרת על השרת עם <code>openssl rand</code>, נכתבת ל-<code>.env</code> של ה-registry בהרשאה 600, ואף פעם לא מודפסת (A69). הסוכן לא קורא קבצי <code>.env</code> (AGENTS.md).</li>
+    <li><code>.env</code> ב-<code>.gitignore</code>. רק <code>.env.example</code> נכנס ל-git.</li>
+    <li>רק שרת Next.js קורא לשירותים. כתובות פנימיות לא מגיעות לדפדפן.</li>
+    <li>Firewall: 3000 לכולם. 22 ו-8000 רק ל-IP שלך (Y32). 8001 ו-8002 על <code>127.0.0.1</code> (O114). PostgreSQL רק מתוך השרת.</li>
+    <li>משתמש <code>agropilot</code> בלי shell, עם <code>NoNewPrivileges</code> ו-<code>ProtectSystem=full</code> (Y31, A68).</li>
+  </ul>
+  <div class="box watch">חולשה להודות בה: אין HTTPS ואין התחברות. מי שיודע את הכתובת רואה את כל החלקות והקואורדינטות שלהן ב-3000. השלב הבא: HTTPS והתחברות.</div></details>
+
+  <details><summary>2. הזרימה של המשתמש, מהדפדפן לשירותים ובחזרה</summary>
+  <div class="box say"><bdi class="en">"The grower opens the overview, clicks a plot, says how the soil feels, and the Next.js server builds the page: today's answer first, then the 7-day plan, with every choice kept in the address."</bdi></div>
+  <p>הבחירות (רמת אדמה, סף, שעת התחלה, תצוגה) נשמרות בכתובת (A63), כך שרענון או קישור ששולחים מראים את אותה תוכנית. להראות בשקף 9.</p></details>
+
+  <details><summary>3. הזרימה של המערכת, כולל מה קורה בשגיאה</summary>
+  <div class="box say"><bdi class="en">"The Next.js server checks the plot in the registry, calls the planner, and the planner reads the registry and the weather service. If anything fails, the planner returns 503 naming the service and the page shows that message, so the grower never gets a plan of zeros."</bdi></div>
+  <p>הדרך התקינה: פרק <a href="#flow">11</a> ושקף 9. הכישלונות, אחד אחד: שקף 10 ופרק <a href="#talk">2</a> (שקף 10).</p></details>
+
+  <details><summary>4. למה צריך שירות מזג אוויר, ולא לקרוא ל-Open-Meteo מה-frontend? איך בדקתם אותו?</summary>
+  <div class="box say"><bdi class="en">"It caches one forecast per 0.1° area for 3 hours and shares it between all plots and growers, falls back to a forecast marked stale when Open-Meteo is down, and the planner needs it on the server anyway. We tested it with a fake Open-Meteo and a fake clock."</bdi></div>
+  <ul>
+    <li>מטמון משותף: דפדפן לא יכול לחלוק מטמון עם דפדפנים אחרים.</li>
+    <li>טיפול בכישלון במקום אחד: ניסיונות חוזרים, stale, בדיקה קפדנית של מה שהספק שולח (שדה חסר, null, שלילי, יחידות).</li>
+    <li>התוכנית מחושבת בשרת, אז הדפדפן שמביא מזג אוויר לא היה עוזר ל-planner.</li>
+    <li>החלפת ספק: רק ה-weather מכיר את הפורמט של Open-Meteo.</li>
+    <li>76 בדיקות עם <code>httpx.MockTransport</code> ושעון מדומה. הבדיקה המרכזית: <code>test_provider_down_serves_last_forecast_as_stale</code>. NFR נמדד בנפרד: p95 5.7ms.</li>
+  </ul></details>
+
+  <details><summary>5. מקרי קצה: ה-registry למטה? משנה פורמט, <code>latitude</code> במקום <code>lat</code>?</summary>
+  <div class="box say"><bdi class="en">"The planner checks every registry answer against a strict model, so a down registry or a renamed field gives 503 'registry-service answered with data the planner can't use' instead of a wrong plan."</bdi></div>
+  <ul>
+    <li><code>RegistryPlot</code> ב-<code>services/planner-service/upstream.py</code> מחייב <code>lat</code> בין -90 ל-90, עם טיפוסים מדויקים (<code>"1000"</code> כטקסט נדחה). שדה חסר: <code>ValidationError</code>, ואז 503.</li>
+    <li>ההוכחה: הטבלה <code>FAILURES</code> ב-<code>tests/test_plan.py</code>: שדה חסר, טקסט במקום מספר, תאריך לא חוקי, <code>lat</code> מחוץ לטווח, null, לא JSON ועוד. אין בדיקה בשם "latitude", אבל "missing field" הוא אותו מנגנון.</li>
+    <li>שדות נוספים מתעלמים מהם, כך שה-registry יכול להוסיף שדה בלי לשבור את ה-planner.</li>
+    <li>להראות בשקף 10: Failure 3 (registry למטה) ו-Failure 5 (latitude).</li>
+  </ul></details>
+
+  <details><summary>6. איך בדקתם את ה-planner, שתלוי בשני שירותים?</summary>
+  <div class="box say"><bdi class="en">"We checked the calculation against 5 cases I calculated by hand, replaced the registry and weather service with fakes to cause every failure on purpose, and checked the real connection with 5 tests on the running system."</bdi></div>
+  <p>שלוש שכבות: ה-engine לבד (חמשת המקרים), השירות עם תשובות מדומות לכל כתובת (<code>httpx.MockTransport</code>), ו-e2e על המערכת האמיתית (<code>test_a_new_plot_gets_a_seven_day_plan</code>). למה מדומים: מהיר, בלי רשת, ואפשר לייצר כל כישלון בכוונה.</p></details>
+
+  <details><summary>7. ביצועים: יש צוואר בקבוק? איך יודעים?</summary>
+  <div class="box say"><bdi class="en">"Our services answer in under 6 ms at p95, so the bottleneck is Open-Meteo on a cache miss. QA showed the overview going from 0.9 s to 7.6 s while Open-Meteo was down."</bdi></div>
+  <ul>
+    <li>נמדד: registry p95 5.8ms, weather טרי 5.7ms, על EC2 2.4-4.4ms.</li>
+    <li>קריאה שלא נמצאת במטמון מחכה ל-Open-Meteo. כשהספק למטה: עד כ-10 שניות (3 ניסיונות של 3 שניות, ועוד הפסקות).</li>
+    <li>הסקירה קוראת ל-planner פעם לכל חלקה, במקביל (<code>Promise.all</code> ב-<code>src/app/page.tsx</code>). זה גדל עם מספר החלקות.</li>
+    <li>QA-7 (O141): 0.9 שניות רגיל, 7.6 שניות כשהספק למטה, כי כל בקשה לתא stale מנסה שוב את הספק. לא תוקן: אין NFR על זמן דף, והתשובות נכונות ומסומנות. התיקון: backoff ב-weather.</li>
+  </ul></details>
+
+  <details><summary>8. איך התמודדתם עם ה-rate limit של Open-Meteo?</summary>
+  <div class="box say"><bdi class="en">"The cache means one call per 0.1° area every 3 hours, with a lock so requests arriving together make one call. We don't handle a 429 on its own: it's retried like any other failure, and backing off would be the next fix."</bdi></div>
+  <ul>
+    <li>קריאה אחת לתא כל 3 שעות, לא משנה כמה חלקות או משתמשים יש בו. שולפים 8 ימים פעם אחת, ו-<code>days</code> רק חותך.</li>
+    <li>נעילה לכל תא (O75): 10 בקשות במקביל לאותו תא עושות קריאה אחת.</li>
+    <li>החשבון: 8 קריאות ביום לתא. אם המגבלה החינמית היא כ-10,000 ביום, זה כ-1,250 תאים שונים. לבדוק את המספר העדכני באתר של Open-Meteo לפני הראיון.</li>
+  </ul>
+  <div class="box watch">חולשה להודות בה: 429 (יותר מדי בקשות) מטופל כמו כל כישלון: ניסיונות חוזרים, ואז stale. הניסיונות מוסיפים קריאות לספק שכבר מסרב. זה אותו פער כמו O141. התיקון: לקרוא את <code>Retry-After</code> ולחכות.</div></details>
+
+  <details><summary>9. איך אימתתם את ה-FR וה-NFR? איך יודעים שבניתם נכון?</summary>
+  <div class="box say"><bdi class="en">"The requirements skill checked every FR and NFR with evidence (37 met), we measured the NFRs with load scripts, and we have 876 tests plus QA runs locally and on EC2 that found 34 issues, each with a status."</bdi></div>
+  <ul>
+    <li>FR: <code>docs/requirements/2026-11-24-p2.html</code>: 37 met, 2 partly, 2 can't tell, כל אחד עם ראיה.</li>
+    <li>NFR: סקריפטי מדידה (פרק <a href="#questions">13</a>, "איך מדדתם את ה-NFR?"), אותה סוויטה על SQLite ועל PostgreSQL (NFR-2.1), 375 פיקסלים ב-Chrome.</li>
+    <li>"בנינו נכון": 876 בדיקות, חמשת המקרים שחושבו ביד, 5 בדיקות e2e. "בנינו את הדבר הנכון": QA כבודק עוין, כמגדל מבולבל וכרשת לא יציבה, מקומית ועל EC2.</li>
+  </ul></details>
+</section>
+
+</main>
+</body>
+</html>
