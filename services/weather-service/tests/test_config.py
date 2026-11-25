@@ -59,3 +59,21 @@ def test_settings_from_env_file(tmp_path):
     (tmp_path / ".env").write_text("".join(f"{k}={v}\n" for k, v in TEST_SETTINGS.items()))
     result = import_config_in(tmp_path, {})
     assert result.returncode == 0, result.stderr
+
+
+def test_load_settings_exits_in_process_when_a_setting_is_missing(tmp_path, monkeypatch, capsys):
+    """Same as above, but in this process so coverage sees it: exit code 1 and the setting's name.
+
+    config.py reads .env from its own folder, so chdir would not hide it; point the
+    settings at an .env that does not exist instead. Nothing is reloaded, so nothing needs restoring.
+    """
+    import pytest
+
+    import config
+
+    monkeypatch.delenv("FRESH_HOURS")
+    monkeypatch.setitem(config.Settings.model_config, "env_file", tmp_path / ".env")
+    with pytest.raises(SystemExit) as stop:
+        config.load_settings()
+    assert stop.value.code == 1
+    assert "Missing or invalid setting: FRESH_HOURS." in capsys.readouterr().err

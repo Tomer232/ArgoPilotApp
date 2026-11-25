@@ -94,3 +94,35 @@ def test_seed_plots_fit_the_realistic_ranges(plot):
     assert 1 <= plot["area_m2"] <= 1_000_000
     assert 0.1 <= plot["row_spacing_m"] <= 10
     assert 0.1 <= plot["emitter_spacing_m"] <= 5
+
+
+def test_main_seeds_the_database_in_settings(tmp_path, monkeypatch, capsys):
+    """seed.main creates the file named by DATABASE_URL and prints the row counts."""
+    path = tmp_path / "main.db"
+    monkeypatch.setattr(seed.settings, "database_url", f"sqlite:///{path}")
+    seed.main()
+    out = capsys.readouterr().out
+    assert "Seeded sqlite:///" in out
+    assert "2 farms, 4 plots, 2 crops, 3 soils, 4 emitters" in out
+    assert path.exists()
+
+
+def test_main_refuses_when_tables_exist(tmp_path, monkeypatch, capsys):
+    """seed.main run twice: the second run exits with code 1 and a one-line message."""
+    monkeypatch.setattr(seed.settings, "database_url", f"sqlite:///{tmp_path / 'main.db'}")
+    seed.main()
+    with pytest.raises(SystemExit) as stop:
+        seed.main()
+    assert stop.value.code == 1
+    assert "Tables already exist; nothing changed." in capsys.readouterr().err
+
+
+def test_running_seed_as_a_script_calls_main(tmp_path, monkeypatch, capsys):
+    """`python seed.py` (the __main__ guard) seeds the database."""
+    import runpy
+
+    path = tmp_path / "script.db"
+    monkeypatch.setattr(seed.settings, "database_url", f"sqlite:///{path}")
+    runpy.run_module("seed", run_name="__main__")
+    assert "Seeded sqlite:///" in capsys.readouterr().out
+    assert path.exists()
