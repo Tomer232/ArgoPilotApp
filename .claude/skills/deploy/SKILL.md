@@ -1,6 +1,6 @@
 ---
 name: deploy
-description: Deploy the current main of AgroPilot to our EC2 instance (i-02119bbbf95e78e0c) in the shared course AWS account. Checks the work is merged (clean tree, local main equals origin/main), runs every test suite with the test skill's run-all.sh and, if one fails, says which and why and reruns the failed tests once, then finds the instance by id (starting it if stopped), runs deploy/update.sh over SSH and checks the server runs origin/main. Touches no other AWS resource, ever. Use whenever the user says "/deploy", "deploy", "ship it", "push it to AWS", "update the server", "put main on EC2", or asks to get the latest version live, even if they only say "release".
+description: Deploy the current main of AgroPilot to our EC2 instance (i-02119bbbf95e78e0c) in the shared course AWS account. Checks the work is merged (clean tree, local main equals origin/main), runs every test suite with the test skill's run-all.sh and, if one fails, says which and why and reruns the failed tests once, then deploys through the GitHub Actions `deploy` workflow (merge to main, or a manual run) and checks the server runs origin/main. Touches no other AWS resource, ever. Use whenever the user says "/deploy", "deploy", "ship it", "push it to AWS", "update the server", "put main on EC2", or asks to get the latest version live, even if they only say "release".
 ---
 
 # deploy
@@ -17,7 +17,7 @@ The AWS account belongs to the course; classmates' instances run in it. We own e
 | Security group | `sg-0bfad4ab93434f856` |
 
 - Every AWS call names the instance by id (`InstanceIds=["i-02119bbbf95e78e0c"]`). Never by name, tag or filter, never a call without an id, never "all instances".
-- The only AWS calls this skill makes are `DescribeInstances` and, when the instance is stopped, `StartInstances` on that id. Never stop, reboot, terminate or modify anything, and never touch the security group. If SSH times out because the owner's IP changed, tell the owner to update the port 22 rule in the console.
+- The only AWS calls this skill makes itself are `DescribeInstances` and, when the instance is stopped, `StartInstances` on that id. Never stop, reboot, terminate or modify anything, and never touch the security group. The `deploy` workflow opens port 22 for its own runner for the length of a run and always removes that rule; it is the only thing that does. If the emergency SSH path below times out because the owner's IP changed, tell the owner to update the port 22 rule in the console.
 - Use the AWS MCP tool (`aws___run_script`, region `us-east-1`); there is no AWS CLI in WSL.
 
 ## 1. Merged
@@ -55,7 +55,7 @@ It prints one `PASS`/`FAIL`/`SKIP` line per suite with its log file and exits 1 
 
 ## 3. The instance
 
-Find it by id:
+The workflow finds the instance by id and starts it when it is stopped. To look yourself (read-only):
 
 ```python
 r = await call_boto3(service_name="ec2", operation_name="DescribeInstances", region_name="us-east-1",
@@ -65,30 +65,36 @@ result = {"state": i["State"]["Name"], "ip": i.get("PublicIpAddress")}
 result
 ```
 
-- `running`: use the IP.
-- `stopped`: start it, by id only: `StartInstances` with `{"InstanceIds": ["i-02119bbbf95e78e0c"]}`. Then call `DescribeInstances` again every ~15 s (up to 3 minutes) until it is `running` with a public IP. The IP is new on every start; say so. The services start by themselves.
-- `pending` / `stopping` / anything else: wait as above for `running` or `stopped`; if it doesn't settle in 3 minutes, stop and report the state.
+The public IP is new on every start; say so.
 
 ## 4. Deploy
 
+Merging into `main` deploys by itself: the `deploy` workflow (`.github/workflows/deploy.yaml`) runs on every push to `main`. It copies `deploy/setup.sh` and `deploy/update.sh` from the runner's checkout of the merged commit to the server and runs them over SSH, with the database password piped on stdin.
+
+1. Merge the PR once its required checks pass, only after the owner says so.
+2. Watch the run: `gh.exe run watch $(gh.exe run list --workflow deploy.yaml --limit 1 --json databaseId --jq '.[0].databaseId') --exit-status`.
+3. Deploy without a merge (for example after the course stopped and restarted the instance): `gh.exe workflow run deploy.yaml --ref main`, then watch it as above.
+4. Roll back: re-run an older successful `deploy` run, `gh.exe run rerun <run id>`. It works only for commits that already contain these scripts.
+
+If a run fails, read its log (`gh.exe run view <run id> --log-failed`), quote the last lines and report. Stop.
+
+### Emergency fallback (only if GitHub Actions is down)
+
+Run it on the server, so the password never leaves it. The scripts are copied to `/tmp` first, because `update.sh` resets the clone it would otherwise be running from. SSH in (the owner opens port 22 to their IP first), then:
+
 ```bash
-ssh -i ~/.ssh/tomer-us-east-1.pem -o ConnectTimeout=10 -o BatchMode=yes ubuntu@<ip> 'sudo bash /opt/agropilot/app/deploy/update.sh'
+sudo cp /opt/agropilot/app/deploy/setup.sh /opt/agropilot/app/deploy/update.sh /tmp/ && sudo sed -n 's#^DATABASE_URL=.*://[^:]*:\([^@]*\)@.*#\1#p' /opt/agropilot/app/services/registry-service/.env | sudo bash /tmp/update.sh <sha>
 ```
-
-After a fresh start, SSH may need a few tries (~30 s) and will ask to accept the new host key: add `-o StrictHostKeyChecking=accept-new`.
-
-`update.sh` pulls `main`, installs the locked dependencies, rebuilds the frontend, restarts the four units, and checks each answers 200. It runs a few minutes (the frontend build is the slow part); give the command a 10-minute timeout.
-
-If it fails, quote the last lines of its output and read the failing unit's log: `ssh ... 'journalctl -u agropilot-<service> -n 40 --no-pager'`. Report and stop.
 
 ## 5. Check
 
+The run's summary shows the commit and the link. Then:
+
 ```bash
-ssh -i ~/.ssh/tomer-us-east-1.pem -o BatchMode=yes ubuntu@<ip> 'sudo -u agropilot git -C /opt/agropilot/app rev-parse --short HEAD; systemctl is-active agropilot-registry agropilot-weather agropilot-planner agropilot-frontend'
 curl -s -o /dev/null -w '%{http_code}\n' --max-time 10 http://<ip>:3000/
 ```
 
-Done means: the server's commit equals `origin/main`'s, all four units are `active`, and the app answers 200 on port 3000 from this machine.
+Done means: the `deploy` run is green, its commit equals `origin/main`'s (`update.sh` itself checks that the server's `HEAD` equals the sha it was given), and the app answers 200 on port 3000 from this machine. The security group should have no `github-deploy-*` rule afterwards.
 
 ## Report
 
@@ -98,4 +104,4 @@ Done means: the server's commit equals `origin/main`'s, all four units are `acti
 - Result: deployed or stopped at step N, and why.
 - Links: `http://<ip>:3000`.
 - Suggest running `/qa-live` against the new deploy. Don't run it yourself.
-- Last line: remind the owner that the instance costs about $1 a day while it runs (the course pays), and to stop it from the console (by its id) when nobody needs it; this skill starts it again next time. The course may also stop it by itself at any time (O145).
+- Last line: remind the owner that the instance costs about $1 a day while it runs (the course pays), and to stop it from the console (by its id) when nobody needs it; the next deploy starts it again. The course may also stop it by itself at any time (O145).

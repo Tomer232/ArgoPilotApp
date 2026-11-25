@@ -115,6 +115,8 @@ No test calls a real external service.
 
 CI runs the four suites above on every pull request into `main`. `tests/e2e` needs the live stack, so it does not run in CI.
 
+Merging into `main` deploys it to AWS automatically (the `deploy` workflow; see [deploy/README.md](deploy/README.md)).
+
 ### Performance
 
 Measured at 10 requests/s, one worker, p95 latency:
@@ -129,10 +131,6 @@ Method, scripts and full tables are in each service README.
 ## Deployment
 
 Production runs on a single AWS EC2 instance (Ubuntu 24.04): one systemd unit per service, all under a dedicated `agropilot` system account, with PostgreSQL on the same host. Only the web app is public; the internal services listen on localhost and the registry API is restricted by IP.
-
-```bash
-sudo bash /opt/agropilot/app/deploy/update.sh    # on the instance: pull main, install, build, restart, health-check
-```
 
 Setup, operations and lessons from the first deploy are in [deploy/README.md](deploy/README.md).
 
