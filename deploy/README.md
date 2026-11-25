@@ -56,7 +56,7 @@ sudo systemctl restart agropilot-frontend      # one service
 sudo ss -ltnp | grep -E ':(3000|800[0-2]|5432)' # who listens where
 ```
 
-Start and stop the instance from the console (filter by the instance id, never by name: the account is shared). After a start, copy the new public IP; the services start by themselves. If SSH or port 8000 times out, your laptop's IP changed (new network): update the port 22 and 8000 rules to your current IP.
+Start and stop the instance from the console (filter by the instance id, never by name: the account is shared). After a start, copy the new public IP; the services start by themselves. The course also stops the instance automatically 3 times a day, so it may be stopped at any time, and after each start it has a new public IP (O145). If SSH or port 8000 times out, your laptop's IP changed (new network): update the port 22 and 8000 rules to your current IP.
 
 ## Found on the first deploy
 

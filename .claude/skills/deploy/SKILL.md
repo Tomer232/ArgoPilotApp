@@ -98,4 +98,4 @@ Done means: the server's commit equals `origin/main`'s, all four units are `acti
 - Result: deployed or stopped at step N, and why.
 - Links: `http://<ip>:3000`.
 - Suggest running `/qa-live` against the new deploy. Don't run it yourself.
-- Last line: remind the owner that the instance costs about $1 a day while it runs (the course pays), and to stop it from the console (by its id) when nobody needs it; this skill starts it again next time.
+- Last line: remind the owner that the instance costs about $1 a day while it runs (the course pays), and to stop it from the console (by its id) when nobody needs it; this skill starts it again next time. The course may also stop it by itself at any time (O145).
