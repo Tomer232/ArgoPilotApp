@@ -122,6 +122,8 @@ uv run pytest          # 75 passed, about 1 s
 
 `uv run pytest --cov` checks 100% line and branch coverage.
 
+`uv audit --locked --preview-features audit-command` checks `uv.lock` for known vulnerabilities (O149).
+
 Tests need no `.env` and never call the real provider. `tests/test_provider.py` replaces the network with a fake Open-Meteo (`httpx.MockTransport`) and checks every kind of bad answer. `tests/test_forecast.py` replaces the clock and the provider call, to check fresh, stale, 24 hours, 503, grid cells and ten requests at once.
 
 ## Latency (NFR-2.3: fresh forecast, p95 ≤ 100 ms at 10 req/s)

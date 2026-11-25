@@ -22,6 +22,7 @@ npm run start                   # serve the production build on port 3000
 npm run lint                    # ESLint
 npm test                        # Vitest, for the logic in src/lib
 npm run coverage                # the same tests with a coverage report; src/lib must stay at 100% (O148)
+npm audit --omit=dev --audit-level=high   # known vulnerabilities in production packages (O149)
 ```
 
 **Settings.** All of them are required and live in `.env.local` (the environment wins). If one is missing, the server stops at startup with a line naming it (`src/instrumentation.ts`).
