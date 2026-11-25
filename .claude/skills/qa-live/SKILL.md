@@ -95,4 +95,4 @@ Finish `docs/qa/<YYYY-MM-DD>-live.md`: the summary counts, every finding with st
 
 In the chat: the counts by severity, the top three findings in one line each, whether everything was restored, the cost check, and the report's path. Don't fix anything and don't commit; the owner decides what happens to each finding.
 
-Last line: remind the owner that the instance costs about $1 a day while it runs, and to stop it from the console (by its id, `i-02119bbbf95e78e0c`) when nobody needs it; `/deploy` starts it again.
+Last line: remind the owner that the instance costs about $1 a day while it runs, and to stop it from the console (by its id, `i-02119bbbf95e78e0c`) when nobody needs it; `/deploy` starts it again. The course may also stop it by itself at any time (O145).
