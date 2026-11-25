@@ -25,6 +25,10 @@ describe("mmAxis", () => {
     expect(ticks.at(-1)).toBeGreaterThanOrEqual(2400);
   });
 
+  it("keeps the largest step for a bucket no step fits in five gaps", () => {
+    expect(mmAxis(5000)).toEqual({ top: 5000, ticks: [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000] });
+  });
+
   it("still draws one gap for a tiny bucket", () => {
     expect(mmAxis(3)).toEqual({ top: 10, ticks: [0, 10] });
   });
