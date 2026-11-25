@@ -433,3 +433,13 @@ def test_weather_failure_is_503_naming_weather(client, services, answer):
     assert "weather-service" in body["detail"]
     assert response.headers["Retry-After"] == "5"
     assert "days" not in body
+
+
+def test_weather_answering_404_is_503_naming_weather(client, services):
+    """upstream.fetch_forecast: a 404 from the weather service is a broken upstream, not an unknown plot."""
+    services.answers[WEATHER] = (404, {"code": "NOT_FOUND"})
+    response = client.get(PLAN_URL)
+    body = assert_problem(response, 503, "UPSTREAM_UNAVAILABLE")
+    assert "weather-service" in body["detail"]
+    assert "status 404" in body["detail"]
+    assert response.headers["Retry-After"] == "5"

@@ -104,6 +104,7 @@ BAD_ANSWERS = [
     ("no rain", ok(body_with(lambda b: b["daily"].pop("precipitation_sum")))),
     ("no time", ok(body_with(lambda b: b["daily"].pop("time")))),
     ("no utc offset", ok(body_with(lambda b: b.pop("utc_offset_seconds")))),
+    ("utc offset not a whole number", ok(body_with(lambda b: b.__setitem__("utc_offset_seconds", 7200.5)))),
     ("ET0 null", ok(body_with(set_et0(2, None)))),
     ("ET0 text", ok(body_with(set_et0(2, "2.5")))),
     ("ET0 true", ok(body_with(set_et0(2, True)))),

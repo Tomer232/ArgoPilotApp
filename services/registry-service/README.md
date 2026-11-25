@@ -55,6 +55,8 @@ It is all or nothing, in one transaction. If any of the five tables already exis
 uv run pytest          # SQLite: 448 passed, 2 skipped (PostgreSQL-only tests), about 10 s
 ```
 
+`uv run pytest --cov` checks 100% line and branch coverage.
+
 Tests need no `.env`. Each test gets its own copy of a freshly seeded SQLite file.
 
 **Running the suite on PostgreSQL (optional).** Set `TEST_DATABASE_URL` and every test runs against PostgreSQL instead. Each test drops every table and seeds again, so **use a separate database, never `registry`**. The suite refuses to start unless the database name ends in `_test`. Create it once:

@@ -34,3 +34,28 @@ def test_repeated_query_parameter_is_422(client):
     url = "/v1/plots/c8f3d1b0-4d2e-5a1b-8b22-1d6e3f702002/plan?days=1&days=2"
     body = assert_problem(client.get(url), 422, "VALIDATION")
     assert body["detail"] == "Query parameter given more than once: days"
+
+
+def test_other_http_errors_keep_their_status_and_headers():
+    """errors.handle_http_error: a status with no special rule (here 401) is passed on as problem+json."""
+    from fastapi import HTTPException
+
+    from errors import handle_http_error
+
+    exc = HTTPException(status_code=401, detail="Not allowed", headers={"WWW-Authenticate": "Basic"})
+    response = handle_http_error(None, exc)  # the request is not used for this status
+    assert response.status_code == 401
+    assert response.headers["content-type"] == "application/problem+json"
+    assert response.headers["www-authenticate"] == "Basic"
+    assert b"Not allowed" in response.body
+
+
+def test_unexpected_error_is_a_503_problem():
+    """errors.handle_unexpected_error: any crash becomes a 503 problem+json with Retry-After."""
+    from errors import handle_unexpected_error
+
+    response = handle_unexpected_error(None, RuntimeError("boom"))
+    assert response.status_code == 503
+    assert response.headers["content-type"] == "application/problem+json"
+    assert response.headers["retry-after"] == "5"
+    assert b"Unexpected server error" in response.body

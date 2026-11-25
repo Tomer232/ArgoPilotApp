@@ -50,15 +50,16 @@ def fetch_forecast(lat: float, lon: float, http: httpx.Client) -> ProviderForeca
     """Ask the provider, trying 1 + PROVIDER_RETRIES times with a pause between tries.
     Raises ProviderError when every try failed."""
     attempts = 1 + settings.provider_retries
+    last_error = None
     for attempt in range(1, attempts + 1):
+        if attempt > 1:
+            time.sleep(settings.provider_retry_pause_seconds)
         try:
             return fetch_once(lat, lon, http)
         except ProviderError as exc:
             logger.warning("Provider attempt %d of %d failed: %s", attempt, attempts, exc)
-            if attempt == attempts:
-                raise
-            time.sleep(settings.provider_retry_pause_seconds)
-    raise AssertionError("unreachable")  # the loop always returns or raises
+            last_error = exc
+    raise last_error
 
 
 def fetch_once(lat: float, lon: float, http: httpx.Client) -> ProviderForecast:

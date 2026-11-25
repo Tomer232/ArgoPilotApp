@@ -98,3 +98,28 @@ def test_health_is_503_with_retry_after_when_the_database_is_missing(tmp_path, m
     response = TestClient(app).get("/health")
     assert_problem(response, 503, "UNAVAILABLE")
     assert response.headers["retry-after"] == "5"
+
+
+def test_other_http_errors_keep_their_status_and_headers():
+    """errors.handle_http_error: a status with no special rule (here 401) is passed on as problem+json."""
+    from fastapi import HTTPException
+
+    from errors import handle_http_error
+
+    exc = HTTPException(status_code=401, detail="Not allowed", headers={"WWW-Authenticate": "Basic"})
+    response = handle_http_error(None, exc)  # the request is not used for this status
+    assert response.status_code == 401
+    assert response.headers["content-type"] == "application/problem+json"
+    assert response.headers["www-authenticate"] == "Basic"
+    assert b"Not allowed" in response.body
+
+
+def test_unexpected_error_is_a_503_problem():
+    """errors.handle_unexpected_error: any crash becomes a 503 problem+json with Retry-After."""
+    from errors import handle_unexpected_error
+
+    response = handle_unexpected_error(None, RuntimeError("boom"))
+    assert response.status_code == 503
+    assert response.headers["content-type"] == "application/problem+json"
+    assert response.headers["retry-after"] == "5"
+    assert b"Unexpected server error" in response.body

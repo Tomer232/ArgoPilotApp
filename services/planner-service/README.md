@@ -161,6 +161,8 @@ sequenceDiagram
 uv run pytest          # 130 passed, about 1 s
 ```
 
+`uv run pytest --cov` checks 100% line and branch coverage.
+
 Tests need no `.env` and never call a real service. `tests/test_engine.py` checks the calculation against the five hand-calculated cases and the edges of every rule. `tests/test_plan.py` replaces the registry and weather with fakes (`httpx.MockTransport`) and checks the plan through the API, the calls made, and every kind of failure.
 
 ## More

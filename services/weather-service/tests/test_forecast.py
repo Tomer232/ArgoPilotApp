@@ -255,3 +255,40 @@ def test_bad_query_is_422(client, scene, case, query):
 @pytest.mark.parametrize("query", ["lat=90&lon=180&days=1", "lat=-90&lon=-180&days=7"])
 def test_edges_are_allowed(client, scene, query):
     assert client.get(f"/v1/forecast?{query}").status_code == 200
+
+
+def test_real_clock_is_utc_and_current():
+    """forecast.utc_now (the tests normally replace it) gives the current time with a UTC zone."""
+    before = datetime.datetime.now(UTC)
+    now = forecast.utc_now()
+    after = datetime.datetime.now(UTC)
+    assert now.tzinfo is not None
+    assert now.utcoffset() == datetime.timedelta(0)
+    assert before <= now <= after
+
+
+def seven_days_from_the_16th(lat, lon, http) -> ProviderForecast:
+    """A provider that sends only 7 days, 16 to 22 November."""
+    full = eight_days()
+    return ProviderForecast(days=full.days[:7], utc_offset_seconds=full.utc_offset_seconds)
+
+
+def test_fresh_forecast_that_no_longer_covers_today_is_fetched_again(client, scene, monkeypatch):
+    """Cached 1 hour ago (fresh) but the point's day has changed and only 6 days are left: ask again."""
+    answers = [seven_days_from_the_16th, lambda lat, lon, http: eight_days(datetime.date(2026, 11, 17))]
+    monkeypatch.setattr(forecast, "fetch_forecast", lambda lat, lon, http: answers.pop(0)(lat, lon, http))
+    scene.now = datetime.datetime(2026, 11, 16, 21, 30, tzinfo=UTC)  # 23:30 on the 16th in Israel
+    client.get(URL)
+    scene.later(hours=1)  # 00:30 on the 17th: the cache is fresh, but the 16th is over
+    body = client.get(URL).json()
+    assert [day["date"] for day in body["days"]] == [f"2026-11-{d}" for d in range(17, 24)]
+    assert body["stale"] is False
+    assert answers == []  # the provider was asked twice
+
+
+def test_provider_days_that_do_not_start_today_are_503(client, scene, monkeypatch):
+    """A fresh answer whose days begin yesterday cannot be served: 503, and nothing is made up."""
+    monkeypatch.setattr(forecast, "fetch_forecast", seven_days_from_the_16th)
+    scene.now = datetime.datetime(2026, 11, 17, 6, 0, tzinfo=UTC)  # the 17th in Israel
+    body = assert_problem(client.get(URL), 503, "UNAVAILABLE")
+    assert "don't start today" in body["detail"]
